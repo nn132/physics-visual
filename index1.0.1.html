@@ -46,6 +46,40 @@
       }
     }
   </style>
+  <!-- 手机端额外样式：只新增，不修改现有桌面样式 -->
+  <style>
+    /* 保持桌面端完全不变；以下规则只在窄屏（手机）生效 */
+    @media (max-width: 768px) {
+      /* 导航：确保品牌、按钮在一行且菜单更紧凑 */
+      #navbar .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+      #navbar .font-bold { font-size: 1rem; }
+
+      /* 英雄区：文字和按钮更紧凑，避免换行 */
+      section.bg-gradient-to-r h1 { font-size: 1.75rem; }
+      section.bg-gradient-to-r p { font-size: 1rem; }
+      section.bg-gradient-to-r .flex { flex-direction: column; }
+      section.bg-gradient-to-r .flex a { width: 100%; }
+
+      /* 功能卡和列表：单列显示，内边距微调 */
+      .grid.md\:grid-cols-3, .grid.md\:grid-cols-4 { grid-template-columns: 1fr !important; }
+      .p-6 { padding: 0.75rem !important; }
+
+      /* 动画容器：高度自适应，使用相对单位，确保不会超出小屏幕 */
+      #animation-container { height: 40vh !important; min-height: 220px; }
+      #animated-object { width: 28px !important; height: 28px !important; }
+
+      /* 控制面板：行内元素换行并撑满宽度 */
+      .mt-4.flex.flex-wrap { gap: 0.5rem; }
+      .mt-4 .ml-auto { margin-left: 0 !important; width: 100%; }
+
+      /* 文本块、表单元素：增大点击目标，避免过窄 */
+      input[type="number"], textarea, select, button { font-size: 0.95rem; }
+      textarea.h-32 { height: 7rem !important; }
+
+      /* 页脚：网格改为单列 */
+      footer .grid.md\:grid-cols-4 { grid-template-columns: 1fr !important; }
+    }
+  </style>
 </head>
 
 <body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
@@ -170,19 +204,24 @@
               
               <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">题目类型</label>
-                <select class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                  <option>匀变速直线运动</option>
-                  <option>平抛运动</option>
-                  <option>圆周运动</option>
-                  <option>天体运动</option>
-                  <option>碰撞与动量守恒</option>
-                  <option>电磁学运动</option>
+                <select id="question-type-select" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                  <option value="uniform">匀变速直线运动</option>
+                  <option value="projectile">平抛/抛体运动</option>
+                  <option value="circular">圆周运动</option>
+                  <option value="astrodynamics">天体运动</option>
+                  <option value="collision">碰撞与动量守恒</option>
+                  <option value="magnetic">带电粒子/电磁学运动</option>
                 </select>
               </div>
               
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">题目描述</label>
-                <textarea class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-32" placeholder="例如：一个物体从高处自由下落，初始速度为0，重力加速度取10m/s²，求5秒后的速度和下落距离..."></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1">题目描述（可填自然语言）</label>
+                <textarea id="problem-description" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-32" placeholder="例如：一个物体从高处自由下落，初始速度为0，重力加速度取10m/s²，5秒后的速度和下落距离..."></textarea>
+                <div class="mt-2 flex items-center gap-2">
+                  <input id="parse-description" type="button" class="bg-primary hover:bg-primary/90 text-white py-1 px-3 rounded-md text-sm" value="从文字解析参数">
+                  <input id="upload-image" type="file" accept="image/*" class="text-sm">
+                  <button id="apply-image" class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-1 px-3 rounded-md text-sm">将图片设为背景</button>
+                </div>
               </div>
               
               <div class="mb-4">
@@ -190,21 +229,23 @@
                 <div class="grid grid-cols-2 gap-2">
                   <div>
                     <label class="text-xs text-gray-500">初始速度 (m/s)</label>
-                    <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="0">
+                    <input id="input-initial-velocity" type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="0">
                   </div>
                   <div>
                     <label class="text-xs text-gray-500">加速度 (m/s²)</label>
-                    <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="10">
+                    <input id="input-acceleration" type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="10">
                   </div>
                   <div>
                     <label class="text-xs text-gray-500">时间 (s)</label>
-                    <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="5">
+                    <input id="input-time" type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="5">
                   </div>
                   <div>
                     <label class="text-xs text-gray-500">质量 (kg)</label>
-                    <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="1">
+                    <input id="input-mass" type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="1">
                   </div>
                 </div>
+                <!-- 动态参数区域（不同题型显示不同字段） -->
+                <div id="dynamic-params" class="mt-3"></div>
               </div>
               
               <button id="generate-animation" class="w-full bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-md transition-colors">
@@ -762,9 +803,18 @@
     let currentTime = 0;
     let isAnimating = false;
     const gravity = 10; // 重力加速度 m/s²
-    const containerHeight = 400; // 容器高度 px
+    // 默认容器高度（桌面端）
+    let containerHeight = 400; // 容器高度 px
     const maxFallDistance = 125; // 最大下落距离 m (5秒自由下落距离)
-    const pixelsPerMeter = containerHeight / maxFallDistance; // 像素每米
+    // 根据当前视口在运行时计算 pixelsPerMeter，以便移动端自适配
+    function computePixelsPerMeter() {
+      // 在窄屏时使用动画容器真实高度（相对单位在 CSS 中已设置为 40vh）
+      const containerEl = document.getElementById('animation-container');
+      const rect = containerEl.getBoundingClientRect();
+      containerHeight = rect.height || containerHeight;
+      return containerHeight / maxFallDistance;
+    }
+    let pixelsPerMeter = computePixelsPerMeter();
     
     // 计算下落距离 (自由落体)
     function calculateDistance(time) {
@@ -778,8 +828,10 @@
     
     // 更新动画状态
     function updateAnimation() {
-      const distance = calculateDistance(currentTime);
-      const velocity = calculateVelocity(currentTime);
+  const distance = calculateDistance(currentTime);
+  const velocity = calculateVelocity(currentTime);
+  // 在每次更新前重新计算像素换算，确保窗口大小变化时动画仍然可视化
+  pixelsPerMeter = computePixelsPerMeter();
       
       // 限制最大下落距离
       if (distance >= maxFallDistance) {
@@ -935,6 +987,308 @@
           }
         }
       });
+    });
+
+    // ========== 新增：题型切换、文字解析、图片上传和多运动类型支持 ==========
+    const questionTypeSelect = document.getElementById('question-type-select');
+    const dynamicParams = document.getElementById('dynamic-params');
+    const descriptionEl = document.getElementById('problem-description');
+    const parseButton = document.getElementById('parse-description');
+    const uploadImageInput = document.getElementById('upload-image');
+    const applyImageButton = document.getElementById('apply-image');
+    const animationContainer = document.getElementById('animation-container');
+
+    // helper: clear dynamic params
+    function clearDynamicParams() {
+      dynamicParams.innerHTML = '';
+    }
+
+    // create input helper
+    function createParamField(id, label, value, type='number') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'mb-2';
+      wrapper.innerHTML = `
+        <label class="text-xs text-gray-500">${label}</label>
+        <input id="${id}" type="${type}" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="${value}">
+      `;
+      return wrapper;
+    }
+
+    // Populate dynamic params depending on type
+    function populateParamsForType(type) {
+      clearDynamicParams();
+      if (type === 'uniform') {
+        dynamicParams.appendChild(createParamField('input-initial-velocity', '初始速度 (m/s)', '0'));
+        dynamicParams.appendChild(createParamField('input-acceleration', '加速度 (m/s^2)', '10'));
+        dynamicParams.appendChild(createParamField('input-time', '时间 (s)', '5'));
+      } else if (type === 'projectile') {
+        dynamicParams.appendChild(createParamField('input-speed', '初速度 (m/s)', '10'));
+        dynamicParams.appendChild(createParamField('input-angle', '角度 (度)', '45'));
+        dynamicParams.appendChild(createParamField('input-height', '初始高度 (m)', '0'));
+      } else if (type === 'circular') {
+        dynamicParams.appendChild(createParamField('input-radius', '半径 (m)', '2'));
+        dynamicParams.appendChild(createParamField('input-angular', '角速度 (rad/s)', '1'));
+      } else if (type === 'collision') {
+        dynamicParams.appendChild(createParamField('input-m1', '质量 m1 (kg)', '1'));
+        dynamicParams.appendChild(createParamField('input-v1', '速度 v1 (m/s)', '2'));
+        dynamicParams.appendChild(createParamField('input-m2', '质量 m2 (kg)', '1'));
+        dynamicParams.appendChild(createParamField('input-v2', '速度 v2 (m/s)', '-1'));
+      } else if (type === 'magnetic') {
+        dynamicParams.appendChild(createParamField('input-charge', '电荷 q (C)', '1e-6', 'text'));
+        dynamicParams.appendChild(createParamField('input-vel', '速度 v (m/s)', '100'));
+        dynamicParams.appendChild(createParamField('input-field', '磁场 B (T)', '0.1'));
+      } else if (type === 'astrodynamics') {
+        dynamicParams.appendChild(createParamField('input-mass-central', '中心天体质量 (kg)', '5.97e24', 'text'));
+        dynamicParams.appendChild(createParamField('input-radius-orbit', '轨道半径 (m)', '7e6', 'text'));
+      }
+    }
+
+    // initial populate
+    populateParamsForType(questionTypeSelect.value || 'uniform');
+
+    questionTypeSelect.addEventListener('change', () => {
+      populateParamsForType(questionTypeSelect.value);
+    });
+
+    // Very small natural-language parser for simple patterns (heuristic)
+    function parseDescriptionToParams(text) {
+      const lower = text.toLowerCase();
+      const num = s => parseFloat((s||'').replace(/[^0-9eE+\-.]/g, ''));
+      const out = {};
+      // gravity
+      const gMatch = text.match(/(g|重力|gravity)\s*[:=]?\s*([0-9\.eE+\-]+)/i);
+      if (gMatch) out.g = num(gMatch[2]);
+      // time
+      const tMatch = text.match(/([0-9\.]+)\s*(s|秒)/i);
+      if (tMatch) out.t = num(tMatch[1]);
+      // initial velocity
+      const v0Match = text.match(/(初速度|v0|v₀|v0\s*=)\s*[:=]?\s*([0-9\.\-]+)/i);
+      if (v0Match) out.v0 = num(v0Match[2]);
+      // acceleration
+      const aMatch = text.match(/(加速度|a|accel)\s*[:=]?\s*([0-9\.\-]+)/i);
+      if (aMatch) out.a = num(aMatch[2]);
+      // angle
+      const angleMatch = text.match(/([0-9\.]+)\s*(deg|度)/i);
+      if (angleMatch) out.angle = num(angleMatch[1]);
+      return out;
+    }
+
+    parseButton.addEventListener('click', () => {
+      const text = descriptionEl.value || '';
+      const parsed = parseDescriptionToParams(text);
+      // apply some parsed values to common inputs
+      if (parsed.v0 !== undefined) {
+        const el = document.getElementById('input-initial-velocity'); if (el) el.value = parsed.v0;
+      }
+      if (parsed.a !== undefined) {
+        const el = document.getElementById('input-acceleration'); if (el) el.value = parsed.a;
+      }
+      if (parsed.t !== undefined) {
+        const el = document.getElementById('input-time'); if (el) el.value = parsed.t;
+      }
+      if (parsed.g !== undefined) {
+        // override gravity used by calculateDistance/Velocity
+        window.GRAVITY_OVERRIDE = parsed.g;
+      }
+      // show a tiny feedback
+      const notice = document.createElement('div');
+      notice.className = 'fixed top-20 right-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+      notice.textContent = '已解析并填充参数（如有）';
+      document.body.appendChild(notice);
+      setTimeout(()=>{ notice.remove(); }, 2000);
+    });
+
+    // Image upload: store selected file as data URL and apply as background of animation container
+    let uploadedImageDataUrl = null;
+    uploadImageInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        uploadedImageDataUrl = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    applyImageButton.addEventListener('click', () => {
+      if (!uploadedImageDataUrl) {
+        const notice = document.createElement('div');
+        notice.className = 'fixed top-20 right-4 bg-yellow-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+        notice.textContent = '请先选择一张图片再应用';
+        document.body.appendChild(notice);
+        setTimeout(()=>{ notice.remove(); }, 2000);
+        return;
+      }
+      animationContainer.style.backgroundImage = `url(${uploadedImageDataUrl})`;
+      animationContainer.style.backgroundSize = 'cover';
+      animationContainer.style.backgroundPosition = 'center';
+    });
+
+    // Motion type dispatch: wrap physics functions to support multiple motions
+    function getParams() {
+      // collect generic params
+      const type = questionTypeSelect.value;
+      const params = { type };
+      // common
+      const v0 = document.getElementById('input-initial-velocity'); if (v0) params.v0 = parseFloat(v0.value || 0);
+      const a = document.getElementById('input-acceleration'); if (a) params.a = parseFloat(a.value || 0);
+      const t = document.getElementById('input-time'); if (t) params.t = parseFloat(t.value || 0);
+      // type-specific
+      if (type === 'projectile') {
+        params.speed = parseFloat((document.getElementById('input-speed')||{}).value || 0);
+        params.angle = parseFloat((document.getElementById('input-angle')||{}).value || 0) * Math.PI/180;
+        params.height = parseFloat((document.getElementById('input-height')||{}).value || 0);
+      }
+      if (type === 'circular') {
+        params.radius = parseFloat((document.getElementById('input-radius')||{}).value || 1);
+        params.angular = parseFloat((document.getElementById('input-angular')||{}).value || 1);
+      }
+      if (type === 'collision') {
+        params.m1 = parseFloat((document.getElementById('input-m1')||{}).value || 1);
+        params.v1 = parseFloat((document.getElementById('input-v1')||{}).value || 0);
+        params.m2 = parseFloat((document.getElementById('input-m2')||{}).value || 1);
+        params.v2 = parseFloat((document.getElementById('input-v2')||{}).value || 0);
+      }
+      if (type === 'magnetic') {
+        params.q = parseFloat((document.getElementById('input-charge')||{}).value || 0);
+        params.v = parseFloat((document.getElementById('input-vel')||{}).value || 0);
+        params.B = parseFloat((document.getElementById('input-field')||{}).value || 0);
+      }
+      if (type === 'astrodynamics') {
+        params.M = parseFloat((document.getElementById('input-mass-central')||{}).value || 5.97e24);
+        params.r = parseFloat((document.getElementById('input-radius-orbit')||{}).value || 7e6);
+      }
+      return params;
+    }
+
+    // Override previous simple physics functions to consult GRAVITY_OVERRIDE if set
+    function effectiveGravity() { return typeof window.GRAVITY_OVERRIDE === 'number' ? window.GRAVITY_OVERRIDE : gravity; }
+
+    // dispatch-based updateAnimation: short-circuit to type-specific routines
+    function updateAnimation() {
+      const params = getParams();
+      if (params.type === 'uniform') {
+        // reuse original free-fall-like logic but with custom acceleration
+        const g = effectiveGravity();
+        const distance = 0.5 * params.a * Math.pow(currentTime, 2) + (params.v0||0) * currentTime;
+        const velocity = (params.v0||0) + (params.a||0) * currentTime;
+        pixelsPerMeter = computePixelsPerMeter();
+        const position = 20 + distance * pixelsPerMeter;
+        animatedObject.style.top = `${position}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(1)}s`;
+        animationVelocity.textContent = `速度: ${velocity.toFixed(1)}m/s`;
+        animationPosition.textContent = `位置: ${distance.toFixed(1)}m`;
+        if (showTrail.checked && currentTime % 0.5 < 0.1) addTrailPoint(position);
+        currentTime += 0.1 / animationSpeed.value;
+        animationId = requestAnimationFrame(updateAnimation);
+      } else if (params.type === 'projectile') {
+        // projectile motion in 2D (x horizontally, y vertically)
+        pixelsPerMeter = computePixelsPerMeter();
+        const vx = params.speed * Math.cos(params.angle || 0);
+        const vy0 = params.speed * Math.sin(params.angle || 0);
+        const y = (params.height || 0) + vy0 * currentTime - 0.5 * effectiveGravity() * Math.pow(currentTime, 2);
+        const x = vx * currentTime;
+        // position mapping: use x to move left-right, y to top-bottom
+        const containerW = animationContainer.clientWidth;
+        const left = Math.min(containerW - 40, Math.max(0, containerW/2 + x * pixelsPerMeter));
+        const top = 20 + Math.max(0, (params.height || 0) + Math.max(0, -y)) * pixelsPerMeter; // simplistic mapping
+        animatedObject.style.left = `${left}px`;
+        animatedObject.style.top = `${top}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(2)}s`;
+        animationVelocity.textContent = `速度垂直: ${(vy0 - effectiveGravity()*currentTime).toFixed(2)}m/s`;
+        animationPosition.textContent = `x: ${x.toFixed(2)}m y: ${y.toFixed(2)}m`;
+        if (showTrail.checked && currentTime % 0.2 < 0.05) addTrailPoint(top);
+        currentTime += 0.05 / animationSpeed.value;
+        if (y < -50) { // left the view
+          stopAnimation(); return;
+        }
+        animationId = requestAnimationFrame(updateAnimation);
+      } else if (params.type === 'circular') {
+        pixelsPerMeter = computePixelsPerMeter();
+        const theta = (params.angular || 1) * currentTime;
+        const r = params.radius || 2;
+        const cx = animationContainer.clientWidth/2;
+        const cy = animationContainer.clientHeight/2;
+        const x = cx + r * pixelsPerMeter * Math.cos(theta);
+        const y = cy + r * pixelsPerMeter * Math.sin(theta);
+        animatedObject.style.left = `${x - 12}px`;
+        animatedObject.style.top = `${y - 12}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(2)}s`;
+        animationVelocity.textContent = `角度: ${theta.toFixed(2)}rad`;
+        animationPosition.textContent = `半径: ${r}m`;
+        currentTime += 0.05 / animationSpeed.value;
+        animationId = requestAnimationFrame(updateAnimation);
+      } else if (params.type === 'collision') {
+        // simple 1D elastic collision visualization: two objects approach center
+        pixelsPerMeter = computePixelsPerMeter();
+        const L = animationContainer.clientWidth;
+        const x1 = L/4 + (params.v1 || 0) * currentTime * pixelsPerMeter;
+        const x2 = L*3/4 + (params.v2 || 0) * currentTime * pixelsPerMeter;
+        // map two objects: we'll reuse animatedObject for the first and create a second if missing
+        animatedObject.style.left = `${x1}px`;
+        // second
+        let obj2 = document.getElementById('animated-object-2');
+        if (!obj2) {
+          obj2 = document.createElement('div');
+          obj2.id = 'animated-object-2';
+          obj2.className = 'absolute w-8 h-8 bg-secondary rounded-full';
+          animationContainer.appendChild(obj2);
+        }
+        obj2.style.top = `${animationContainer.clientHeight/2}px`;
+        obj2.style.left = `${x2}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(2)}s`;
+        currentTime += 0.05 / animationSpeed.value;
+        // stop if they cross
+        if (x1 + 16 >= x2) { stopAnimation(); return; }
+        animationId = requestAnimationFrame(updateAnimation);
+      } else if (params.type === 'magnetic') {
+        // charged particle circular motion approximation
+        pixelsPerMeter = computePixelsPerMeter();
+        const q = params.q || 1e-6;
+        const v = params.v || 100;
+        const B = params.B || 0.1;
+        const m = parseFloat((document.getElementById('input-mass')||{}).value || 1);
+        const r = Math.abs(m * v / (q * B + 1e-12));
+        const omega = v / r;
+        const cx = animationContainer.clientWidth/2;
+        const cy = animationContainer.clientHeight/2;
+        const x = cx + r * pixelsPerMeter * Math.cos(omega * currentTime);
+        const y = cy + r * pixelsPerMeter * Math.sin(omega * currentTime);
+        animatedObject.style.left = `${x - 12}px`;
+        animatedObject.style.top = `${y - 12}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(2)}s`;
+        animationVelocity.textContent = `速率: ${v.toFixed(1)}m/s`;
+        animationPosition.textContent = `半径: ${r.toExponential(2)}m`;
+        currentTime += 0.05 / animationSpeed.value;
+        animationId = requestAnimationFrame(updateAnimation);
+      } else {
+        // default fallback: use original free-fall
+        const distance = calculateDistance(currentTime);
+        const velocity = calculateVelocity(currentTime);
+        pixelsPerMeter = computePixelsPerMeter();
+        const position = 20 + distance * pixelsPerMeter;
+        animatedObject.style.top = `${position}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(1)}s`;
+        animationVelocity.textContent = `速度: ${velocity.toFixed(1)}m/s`;
+        animationPosition.textContent = `位置: ${distance.toFixed(1)}m`;
+        if (showTrail.checked && currentTime % 0.5 < 0.1) addTrailPoint(position);
+        currentTime += 0.1 / animationSpeed.value;
+        animationId = requestAnimationFrame(updateAnimation);
+      }
+    }
+
+    // ensure generate button resets state and uses new updateAnimation
+    generateButton.removeEventListener && generateButton.removeEventListener('click', () => {});
+    generateButton.addEventListener('click', () => {
+      // cleanup any second object if exists
+      const obj2 = document.getElementById('animated-object-2'); if (obj2) obj2.remove();
+      resetAnimation();
+      startAnimation();
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+      notification.textContent = '已根据题目生成可视化';
+      document.body.appendChild(notification);
+      setTimeout(() => { notification.remove(); }, 1600);
     });
   </script>
 </body>
