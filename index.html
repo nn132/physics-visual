@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物理可视化学习平台</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- 配置Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            accent: '#FF7D00',
+            dark: '#1D2129',
+            light: '#F2F3F5'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .scrollbar-hide {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .physics-animation {
+        transition-timing-function: cubic-bezier(0.17, 0.67, 0.83, 0.67);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
+  <!-- 导航栏 -->
+  <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300" id="navbar">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- 品牌标识 -->
+        <div class="flex items-center">
+          <div class="flex-shrink-0 text-primary">
+            <i class="fa fa-cubes text-2xl mr-2"></i>
+            <span class="font-bold text-xl">物理可视化</span>
+          </div>
+        </div>
+        
+        <!-- 导航链接 - 桌面端 -->
+        <nav class="hidden md:flex space-x-8">
+          <a href="#visualization" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">运动可视化</a>
+          <a href="#knowledge" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">知识点库</a>
+          <a href="#question-types" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">题型分类</a>
+          <a href="#help" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">使用帮助</a>
+        </nav>
+        
+        <!-- 用户区域 -->
+        <div class="flex items-center">
+          <button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mr-2">
+            登录
+          </button>
+          <button class="hidden md:block text-gray-700 hover:text-primary">
+            <i class="fa fa-question-circle text-xl"></i>
+          </button>
+          <!-- 移动端菜单按钮 -->
+          <button type="button" class="md:hidden ml-4 text-gray-700 hover:text-primary" id="mobile-menu-button">
+            <i class="fa fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 移动端菜单 -->
+    <div class="md:hidden hidden bg-white shadow-lg absolute w-full" id="mobile-menu">
+      <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <a href="#visualization" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">运动可视化</a>
+        <a href="#knowledge" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">知识点库</a>
+        <a href="#question-types" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">题型分类</a>
+        <a href="#help" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">使用帮助</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow">
+    <!-- 英雄区域 -->
+    <section class="bg-gradient-to-r from-primary/90 to-primary text-white py-16 md:py-24">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl">
+          <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">让物理学习变得直观简单</h1>
+          <p class="text-xl md:text-2xl mb-8 text-white/90">导入物理题目，自动生成运动过程可视化，轻松理解物理概念与解题思路</p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="#visualization" class="bg-white text-primary hover:bg-gray-100 px-6 py-3 rounded-md font-medium text-center transition-colors">
+              开始使用 <i class="fa fa-arrow-right ml-2"></i>
+            </a>
+            <a href="#demo" class="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 rounded-md font-medium text-center transition-colors">
+              查看演示 <i class="fa fa-play-circle ml-2"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 功能特点 -->
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold mb-4">强大功能，助力物理学习</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">专为高中生设计的物理学习工具，让抽象概念变得直观易懂</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- 功能1 -->
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fa fa-line-chart text-primary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">运动过程可视化</h3>
+            <p class="text-gray-600">导入物理题目，自动生成3D或2D运动轨迹，直观展示物体运动过程，标注关键位置和状态。</p>
+          </div>
+          
+          <!-- 功能2 -->
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fa fa-book text-primary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">知识点集成</h3>
+            <p class="text-gray-600">整合高中物理全部知识点，配有详细解析和例题，方便随时查阅，巩固基础。</p>
+          </div>
+          
+          <!-- 功能3 -->
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fa fa-tags text-primary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">题型分类整理</h3>
+            <p class="text-gray-600">按知识点和难度分类整理典型题型，帮助学生掌握各类问题的解题思路和方法。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 运动可视化区域 -->
+    <section id="visualization" class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold mb-4">物理运动可视化</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">导入题目，生成动态演示，直观理解物理过程</p>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+          <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            <!-- 左侧：题目输入区 -->
+            <div class="p-6">
+              <h3 class="text-lg font-semibold mb-4">输入物理题目</h3>
+              
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">题目类型</label>
+                <select class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                  <option>匀变速直线运动</option>
+                  <option>平抛运动</option>
+                  <option>圆周运动</option>
+                  <option>天体运动</option>
+                  <option>碰撞与动量守恒</option>
+                  <option>电磁学运动</option>
+                </select>
+              </div>
+              
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">题目描述</label>
+                <textarea class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-32" placeholder="例如：一个物体从高处自由下落，初始速度为0，重力加速度取10m/s²，求5秒后的速度和下落距离..."></textarea>
+              </div>
+              
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">关键参数</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-xs text-gray-500">初始速度 (m/s)</label>
+                    <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="0">
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500">加速度 (m/s²)</label>
+                    <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="10">
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500">时间 (s)</label>
+                    <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="5">
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500">质量 (kg)</label>
+                    <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="1">
+                  </div>
+                </div>
+              </div>
+              
+              <button id="generate-animation" class="w-full bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-md transition-colors">
+                生成可视化 <i class="fa fa-magic ml-1"></i>
+              </button>
+              
+              <div class="mt-4 text-center text-sm text-gray-500">
+                或 <button class="text-primary hover:underline">上传题目图片</button>
+              </div>
+            </div>
+            
+            <!-- 右侧：可视化展示区 -->
+            <div class="md:col-span-2 p-6 bg-gray-50">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">运动过程演示</h3>
+                <div class="flex space-x-2">
+                  <button id="play-animation" class="bg-primary/10 hover:bg-primary/20 text-primary p-2 rounded-md transition-colors">
+                    <i class="fa fa-play"></i>
+                  </button>
+                  <button id="pause-animation" class="bg-gray-200 hover:bg-gray-300 text-gray-700 p-2 rounded-md transition-colors">
+                    <i class="fa fa-pause"></i>
+                  </button>
+                  <button id="reset-animation" class="bg-gray-200 hover:bg-gray-300 text-gray-700 p-2 rounded-md transition-colors">
+                    <i class="fa fa-refresh"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 动画画布 -->
+              <div id="animation-container" class="bg-white rounded-lg border border-gray-200 h-64 md:h-80 relative overflow-hidden">
+                <!-- 自由落体动画示例 -->
+                <div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-accent rounded-full" id="animated-object"></div>
+                
+                <!-- 地面参考线 -->
+                <div class="absolute bottom-10 left-0 right-0 h-1 bg-gray-400"></div>
+                
+                <!-- 时间标记 -->
+                <div class="absolute left-4 top-4 text-sm text-gray-500" id="animation-time">时间: 0s</div>
+                
+                <!-- 速度标记 -->
+                <div class="absolute left-4 top-10 text-sm text-gray-500" id="animation-velocity">速度: 0m/s</div>
+                
+                <!-- 位置标记 -->
+                <div class="absolute left-4 top-16 text-sm text-gray-500" id="animation-position">位置: 0m</div>
+                
+                <!-- 特殊点标记 (初始位置) -->
+                <div class="absolute top-4 left-1/2 transform -translate-x-1/2 -translate-y-6 text-xs text-gray-500">起点</div>
+              </div>
+              
+              <!-- 控制面板 -->
+              <div class="mt-4 flex flex-wrap gap-4 items-center">
+                <div class="flex items-center">
+                  <label class="text-sm text-gray-600 mr-2">速度:</label>
+                  <input type="range" min="0.1" max="2" step="0.1" value="1" class="w-32" id="animation-speed">
+                </div>
+                
+                <div class="flex items-center">
+                  <label class="text-sm text-gray-600 mr-2">显示轨迹:</label>
+                  <input type="checkbox" checked class="rounded text-primary focus:ring-primary" id="show-trail">
+                </div>
+                
+                <div class="flex items-center">
+                  <label class="text-sm text-gray-600 mr-2">显示网格:</label>
+                  <input type="checkbox" class="rounded text-primary focus:ring-primary" id="show-grid">
+                </div>
+                
+                <button class="ml-auto bg-gray-200 hover:bg-gray-300 text-gray-700 py-1 px-3 rounded-md text-sm transition-colors">
+                  导出动画 <i class="fa fa-download ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 知识点库 -->
+    <section id="knowledge" class="py-16 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold mb-4">物理知识点库</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">系统整理高中物理知识点，随时查阅学习</p>
+        </div>
+        
+        <div class="grid md:grid-cols-4 gap-6">
+          <!-- 知识点分类导航 -->
+          <div class="md:col-span-1">
+            <div class="bg-light rounded-xl p-4 sticky top-24">
+              <h3 class="font-semibold mb-4 pb-2 border-b border-gray-200">知识点分类</h3>
+              <ul class="space-y-1">
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md bg-primary/10 text-primary text-sm font-medium">
+                    运动学
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    力学
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    能量与动量
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    电磁学
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    光学
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    热学
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    近代物理
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- 知识点内容 -->
+          <div class="md:col-span-3">
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h3 class="text-xl font-semibold">匀变速直线运动</h3>
+                  <p class="text-gray-500 text-sm">运动学 > 直线运动</p>
+                </div>
+                <button class="text-gray-400 hover:text-primary">
+                  <i class="fa fa-star-o"></i>
+                </button>
+              </div>
+              
+              <div class="prose max-w-none">
+                <p>物体在一条直线上运动，如果在相等的时间内速度的变化相等，这种运动就叫做匀变速直线运动。</p>
+                
+                <h4 class="text-lg font-medium mt-4 mb-2">基本公式</h4>
+                <div class="bg-gray-50 p-4 rounded-md mb-4">
+                  <p class="mb-2">1. 速度公式：v = v₀ + at</p>
+                  <p class="mb-2">2. 位移公式：s = v₀t + ½at²</p>
+                  <p class="mb-2">3. 速度-位移公式：v² - v₀² = 2as</p>
+                  <p>4. 平均速度公式：v̄ = (v₀ + v)/2 = s/t</p>
+                </div>
+                
+                <h4 class="text-lg font-medium mt-4 mb-2">重要推论</h4>
+                <ul class="list-disc pl-5 mb-4">
+                  <li>在连续相等的时间间隔内的位移之差为一恒量：Δs = aT²</li>
+                  <li>某段时间内的平均速度等于这段时间中间时刻的瞬时速度</li>
+                  <li>某段位移中点的瞬时速度等于初速度和末速度平方和一半的平方根</li>
+                </ul>
+                
+                <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-100">
+                  <div class="flex items-center text-sm text-gray-500">
+                    <span class="mr-4"><i class="fa fa-eye mr-1"></i> 1245</span>
+                    <span><i class="fa fa-bookmark mr-1"></i> 328</span>
+                  </div>
+                  <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                    查看例题 <i class="fa fa-angle-right ml-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 相关知识点 -->
+            <div>
+              <h3 class="font-semibold mb-4">相关知识点</h3>
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                  <h4 class="font-medium mb-1">自由落体运动</h4>
+                  <p class="text-sm text-gray-600">初速度为零，加速度为重力加速度的匀加速直线运动</p>
+                </div>
+                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                  <h4 class="font-medium mb-1">竖直上抛运动</h4>
+                  <p class="text-sm text-gray-600">加速度为重力加速度的匀变速直线运动</p>
+                </div>
+                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                  <h4 class="font-medium mb-1">运动的合成与分解</h4>
+                  <p class="text-sm text-gray-600">遵循平行四边形定则的矢量合成法则</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 题型分类 -->
+    <section id="question-types" class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold mb-4">物理题型分类</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">按知识点和难度整理，掌握各类题型的解题方法</p>
+        </div>
+        
+        <!-- 题型筛选 -->
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-8">
+          <div class="flex flex-wrap gap-3">
+            <button class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium">
+              全部题型
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              基础题
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              中档题
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              难题
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              运动学
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              力学
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              电磁学
+            </button>
+          </div>
+        </div>
+        
+        <!-- 题型列表 -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- 题型1 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">自由落体运动问题</h3>
+                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">基础题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查自由落体运动的速度、位移与时间的关系，重力加速度的应用。</p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动学</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">匀加速</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">公式应用</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 12</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型2 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">平抛运动综合问题</h3>
+                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">中档题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查平抛运动在水平和竖直方向的分解，运动时间与高度的关系。</p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动学</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">曲线运动</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动分解</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 18</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型3 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">传送带问题</h3>
+                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查摩擦力分析、运动状态判断及多过程运动的综合计算。</p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">力学</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">摩擦力</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">多过程</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 15</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型4 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">天体运动问题</h3>
+                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">中档题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查万有引力定律应用，卫星运动参数计算，宇宙速度等知识点。</p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">万有引力</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">圆周运动</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">卫星运动</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 14</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型5 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">碰撞与动量守恒</h3>
+                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查动量守恒定律的应用，弹性碰撞与非弹性碰撞的区别与计算。</p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">动量</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">能量</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">碰撞</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 16</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型6 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">带电粒子在磁场中的运动</h3>
+                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查洛伦兹力、圆周运动半径与周期计算，磁场边界问题分析。</p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">电磁学</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">圆周运动</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">洛伦兹力</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 20</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 加载更多 -->
+        <div class="text-center mt-10">
+          <button class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-md font-medium transition-colors">
+            加载更多题型 <i class="fa fa-angle-down ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 使用帮助 -->
+    <section id="help" class="py-16 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold mb-4">使用帮助</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">快速了解如何使用平台功能</p>
+        </div>
+        
+        <div class="max-w-3xl mx-auto">
+          <div class="space-y-6">
+            <!-- 问题1 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">如何导入物理题目并生成可视化？</h3>
+                <i class="fa fa-minus text-primary"></i>
+              </button>
+              <div class="mt-4 text-gray-600">
+                <p>您可以通过两种方式生成物理运动可视化：</p>
+                <ol class="list-decimal pl-5 mt-2 space-y-1">
+                  <li>在"运动可视化"页面的题目输入区，选择题目类型并填写题目描述和关键参数，点击"生成可视化"按钮</li>
+                  <li>直接上传包含物理题目的图片，系统会自动识别题目内容并提取关键参数生成可视化</li>
+                </ol>
+                <p class="mt-2">生成后，您可以通过播放、暂停、重置按钮控制动画，并可调整动画速度和显示选项。</p>
+              </div>
+            </div>
+            
+            <!-- 问题2 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">平台支持哪些类型的物理题目可视化？</h3>
+                <i class="fa fa-plus text-gray-400"></i>
+              </button>
+            </div>
+            
+            <!-- 问题3 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">如何查找特定的知识点和题型？</h3>
+                <i class="fa fa-plus text-gray-400"></i>
+              </button>
+            </div>
+            
+            <!-- 问题4 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">能否保存和导出可视化动画？</h3>
+                <i class="fa fa-plus text-gray-400"></i>
+              </button>
+            </div>
+            
+            <!-- 问题5 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">平台是否支持自定义物理参数？</h3>
+                <i class="fa fa-plus text-gray-400"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="mt-10 text-center">
+            <p class="text-gray-600 mb-4">还有其他问题？</p>
+            <button class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-colors">
+              联系客服 <i class="fa fa-envelope ml-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white pt-12 pb-6">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <i class="fa fa-cubes text-2xl mr-2"></i>
+            <span class="font-bold text-xl">物理可视化</span>
+          </div>
+          <p class="text-gray-400 text-sm">让高中物理学习变得直观简单，助力学生理解抽象概念，提高学习效率。</p>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold mb-4">功能导航</h3>
+          <ul class="space-y-2 text-gray-400 text-sm">
+            <li><a href="#visualization" class="hover:text-white transition-colors">运动可视化</a></li>
+            <li><a href="#knowledge" class="hover:text-white transition-colors">知识点库</a></li>
+            <li><a href="#question-types" class="hover:text-white transition-colors">题型分类</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">错题本</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">学习计划</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold mb-4">帮助支持</h3>
+          <ul class="space-y-2 text-gray-400 text-sm">
+            <li><a href="#help" class="hover:text-white transition-colors">使用帮助</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">常见问题</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">联系我们</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">意见反馈</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold mb-4">关注我们</h3>
+          <div class="flex space-x-4 mb-4">
+            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-weixin"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-weibo"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-qq"></i>
+            </a>
+          </div>
+          <p class="text-gray-400 text-sm">扫码关注公众号，获取更多学习资源</p>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-700 pt-6 text-center text-gray-500 text-sm">
+        <p>© 2023 物理可视化学习平台 版权所有</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // 移动端菜单切换
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 导航栏滚动效果
+    const navbar = document.getElementById('navbar');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        navbar.classList.add('shadow');
+        navbar.classList.remove('shadow-sm');
+      } else {
+        navbar.classList.remove('shadow');
+        navbar.classList.add('shadow-sm');
+      }
+    });
+    
+    // 动画控制
+    const animatedObject = document.getElementById('animated-object');
+    const animationTime = document.getElementById('animation-time');
+    const animationVelocity = document.getElementById('animation-velocity');
+    const animationPosition = document.getElementById('animation-position');
+    const playButton = document.getElementById('play-animation');
+    const pauseButton = document.getElementById('pause-animation');
+    const resetButton = document.getElementById('reset-animation');
+    const animationSpeed = document.getElementById('animation-speed');
+    const showTrail = document.getElementById('show-trail');
+    const generateButton = document.getElementById('generate-animation');
+    
+    let animationId = null;
+    let currentTime = 0;
+    let isAnimating = false;
+    const gravity = 10; // 重力加速度 m/s²
+    const containerHeight = 400; // 容器高度 px
+    const maxFallDistance = 125; // 最大下落距离 m (5秒自由下落距离)
+    const pixelsPerMeter = containerHeight / maxFallDistance; // 像素每米
+    
+    // 计算下落距离 (自由落体)
+    function calculateDistance(time) {
+      return 0.5 * gravity * Math.pow(time, 2);
+    }
+    
+    // 计算速度
+    function calculateVelocity(time) {
+      return gravity * time;
+    }
+    
+    // 更新动画状态
+    function updateAnimation() {
+      const distance = calculateDistance(currentTime);
+      const velocity = calculateVelocity(currentTime);
+      
+      // 限制最大下落距离
+      if (distance >= maxFallDistance) {
+        stopAnimation();
+        return;
+      }
+      
+      // 更新物体位置 (从顶部下落)
+      const position = 20 + distance * pixelsPerMeter; // 20是初始顶部偏移
+      animatedObject.style.top = `${position}px`;
+      
+      // 更新显示信息
+      animationTime.textContent = `时间: ${currentTime.toFixed(1)}s`;
+      animationVelocity.textContent = `速度: ${velocity.toFixed(1)}m/s`;
+      animationPosition.textContent = `位置: ${distance.toFixed(1)}m`;
+      
+      // 如果显示轨迹，添加轨迹点
+      if (showTrail.checked && currentTime % 0.5 < 0.1) {
+        addTrailPoint(position);
+      }
+      
+      // 增加时间 (基于动画速度)
+      currentTime += 0.1 / animationSpeed.value;
+      
+      // 继续动画
+      animationId = requestAnimationFrame(updateAnimation);
+    }
+    
+    // 添加轨迹点
+    function addTrailPoint(yPosition) {
+      const trailPoint = document.createElement('div');
+      trailPoint.className = 'absolute w-2 h-2 bg-accent/50 rounded-full';
+      trailPoint.style.left = '50%';
+      trailPoint.style.top = `${yPosition}px`;
+      trailPoint.style.transform = 'translateX(-50%)';
+      document.getElementById('animation-container').appendChild(trailPoint);
+      
+      // 轨迹点逐渐消失
+      setTimeout(() => {
+        trailPoint.style.opacity = '0';
+        trailPoint.style.transition = 'opacity 1s';
+        setTimeout(() => trailPoint.remove(), 1000);
+      }, 3000);
+    }
+    
+    // 开始动画
+    function startAnimation() {
+      if (!isAnimating) {
+        isAnimating = true;
+        updateAnimation();
+        playButton.classList.remove('bg-primary/10', 'text-primary');
+        playButton.classList.add('bg-gray-200', 'text-gray-700');
+        pauseButton.classList.remove('bg-gray-200', 'text-gray-700');
+        pauseButton.classList.add('bg-primary/10', 'text-primary');
+      }
+    }
+    
+    // 停止动画
+    function stopAnimation() {
+      if (isAnimating) {
+        isAnimating = false;
+        cancelAnimationFrame(animationId);
+        pauseButton.classList.remove('bg-primary/10', 'text-primary');
+        pauseButton.classList.add('bg-gray-200', 'text-gray-700');
+        playButton.classList.remove('bg-gray-200', 'text-gray-700');
+        playButton.classList.add('bg-primary/10', 'text-primary');
+      }
+    }
+    
+    // 重置动画
+    function resetAnimation() {
+      stopAnimation();
+      currentTime = 0;
+      
+      // 清除轨迹
+      document.querySelectorAll('#animation-container > div:not(#animated-object)').forEach(el => {
+        if (!el.id) el.remove();
+      });
+      
+      // 重置物体位置
+      animatedObject.style.top = '20px';
+      
+      // 重置显示信息
+      animationTime.textContent = '时间: 0s';
+      animationVelocity.textContent = '速度: 0m/s';
+      animationPosition.textContent = '位置: 0m';
+    }
+    
+    // 事件监听
+    playButton.addEventListener('click', startAnimation);
+    pauseButton.addEventListener('click', stopAnimation);
+    resetButton.addEventListener('click', resetAnimation);
+    generateButton.addEventListener('click', () => {
+      resetAnimation();
+      startAnimation();
+      
+      // 显示生成成功提示
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+      notification.textContent = '可视化已生成';
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.5s';
+        setTimeout(() => notification.remove(), 500);
+      }, 2000);
+    });
+    
+    // 帮助部分的折叠/展开功能
+    document.querySelectorAll('#help button').forEach(button => {
+      button.addEventListener('click', () => {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('i');
+        
+        if (content) {
+          content.classList.toggle('hidden');
+          
+          if (content.classList.contains('hidden')) {
+            icon.classList.remove('fa-minus', 'text-primary');
+            icon.classList.add('fa-plus', 'text-gray-400');
+          } else {
+            icon.classList.remove('fa-plus', 'text-gray-400');
+            icon.classList.add('fa-minus', 'text-primary');
+          }
+        }
+      });
+    });
+    
+    // 初始隐藏部分帮助内容
+    document.querySelectorAll('#help > div > div:nth-child(n+2) > div').forEach(content => {
+      if (content.tagName === 'DIV' && !content.classList.contains('hidden')) {
+        content.classList.add('hidden');
+      }
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+          
+          // 关闭移动端菜单
+          if (!mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
