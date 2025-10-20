@@ -1064,6 +1064,53 @@
   const BACKEND_PATH = 'https://physics-visual-worker.yywf08125.workers.dev/api/parse-problem';
     
     /**
+     * 本地简单解析（不依赖后端）
+     * @param {string} text - 题目描述文本
+     * @returns {Object} 解析结果
+     */
+    function parseLocalFallback(text) {
+      const t = text.toLowerCase();
+      
+      // 检测抛体运动
+      if (t.includes('抛') || t.includes('角度') || t.includes('°') || t.includes('度')) {
+        return {
+          success: true,
+          type: 'projectile',
+          params: { speed: 10, angle: 45, height: 0 },
+          reasoning: '检测到抛体运动关键词（本地解析模式）'
+        };
+      }
+      
+      // 检测圆周运动
+      if (t.includes('圆周') || t.includes('角速度') || t.includes('转动')) {
+        return {
+          success: true,
+          type: 'circular',
+          params: { radius: 2, angular: 1 },
+          reasoning: '检测到圆周运动关键词（本地解析模式）'
+        };
+      }
+      
+      // 检测碰撞
+      if (t.includes('碰撞') || t.includes('相撞')) {
+        return {
+          success: true,
+          type: 'collision',
+          params: { m1: 1, v1: 2, m2: 1, v2: -1 },
+          reasoning: '检测到碰撞关键词（本地解析模式）'
+        };
+      }
+      
+      // 默认：自由落体/匀变速
+      return {
+        success: true,
+        type: 'uniform',
+        params: { v0: 0, a: 10, time: 5 },
+        reasoning: '默认为自由落体运动（本地解析模式）'
+      };
+    }
+    
+    /**
      * 调用 AI 后端解析物理题目
      * @param {string} text - 题目描述文本
      * @returns {Promise<Object>} 解析结果 {success, type, params, reasoning}
@@ -1092,11 +1139,11 @@
         const result = await response.json();
         return result;
       } catch (error) {
-        console.error('AI 解析失败:', error);
-        if (error.name === 'AbortError') {
-          throw new Error('请求超时，请检查网络连接');
-        }
-        throw error;
+        console.error('AI 解析失败，尝试本地解析:', error);
+        
+        // 网络失败时自动使用本地解析
+        console.log('使用本地 fallback 解析模式');
+        return parseLocalFallback(text);
       }
     }
     
