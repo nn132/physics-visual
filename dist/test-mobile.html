@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机端 API 测试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: #0070f3;
+            color: white;
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+        }
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+        }
+        .info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+        }
+        .loading {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .device-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 手机端 API 测试工具</h1>
+    
+    <div class="test-box">
+        <h2>设备信息</h2>
+        <div id="device-info" class="device-info"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>测试 1: 网络连接</h2>
+        <button class="btn-primary" onclick="testNetwork()">测试网络连接</button>
+        <div id="network-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>测试 2: Worker API</h2>
+        <button class="btn-primary" onclick="testWorkerAPI()">测试 Worker API</button>
+        <div id="worker-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>测试 3: 完整解析流程</h2>
+        <input type="text" id="test-input" placeholder="输入测试题目" 
+               value="一个物体从静止开始自由下落5秒" 
+               style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        <button class="btn-success" onclick="testFullParse()">完整测试</button>
+        <div id="full-result"></div>
+    </div>
+
+    <script>
+        const WORKER_URL = 'https://physics-visual-worker.yywf08125.workers.dev/api/parse-problem';
+
+        // 显示设备信息
+        function showDeviceInfo() {
+            const info = {
+                'User Agent': navigator.userAgent,
+                '屏幕宽度': window.screen.width + 'px',
+                '屏幕高度': window.screen.height + 'px',
+                '在线状态': navigator.onLine ? '在线' : '离线',
+                '连接类型': navigator.connection ? navigator.connection.effectiveType : '未知'
+            };
+            
+            let html = '';
+            for (const [key, value] of Object.entries(info)) {
+                html += `<div><strong>${key}:</strong> ${value}</div>`;
+            }
+            document.getElementById('device-info').innerHTML = html;
+        }
+
+        // 测试 1: 网络连接
+        async function testNetwork() {
+            const resultDiv = document.getElementById('network-result');
+            resultDiv.innerHTML = '<div class="result loading">⏳ 测试中...</div>';
+            
+            try {
+                const start = Date.now();
+                const response = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
+                const duration = Date.now() - start;
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    resultDiv.innerHTML = `<div class="result success">✅ 网络连接正常\n响应时间: ${duration}ms\n\n${text}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">❌ 网络异常\n状态码: ${response.status}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ 网络测试失败\n错误: ${error.message}</div>`;
+            }
+        }
+
+        // 测试 2: Worker API
+        async function testWorkerAPI() {
+            const resultDiv = document.getElementById('worker-result');
+            resultDiv.innerHTML = '<div class="result loading">⏳ 测试 Worker API...</div>';
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                
+                const start = Date.now();
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ description: '测试' }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                const duration = Date.now() - start;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const formatted = JSON.stringify(data, null, 2);
+                    
+                    if (data.success) {
+                        resultDiv.innerHTML = `<div class="result success">✅ Worker API 正常\n响应时间: ${duration}ms\n\n返回数据:\n${formatted}</div>`;
+                    } else {
+                        resultDiv.innerHTML = `<div class="result error">⚠️ Worker 返回失败\n响应时间: ${duration}ms\n\n${formatted}</div>`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">❌ Worker API 错误\n状态码: ${response.status}\n响应时间: ${duration}ms</div>`;
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    resultDiv.innerHTML = `<div class="result error">❌ 请求超时（30秒）\n可能原因：网络太慢或Worker响应慢</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">❌ Worker API 测试失败\n错误类型: ${error.name}\n错误信息: ${error.message}</div>`;
+                }
+            }
+        }
+
+        // 测试 3: 完整解析流程
+        async function testFullParse() {
+            const input = document.getElementById('test-input').value;
+            const resultDiv = document.getElementById('full-result');
+            
+            if (!input.trim()) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入测试题目</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result loading">⏳ 正在解析题目...</div>';
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                
+                const start = Date.now();
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ description: input }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                const duration = Date.now() - start;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        let html = `<div class="result success">✅ 解析成功！\n响应时间: ${duration}ms\n\n`;
+                        html += `题型: ${data.type}\n`;
+                        html += `参数: ${JSON.stringify(data.params, null, 2)}\n`;
+                        html += `说明: ${data.reasoning}</div>`;
+                        resultDiv.innerHTML = html;
+                    } else {
+                        resultDiv.innerHTML = `<div class="result error">❌ 解析失败\n错误: ${data.error}\n响应时间: ${duration}ms</div>`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">❌ HTTP 错误\n状态码: ${response.status}\n响应时间: ${duration}ms</div>`;
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    resultDiv.innerHTML = `<div class="result error">❌ 请求超时（30秒）\n\n可能原因:\n1. 手机网络太慢\n2. Worker 响应慢\n3. OpenAI API 响应慢\n\n建议:\n- 切换到 WiFi\n- 尝试刷新页面\n- 或使用 Mock 模式</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">❌ 解析失败\n错误类型: ${error.name}\n错误信息: ${error.message}\n\nStack:\n${error.stack}</div>`;
+                }
+            }
+        }
+
+        // 页面加载时显示设备信息
+        window.onload = showDeviceInfo;
+    </script>
+</body>
+</html>
