@@ -1,0 +1,12 @@
+name = "physics-visual-worker"
+main = "./index.js"
+# compatibility_date must not be set in the future relative to Cloudflare.
+# Set to previous day to avoid "Can't set compatibility date in the future" error.
+compatibility_date = "2025-10-19"
+
+[build]
+command = ""
+
+[env.production]
+route = "physics-visual.pages.dev/api/*"
+zone_id = "<YOUR_ZONE_ID>"  # optional for Pages route binding via worker routes
