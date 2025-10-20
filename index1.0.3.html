@@ -1070,13 +1070,20 @@
      */
     async function parseDescriptionWithAI(text) {
       try {
+        // 创建一个带超时的 fetch (30秒超时)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        
         const response = await fetch(BACKEND_PATH, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ description: text })
+          body: JSON.stringify({ description: text }),
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
           throw new Error(`后端返回错误: ${response.status}`);
@@ -1086,6 +1093,9 @@
         return result;
       } catch (error) {
         console.error('AI 解析失败:', error);
+        if (error.name === 'AbortError') {
+          throw new Error('请求超时，请检查网络连接');
+        }
         throw error;
       }
     }
@@ -1157,7 +1167,7 @@
       // 显示加载提示
       parseButton.disabled = true;
       parseButton.textContent = '正在解析...';
-      const loadingNotice = showNotice('AI 正在理解题目，请稍候...', 'info', 0);
+      let loadingNotice = showNotice('AI 正在理解题目，请稍候...', 'info', 0);
       
       try {
         // 调用 AI 后端
@@ -1168,7 +1178,7 @@
           fillFormFromAI(result.type, result.params);
           
           // 显示成功提示（包含推理过程）
-          loadingNotice.remove();
+          if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
           const message = result.reasoning 
             ? `✓ 已识别为【${getTypeNameZh(result.type)}】\n${result.reasoning}`
             : `✓ 已识别为【${getTypeNameZh(result.type)}】并填充参数`;
@@ -1178,7 +1188,8 @@
         }
         
       } catch (error) {
-        loadingNotice.remove();
+        // 确保移除加载提示
+        if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
         console.error('解析错误:', error);
         
         // 如果后端不可用，根据后端配置给出更精确的提示
@@ -1196,8 +1207,12 @@
         showNotice(errorMsg, 'error', 7000);
         
       } finally {
+        // 确保无论如何都恢复按钮状态并移除加载提示
         parseButton.disabled = false;
         parseButton.textContent = '从文字解析参数';
+        if (loadingNotice && loadingNotice.remove) {
+          try { loadingNotice.remove(); } catch(e) {}
+        }
       }
     });
     
