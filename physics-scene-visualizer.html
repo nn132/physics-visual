@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物理场景可视化 - 专业模式</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --accent: #f59e0b;
+    }
+    
+    body {
+      font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+    }
+    
+    #scene-canvas {
+      background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
+      box-shadow: inset 0 0 50px rgba(59, 130, 246, 0.1);
+    }
+    
+    .data-panel {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .vector-arrow {
+      stroke: #ef4444;
+      stroke-width: 2;
+      fill: #ef4444;
+      marker-end: url(#arrowhead);
+    }
+    
+    .trail-point {
+      animation: fade-out 2s ease-out forwards;
+    }
+    
+    @keyframes fade-out {
+      from { opacity: 0.8; }
+      to { opacity: 0; }
+    }
+    
+    .glow {
+      filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- 顶部导航 -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-atom text-primary text-2xl"></i>
+        <h1 class="text-xl font-bold">物理场景可视化</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="index1.0.3.html" class="text-sm text-gray-600 hover:text-primary">
+          <i class="fas fa-cog mr-1"></i>参数模式
+        </a>
+        <button id="toggle-fullscreen" class="text-sm text-gray-600 hover:text-primary">
+          <i class="fas fa-expand mr-1"></i>全屏
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto px-4 py-6">
+    <div class="grid lg:grid-cols-4 gap-6">
+      
+      <!-- 左侧：场景选择面板 -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-md p-6 sticky top-20">
+          <h2 class="text-lg font-bold mb-4 pb-3 border-b">
+            <i class="fas fa-film text-primary mr-2"></i>物理场景
+          </h2>
+          
+          <div class="space-y-2">
+            <button class="scene-btn active w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors border-2" data-scene="freefall">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-arrow-down text-blue-600"></i>
+                </div>
+                <div>
+                  <div class="font-medium">自由落体</div>
+                  <div class="text-xs text-gray-500">Free Fall</div>
+                </div>
+              </div>
+            </button>
+            
+            <button class="scene-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors border-2 border-transparent" data-scene="projectile">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-baseball-ball text-orange-600"></i>
+                </div>
+                <div>
+                  <div class="font-medium">平抛运动</div>
+                  <div class="text-xs text-gray-500">Projectile Motion</div>
+                </div>
+              </div>
+            </button>
+            
+            <button class="scene-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors border-2 border-transparent" data-scene="incline">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-chart-line text-purple-600"></i>
+                </div>
+                <div>
+                  <div class="font-medium">斜面运动</div>
+                  <div class="text-xs text-gray-500">Inclined Plane</div>
+                </div>
+              </div>
+            </button>
+            
+            <button class="scene-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors border-2 border-transparent" data-scene="pendulum">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-circle-notch text-green-600"></i>
+                </div>
+                <div>
+                  <div class="font-medium">单摆运动</div>
+                  <div class="text-xs text-gray-500">Pendulum</div>
+                </div>
+              </div>
+            </button>
+            
+            <button class="scene-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors border-2 border-transparent" data-scene="collision">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-circle text-red-600"></i>
+                </div>
+                <div>
+                  <div class="font-medium">碰撞</div>
+                  <div class="text-xs text-gray-500">Collision</div>
+                </div>
+              </div>
+            </button>
+            
+            <button class="scene-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors border-2 border-transparent" data-scene="complex-track">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-road text-pink-600"></i>
+                </div>
+                <div>
+                  <div class="font-medium">复合轨道</div>
+                  <div class="text-xs text-gray-500">Complex Track</div>
+                </div>
+              </div>
+            </button>
+          </div>
+          
+          <!-- 参数调节 -->
+          <div class="mt-6 pt-6 border-t">
+            <h3 class="font-medium mb-3 text-sm">
+              <i class="fas fa-sliders-h text-gray-500 mr-2"></i>参数调节
+            </h3>
+            <div id="scene-params" class="space-y-3">
+              <!-- 动态生成参数控制 -->
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 中间：可视化画布 -->
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+          <!-- 工具栏 -->
+          <div class="bg-gray-50 px-6 py-3 border-b flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <button id="play-btn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-play mr-2"></i>播放
+              </button>
+              <button id="pause-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors hidden">
+                <i class="fas fa-pause mr-2"></i>暂停
+              </button>
+              <button id="reset-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-redo mr-2"></i>重置
+              </button>
+            </div>
+            
+            <div class="flex items-center gap-4">
+              <label class="flex items-center text-sm text-gray-600">
+                <input type="checkbox" id="show-vectors" checked class="mr-2 rounded">
+                显示力矢量
+              </label>
+              <label class="flex items-center text-sm text-gray-600">
+                <input type="checkbox" id="show-trail" checked class="mr-2 rounded">
+                显示轨迹
+              </label>
+              <label class="flex items-center text-sm text-gray-600">
+                <input type="checkbox" id="show-grid" class="mr-2 rounded">
+                显示网格
+              </label>
+            </div>
+          </div>
+          
+          <!-- Canvas 画布 -->
+          <div class="relative bg-gradient-to-b from-sky-100 to-sky-50" style="height: 600px;">
+            <canvas id="scene-canvas" class="w-full h-full"></canvas>
+            
+            <!-- SVG 层（用于绘制矢量箭头） -->
+            <svg id="vector-layer" class="absolute inset-0 pointer-events-none w-full h-full">
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <polygon points="0 0, 10 3, 0 6" fill="#ef4444" />
+                </marker>
+              </defs>
+            </svg>
+            
+            <!-- 数据面板 -->
+            <div class="absolute top-4 left-4 data-panel rounded-lg p-4 shadow-lg min-w-[200px]">
+              <div class="text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-chart-bar text-primary mr-2"></i>实时数据
+              </div>
+              <div class="space-y-1 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">时间:</span>
+                  <span id="data-time" class="font-mono font-medium">0.00 s</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">位移:</span>
+                  <span id="data-position" class="font-mono font-medium">0.00 m</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">速度:</span>
+                  <span id="data-velocity" class="font-mono font-medium">0.00 m/s</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">加速度:</span>
+                  <span id="data-acceleration" class="font-mono font-medium">9.8 m/s²</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 场景说明 -->
+            <div class="absolute bottom-4 right-4 data-panel rounded-lg p-4 shadow-lg max-w-xs">
+              <div id="scene-description" class="text-sm text-gray-700">
+                选择一个物理场景开始可视化演示
+              </div>
+            </div>
+          </div>
+          
+          <!-- 速度控制 -->
+          <div class="bg-gray-50 px-6 py-3 border-t flex items-center gap-4">
+            <label class="text-sm text-gray-600 whitespace-nowrap">播放速度:</label>
+            <input type="range" id="speed-slider" min="0.1" max="2" step="0.1" value="1" class="flex-1">
+            <span id="speed-value" class="text-sm font-mono text-gray-700 w-12">1.0x</span>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    // ========== 场景可视化引擎 ==========
+    const canvas = document.getElementById('scene-canvas');
+    const ctx = canvas.getContext('2d');
+    const vectorLayer = document.getElementById('vector-layer');
+    
+    // 设置 Canvas 尺寸
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // 全局状态
+    let animationId = null;
+    let currentScene = null;
+    let time = 0;
+    let isPlaying = false;
+    let speed = 1;
+    let showVectors = true;
+    let showTrail = true;
+    let showGrid = false;
+    
+    // 物理常量
+    const g = 9.8; // 重力加速度 m/s²
+    
+    // ========== 场景定义 ==========
+    
+    class FreeFallScene {
+      constructor() {
+        this.name = "自由落体";
+        this.description = "物体在重力作用下从静止开始下落，加速度恒定为g=9.8m/s²";
+        this.h0 = 50; // 初始高度(m)
+        this.scale = canvas.height / 80; // 像素/米比例
+        this.trail = [];
+      }
+      
+      reset() {
+        this.trail = [];
+      }
+      
+      update(t) {
+        // 自由落体公式: h = h0 - 0.5*g*t²
+        const h = this.h0 - 0.5 * g * t * t;
+        const v = g * t; // v = g*t
+        
+        return {
+          x: canvas.width / 2,
+          y: canvas.height - h * this.scale - 30,
+          vx: 0,
+          vy: v,
+          stopped: h <= 0
+        };
+      }
+      
+      draw(state) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制网格
+        if (showGrid) this.drawGrid();
+        
+        // 绘制地面
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+        ctx.fillStyle = '#059669';
+        for (let i = 0; i < canvas.width; i += 20) {
+          ctx.fillRect(i, canvas.height - 30, 10, 5);
+        }
+        
+        // 绘制起始高度标记
+        const y0 = canvas.height - this.h0 * this.scale - 30;
+        ctx.strokeStyle = '#94a3b8';
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(0, y0);
+        ctx.lineTo(canvas.width, y0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px Arial';
+        ctx.fillText(`h₀ = ${this.h0}m`, 10, y0 - 5);
+        
+        // 绘制轨迹
+        if (showTrail) {
+          this.trail.push({ x: state.x, y: state.y, time: Date.now() });
+          this.trail = this.trail.filter(p => Date.now() - p.time < 2000);
+          
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.3)';
+          this.trail.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+        
+        // 绘制物体（带光晕效果）
+        const gradient = ctx.createRadialGradient(state.x, state.y, 0, state.x, state.y, 20);
+        gradient.addColorStop(0, '#f59e0b');
+        gradient.addColorStop(0.7, '#f59e0b');
+        gradient.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(state.x, state.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(state.x, state.y, 12, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 绘制重力矢量
+        if (showVectors) {
+          this.drawVector(state.x, state.y, 0, 60, '#ef4444', 'F_g');
+        }
+      }
+      
+      drawVector(x, y, dx, dy, color, label) {
+        const svg = vectorLayer;
+        svg.innerHTML = '';
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x);
+        line.setAttribute('y1', y);
+        line.setAttribute('x2', x + dx);
+        line.setAttribute('y2', y + dy);
+        line.setAttribute('class', 'vector-arrow');
+        line.setAttribute('stroke', color);
+        svg.appendChild(line);
+        
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', x + dx + 10);
+        text.setAttribute('y', y + dy);
+        text.setAttribute('fill', color);
+        text.setAttribute('font-size', '14');
+        text.setAttribute('font-weight', 'bold');
+        text.textContent = label;
+        svg.appendChild(text);
+      }
+      
+      drawGrid() {
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 40) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 40) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+      }
+      
+      getParams() {
+        return {
+          h0: { label: '初始高度', value: this.h0, min: 10, max: 100, unit: 'm' }
+        };
+      }
+      
+      setParam(key, value) {
+        this[key] = parseFloat(value);
+        this.scale = canvas.height / 80;
+      }
+    }
+    
+    // ========== 场景管理器 ==========
+    const scenes = {
+      freefall: null, // 稍后初始化
+      'complex-track': null, // 稍后初始化
+    };
+    
+    // ========== 复合轨道场景（模拟题目配图）==========
+    class ComplexTrackScene {
+      constructor() {
+        this.name = "复合轨道运动";
+        this.description = "物体从A点以初速度v₁抛出，经过圆形轨道、水平滑板和圆弧轨道，综合考察平抛、圆周、能量守恒等知识点";
+        
+        // 物理参数
+        this.R = 40; // 基础半径(像素)
+        this.v1 = 15; // A点初速度(m/s)
+        this.mu = 0.2; // 摩擦系数
+        this.m = 1; // 质量(kg)
+        
+        // 轨道参数（像素坐标）
+        this.trackScale = 3; // 比例尺: 1m = 3px
+        
+        // 轨道段定义
+        this.initTrackSegments();
+        
+        // 运动状态
+        this.phase = 'throw'; // throw, arc1, slide, arc2, fall
+        this.position = { x: 0, y: 0 };
+        this.velocity = { vx: 0, vy: 0 };
+        this.trail = [];
+      }
+      
+      initTrackSegments() {
+        const centerY = canvas.height - 150;
+        const R = this.R;
+        
+        // A点（抛出点）
+        this.pointA = { x: canvas.width - 100, y: centerY - 3 * R };
+        
+        // D点（1/4圆轨道底部）
+        this.arc1Center = { x: 200, y: centerY - R };
+        this.pointD = { x: 200, y: centerY };
+        this.pointE = { x: 200 - R, y: centerY - R };
+        
+        // M点（滑板起点）
+        this.pointM = { x: 250, y: centerY };
+        
+        // C点（滑板终点，圆弧起点）
+        this.pointC = { x: 250 + 6.5 * R, y: centerY };
+        
+        // 圆弧O₁B
+        this.arc2Center = { x: this.pointC.x + R, y: centerY - R };
+        this.pointO1 = { x: this.pointC.x, y: centerY - R };
+        this.pointB = { x: this.arc2Center.x + R, y: centerY };
+      }
+      
+      reset() {
+        this.phase = 'throw';
+        this.position = { ...this.pointA };
+        this.velocity = { vx: -this.v1 / Math.sqrt(2), vy: -this.v1 / Math.sqrt(2) };
+        this.trail = [];
+        this.throwStartTime = 0;
+      }
+      
+      update(t) {
+        const dt = 0.016;
+        
+        if (this.phase === 'throw') {
+          // 平抛运动
+          this.position.x += this.velocity.vx * dt * this.trackScale;
+          this.position.y += this.velocity.vy * dt * this.trackScale;
+          this.velocity.vy += g * dt;
+          
+          // 检测是否进入圆弧轨道
+          const dist = Math.sqrt(
+            Math.pow(this.position.x - this.arc1Center.x, 2) +
+            Math.pow(this.position.y - this.arc1Center.y, 2)
+          );
+          
+          if (dist <= this.R + 5 && this.position.x < this.arc1Center.x) {
+            this.phase = 'arc1';
+            // 计算切入角度
+            const angle = Math.atan2(
+              this.position.y - this.arc1Center.y,
+              this.position.x - this.arc1Center.x
+            );
+            this.angle = angle;
+          }
+          
+        } else if (this.phase === 'arc1') {
+          // 圆周运动（1/4圆）
+          const v = Math.sqrt(this.velocity.vx ** 2 + this.velocity.vy ** 2);
+          const angularV = v / this.R * this.trackScale;
+          this.angle += angularV * dt;
+          
+          this.position.x = this.arc1Center.x + this.R * Math.cos(this.angle);
+          this.position.y = this.arc1Center.y + this.R * Math.sin(this.angle);
+          
+          // 检测是否到达D点（底部）
+          if (this.angle >= Math.PI / 2) {
+            this.phase = 'slide';
+            this.position = { ...this.pointM };
+            this.velocity = { vx: v, vy: 0 };
+          }
+          
+        } else if (this.phase === 'slide') {
+          // 水平滑动（有摩擦）
+          const friction = this.mu * this.m * g;
+          const a = -friction / this.m;
+          
+          this.velocity.vx += a * dt;
+          if (this.velocity.vx < 0) this.velocity.vx = 0;
+          
+          this.position.x += this.velocity.vx * dt * this.trackScale;
+          this.position.y = this.pointM.y;
+          
+          // 检测是否到达C点
+          if (this.position.x >= this.pointC.x) {
+            this.phase = 'arc2';
+            this.angle = Math.PI;
+          }
+          
+        } else if (this.phase === 'arc2') {
+          // 圆弧运动
+          const v = Math.abs(this.velocity.vx);
+          const angularV = v / this.R * this.trackScale;
+          this.angle -= angularV * dt;
+          
+          this.position.x = this.arc2Center.x + this.R * Math.cos(this.angle);
+          this.position.y = this.arc2Center.y + this.R * Math.sin(this.angle);
+          
+          if (this.angle <= 0) {
+            this.phase = 'fall';
+            this.velocity = { vx: 0, vy: v };
+          }
+          
+        } else if (this.phase === 'fall') {
+          // 自由落体
+          this.position.y += this.velocity.vy * dt * this.trackScale;
+          this.velocity.vy += g * dt;
+        }
+        
+        return {
+          x: this.position.x,
+          y: this.position.y,
+          vx: this.velocity.vx,
+          vy: this.velocity.vy,
+          stopped: this.position.y > canvas.height + 50
+        };
+      }
+      
+      draw(state) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制网格
+        if (showGrid) this.drawGrid();
+        
+        // 绘制轨道
+        this.drawTracks();
+        
+        // 绘制尺寸标注
+        this.drawDimensions();
+        
+        // 绘制轨迹
+        if (showTrail) {
+          this.trail.push({ x: state.x, y: state.y, time: Date.now() });
+          this.trail = this.trail.filter(p => Date.now() - p.time < 3000);
+          
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          this.trail.forEach((p, i) => {
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.stroke();
+        }
+        
+        // 绘制物体（方块）
+        ctx.save();
+        ctx.translate(state.x, state.y);
+        
+        // 阴影
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 5;
+        
+        // 方块
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillRect(-10, -10, 20, 20);
+        
+        // 边框
+        ctx.strokeStyle = '#1e40af';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-10, -10, 20, 20);
+        
+        // 字母A标记
+        ctx.shadowColor = 'transparent';
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('A', 0, 0);
+        
+        ctx.restore();
+        
+        // 绘制速度矢量
+        if (showVectors && (state.vx !== 0 || state.vy !== 0)) {
+          this.drawVelocityVector(state);
+        }
+      }
+      
+      drawTracks() {
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 3;
+        
+        // 1. 绘制1/4圆轨道 (D-E)
+        ctx.beginPath();
+        ctx.arc(
+          this.arc1Center.x,
+          this.arc1Center.y,
+          this.R,
+          Math.PI / 2,
+          Math.PI,
+          false
+        );
+        ctx.stroke();
+        
+        // 2. 绘制水平滑板 (M-C)
+        ctx.beginPath();
+        ctx.moveTo(this.pointM.x, this.pointM.y);
+        ctx.lineTo(this.pointC.x, this.pointC.y);
+        ctx.stroke();
+        
+        // 滑板纹理
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        for (let x = this.pointM.x; x < this.pointC.x; x += 15) {
+          ctx.beginPath();
+          ctx.moveTo(x, this.pointM.y - 3);
+          ctx.lineTo(x + 7, this.pointM.y + 3);
+          ctx.stroke();
+        }
+        
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 3;
+        
+        // 3. 绘制圆弧轨道 (C-B)
+        ctx.beginPath();
+        ctx.arc(
+          this.arc2Center.x,
+          this.arc2Center.y,
+          this.R,
+          Math.PI / 2,
+          0,
+          true
+        );
+        ctx.stroke();
+        
+        // 4. 绘制地面
+        const groundY = this.pointD.y + 30;
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(0, groundY, canvas.width, 30);
+        ctx.fillStyle = '#059669';
+        for (let i = 0; i < canvas.width; i += 20) {
+          ctx.fillRect(i, groundY, 10, 5);
+        }
+        
+        // 5. 绘制关键点标记
+        this.drawPoint(this.pointA.x, this.pointA.y, 'A', 'above');
+        this.drawPoint(this.pointE.x - this.R, this.pointE.y, 'E', 'left');
+        this.drawPoint(this.pointD.x, this.pointD.y + 5, 'D', 'below');
+        this.drawPoint(this.pointM.x, this.pointM.y + 5, 'M', 'below');
+        this.drawPoint(this.pointC.x, this.pointC.y + 5, 'C', 'below');
+        this.drawPoint(this.pointO1.x, this.pointO1.y, 'O₁', 'above');
+        this.drawPoint(this.pointB.x, this.pointB.y + 5, 'B', 'below');
+      }
+      
+      drawPoint(x, y, label, position = 'above') {
+        // 绘制圆点
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 绘制标签
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        
+        let offsetY = position === 'above' ? -12 : 18;
+        if (position === 'left') {
+          ctx.textAlign = 'right';
+          offsetY = 5;
+        }
+        
+        ctx.fillText(label, position === 'left' ? x - 10 : x, y + offsetY);
+      }
+      
+      drawDimensions() {
+        ctx.strokeStyle = '#94a3b8';
+        ctx.fillStyle = '#64748b';
+        ctx.lineWidth = 1;
+        ctx.font = '12px Arial';
+        
+        // L 标注
+        const Lx = (this.pointD.x + this.pointM.x) / 2;
+        const Ly = this.pointD.y + 40;
+        this.drawDimensionLine(this.pointD.x, Ly, this.pointM.x, Ly, 'L');
+        
+        // 6.5R 标注
+        const slideX = (this.pointM.x + this.pointC.x) / 2;
+        const slideY = this.pointM.y + 40;
+        this.drawDimensionLine(this.pointM.x, slideY, this.pointC.x, slideY, '6.5R');
+        
+        // R 标注（圆弧半径）
+        ctx.strokeStyle = '#94a3b8';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(this.arc2Center.x, this.arc2Center.y);
+        ctx.lineTo(this.pointO1.x, this.pointO1.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = '#64748b';
+        ctx.textAlign = 'center';
+        ctx.fillText('R', (this.arc2Center.x + this.pointO1.x) / 2 - 10, (this.arc2Center.y + this.pointO1.y) / 2);
+        
+        // 3R 高度标注
+        const heightX = this.pointB.x + 30;
+        this.drawDimensionLine(heightX, this.pointB.y, heightX, this.pointB.y - 3 * this.R, '3R', true);
+        
+        // v₁ 箭头
+        ctx.strokeStyle = '#ef4444';
+        ctx.fillStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        this.drawArrow(this.pointA.x - 30, this.pointA.y - 20, this.pointA.x - 60, this.pointA.y - 20);
+        ctx.font = 'italic bold 14px Arial';
+        ctx.fillText('v₁', this.pointA.x - 75, this.pointA.y - 20);
+      }
+      
+      drawDimensionLine(x1, y1, x2, y2, label, vertical = false) {
+        ctx.strokeStyle = '#94a3b8';
+        ctx.fillStyle = '#64748b';
+        
+        // 主线
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        
+        // 端点箭头
+        const arrowSize = 5;
+        if (vertical) {
+          // 上箭头
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x1 - arrowSize, y1 + arrowSize);
+          ctx.lineTo(x1 + arrowSize, y1 + arrowSize);
+          ctx.closePath();
+          ctx.fill();
+          
+          // 下箭头
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - arrowSize, y2 - arrowSize);
+          ctx.lineTo(x2 + arrowSize, y2 - arrowSize);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // 左箭头
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x1 + arrowSize, y1 - arrowSize);
+          ctx.lineTo(x1 + arrowSize, y1 + arrowSize);
+          ctx.closePath();
+          ctx.fill();
+          
+          // 右箭头
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - arrowSize, y2 - arrowSize);
+          ctx.lineTo(x2 - arrowSize, y2 + arrowSize);
+          ctx.closePath();
+          ctx.fill();
+        }
+        
+        // 标签
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        ctx.fillText(label, midX, vertical ? midY : midY - 8);
+      }
+      
+      drawArrow(x1, y1, x2, y2) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const arrowSize = 8;
+        
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(
+          x2 - arrowSize * Math.cos(angle - Math.PI / 6),
+          y2 - arrowSize * Math.sin(angle - Math.PI / 6)
+        );
+        ctx.lineTo(
+          x2 - arrowSize * Math.cos(angle + Math.PI / 6),
+          y2 - arrowSize * Math.sin(angle + Math.PI / 6)
+        );
+        ctx.closePath();
+        ctx.fill();
+      }
+      
+      drawVelocityVector(state) {
+        const scale = 3;
+        vectorLayer.innerHTML = '';
+        
+        const vx = state.vx * scale;
+        const vy = state.vy * scale;
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', state.x);
+        line.setAttribute('y1', state.y);
+        line.setAttribute('x2', state.x + vx);
+        line.setAttribute('y2', state.y + vy);
+        line.setAttribute('class', 'vector-arrow');
+        line.setAttribute('stroke', '#10b981');
+        vectorLayer.appendChild(line);
+        
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', state.x + vx + 10);
+        text.setAttribute('y', state.y + vy);
+        text.setAttribute('fill', '#10b981');
+        text.setAttribute('font-size', '14');
+        text.setAttribute('font-weight', 'bold');
+        text.textContent = 'v';
+        vectorLayer.appendChild(text);
+      }
+      
+      drawGrid() {
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 40) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 40) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+      }
+      
+      getParams() {
+        return {
+          v1: { label: '初速度v₁', value: this.v1, min: 5, max: 30, unit: 'm/s' },
+          mu: { label: '摩擦系数μ', value: this.mu, min: 0, max: 0.5, unit: '' },
+          R: { label: '半径R', value: this.R, min: 20, max: 60, unit: 'px' }
+        };
+      }
+      
+      setParam(key, value) {
+        this[key] = parseFloat(value);
+        if (key === 'R') {
+          this.initTrackSegments();
+        }
+      }
+    };
+    
+    // 初始化所有场景
+    scenes.freefall = new FreeFallScene();
+    scenes['complex-track'] = new ComplexTrackScene();
+    
+    function loadScene(sceneName) {
+      currentScene = scenes[sceneName];
+      if (!currentScene) {
+        console.error('场景不存在:', sceneName);
+        return;
+      }
+      
+      time = 0;
+      currentScene.reset();
+      document.getElementById('scene-description').textContent = currentScene.description;
+      
+      // 更新参数面板
+      const paramsDiv = document.getElementById('scene-params');
+      paramsDiv.innerHTML = '';
+      const params = currentScene.getParams();
+      Object.entries(params).forEach(([key, param]) => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label class="text-xs text-gray-600 block mb-1">${param.label}</label>
+          <div class="flex items-center gap-2">
+            <input type="range" 
+                   class="flex-1 param-slider" 
+                   data-key="${key}"
+                   min="${param.min}" 
+                   max="${param.max}" 
+                   step="${(param.max - param.min) / 100}" 
+                   value="${param.value}">
+            <span class="text-xs font-mono w-16">${param.value}${param.unit}</span>
+          </div>
+        `;
+        paramsDiv.appendChild(div);
+      });
+      
+      // 绑定参数变化
+      document.querySelectorAll('.param-slider').forEach(slider => {
+        slider.addEventListener('input', (e) => {
+          const key = e.target.dataset.key;
+          const value = e.target.value;
+          currentScene.setParam(key, value);
+          e.target.nextElementSibling.textContent = `${parseFloat(value).toFixed(1)}${params[key].unit}`;
+          if (!isPlaying) {
+            const state = currentScene.update(time);
+            currentScene.draw(state);
+          }
+        });
+      });
+      
+      // 绘制初始状态
+      const state = currentScene.update(0);
+      currentScene.draw(state);
+      updateDataPanel(state, 0);
+    }
+    
+    // ========== 动画循环 ==========
+    function animate() {
+      if (!isPlaying || !currentScene) return;
+      
+      time += 0.016 * speed; // 60fps * speed
+      
+      const state = currentScene.update(time);
+      currentScene.draw(state);
+      updateDataPanel(state, time);
+      
+      if (state.stopped) {
+        pause();
+        return;
+      }
+      
+      animationId = requestAnimationFrame(animate);
+    }
+    
+    function updateDataPanel(state, t) {
+      document.getElementById('data-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('data-position').textContent = ((state.y - canvas.height + 30) / -currentScene.scale).toFixed(2) + ' m';
+      document.getElementById('data-velocity').textContent = state.vy.toFixed(2) + ' m/s';
+    }
+    
+    function play() {
+      isPlaying = true;
+      document.getElementById('play-btn').classList.add('hidden');
+      document.getElementById('pause-btn').classList.remove('hidden');
+      animate();
+    }
+    
+    function pause() {
+      isPlaying = false;
+      document.getElementById('play-btn').classList.remove('hidden');
+      document.getElementById('pause-btn').classList.add('hidden');
+      if (animationId) cancelAnimationFrame(animationId);
+    }
+    
+    function reset() {
+      pause();
+      time = 0;
+      if (currentScene) {
+        currentScene.reset();
+        const state = currentScene.update(0);
+        currentScene.draw(state);
+        updateDataPanel(state, 0);
+      }
+    }
+    
+    // ========== 事件绑定 ==========
+    document.getElementById('play-btn').addEventListener('click', play);
+    document.getElementById('pause-btn').addEventListener('click', pause);
+    document.getElementById('reset-btn').addEventListener('click', reset);
+    
+    document.getElementById('show-vectors').addEventListener('change', (e) => {
+      showVectors = e.target.checked;
+    });
+    
+    document.getElementById('show-trail').addEventListener('change', (e) => {
+      showTrail = e.target.checked;
+    });
+    
+    document.getElementById('show-grid').addEventListener('change', (e) => {
+      showGrid = e.target.checked;
+      if (currentScene) {
+        const state = currentScene.update(time);
+        currentScene.draw(state);
+      }
+    });
+    
+    document.getElementById('speed-slider').addEventListener('input', (e) => {
+      speed = parseFloat(e.target.value);
+      document.getElementById('speed-value').textContent = speed.toFixed(1) + 'x';
+    });
+    
+    document.getElementById('toggle-fullscreen').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+    
+    // 场景切换
+    document.querySelectorAll('.scene-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.scene-btn').forEach(b => {
+          b.classList.remove('active', 'border-primary', 'bg-blue-50');
+          b.classList.add('border-transparent');
+        });
+        btn.classList.add('active', 'border-primary', 'bg-blue-50');
+        btn.classList.remove('border-transparent');
+        
+        const sceneName = btn.dataset.scene;
+        loadScene(sceneName);
+      });
+    });
+    
+    // 初始化默认场景
+    loadScene('freefall');
+  </script>
+
+</body>
+</html>

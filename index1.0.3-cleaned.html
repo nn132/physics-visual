@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物理可视化学习平�?/title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <!-- Mammoth.js for client-side .docx parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
+  <!-- gif.js for GIF export -->
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  
+  
+  <!-- 配置Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            accent: '#FF7D00',
+            dark: '#1D2129',
+            light: '#F2F3F5'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .scrollbar-hide {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .physics-animation {
+        transition-timing-function: cubic-bezier(0.17, 0.67, 0.83, 0.67);
+      }
+      
+      /* 全屏模式样式 */
+      #animation-container.fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        border-radius: 0 !important;
+        min-height: 100vh !important;
+      }
+      
+      #animation-container.fullscreen #physics-canvas {
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+      
+      /* 全屏时隐藏其他元�?*/
+      body.fullscreen-active > *:not(#animation-container) {
+        display: none !important;
+      }
+      
+      /* 全屏退出按�?*/
+      .fullscreen-exit-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+      
+      .fullscreen-exit-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: scale(1.05);
+      }
+    }
+  </style>
+  <!-- 手机端额外样式：只新增，不修改现有桌面样�?-->
+  <style>
+    /* 保持桌面端完全不变；以下规则只在窄屏（手机）生效 */
+    @media (max-width: 768px) {
+      /* 导航：确保品牌、按钮在一行且菜单更紧�?*/
+      #navbar .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+      #navbar .font-bold { font-size: 1rem; }
+
+      /* 英雄区：文字和按钮更紧凑，避免换�?*/
+      section.bg-gradient-to-r h1 { font-size: 1.75rem; }
+      section.bg-gradient-to-r p { font-size: 1rem; }
+      section.bg-gradient-to-r .flex { flex-direction: column; }
+      section.bg-gradient-to-r .flex a { width: 100%; }
+
+      /* 功能卡和列表：单列显示，内边距微�?*/
+      .grid.md\:grid-cols-3, .grid.md\:grid-cols-4 { grid-template-columns: 1fr !important; }
+      .p-6 { padding: 0.75rem !important; }
+
+      /* 动画容器：高度自适应，使用相对单位，确保不会超出小屏�?*/
+      #animation-container { height: 40vh !important; min-height: 220px; }
+      #animated-object { width: 28px !important; height: 28px !important; }
+
+      /* 控制面板：行内元素换行并撑满宽度 */
+      .mt-4.flex.flex-wrap { gap: 0.5rem; }
+      .mt-4 .ml-auto { margin-left: 0 !important; width: 100%; }
+
+      /* 文本块、表单元素：增大点击目标，避免过�?*/
+      input[type="number"], textarea, select, button { font-size: 0.95rem; }
+      textarea.h-32 { height: 7rem !important; }
+
+      /* 页脚：网格改为单�?*/
+      footer .grid.md\:grid-cols-4 { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
+  <!-- 导航�?-->
+  <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300" id="navbar">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- 品牌标识 -->
+        <div class="flex items-center">
+          <div class="flex-shrink-0 text-primary">
+            <i class="fa fa-cubes text-2xl mr-2"></i>
+            <span class="font-bold text-xl">物理可视�?/span>
+          </div>
+        </div>
+        
+        <!-- 导航链接 - 桌面�?-->
+        <nav class="hidden md:flex space-x-8">
+          <a href="#visualization" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">运动可视�?/a>
+          <a href="#knowledge" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">知识点库</a>
+          <a href="#question-types" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">题型分类</a>
+          <a href="#help" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">使用帮助</a>
+        </nav>
+        
+        <!-- 用户区域 -->
+        <div class="flex items-center">
+          <button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mr-2">
+            登录
+          </button>
+          <button class="hidden md:block text-gray-700 hover:text-primary">
+            <i class="fa fa-question-circle text-xl"></i>
+          </button>
+          <!-- 移动端菜单按�?-->
+          <button type="button" class="md:hidden ml-4 text-gray-700 hover:text-primary" id="mobile-menu-button">
+            <i class="fa fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 移动端菜�?-->
+    <div class="md:hidden hidden bg-white shadow-lg absolute w-full" id="mobile-menu">
+      <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <a href="#visualization" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">运动可视�?/a>
+        <a href="#knowledge" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">知识点库</a>
+        <a href="#question-types" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">题型分类</a>
+        <a href="#help" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">使用帮助</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow">
+    <!-- 英雄区域 -->
+    <section class="bg-gradient-to-r from-primary/90 to-primary text-white py-16 md:py-24">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl">
+          <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">让物理学习变得直观简�?/h1>
+          <p class="text-xl md:text-2xl mb-8 text-white/90">导入物理题目，自动生成运动过程可视化，轻松理解物理概念与解题思路</p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="#visualization" class="bg-white text-primary hover:bg-gray-100 px-6 py-3 rounded-md font-medium text-center transition-colors">
+              开始使�?<i class="fa fa-arrow-right ml-2"></i>
+            </a>
+            <a href="#demo" class="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 rounded-md font-medium text-center transition-colors">
+              查看演示 <i class="fa fa-play-circle ml-2"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 功能特点 -->
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold mb-4">强大功能，助力物理学�?/h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">专为高中生设计的物理学习工具，让抽象概念变得直观易懂</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- 功能1 -->
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fa fa-line-chart text-primary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">运动过程可视�?/h3>
+            <p class="text-gray-600">导入物理题目，自动生�?D�?D运动轨迹，直观展示物体运动过程，标注关键位置和状态�?/p>
+          </div>
+          
+          <!-- 功能2 -->
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fa fa-book text-primary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">知识点集�?/h3>
+            <p class="text-gray-600">整合高中物理全部知识点，配有详细解析和例题，方便随时查阅，巩固基础�?/p>
+          </div>
+          
+          <!-- 功能3 -->
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fa fa-tags text-primary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">题型分类整理</h3>
+            <p class="text-gray-600">按知识点和难度分类整理典型题型，帮助学生掌握各类问题的解题思路和方法�?/p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 运动可视化区�?-->
+    <section id="visualization" class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold mb-4">物理运动可视�?/h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">导入题目，生成动态演示，直观理解物理过程</p>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            <!-- 左侧：题目输入区 -->
+            <div class="p-6 flex flex-col">
+              <h3 class="text-lg font-semibold mb-4">输入物理题目</h3>
+              
+              <!-- 题目类型 -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">题目类型</label>
+                <select id="question-type-select" class="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="uniform">匀变速直线运�?/option>
+                  <option value="projectile">平抛/抛体运动</option>
+                  <option value="circular">圆周运动</option>
+                  <option value="astrodynamics">天体运动</option>
+                  <option value="collision">碰撞与动量守�?/option>
+                  <option value="magnetic">带电粒子/电磁学运�?/option>
+                </select>
+              </div>
+              
+              <!-- 题目描述 -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">题目描述</label>
+                <textarea id="problem-description" class="w-full p-3 border-2 border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" rows="6" placeholder="输入题目或点击下方导�?.."></textarea>
+                
+                <!-- 导入按钮�?- 等宽并排 -->
+                <div class="mt-3 grid grid-cols-2 gap-3">
+                  <!-- 导入题目下拉菜单 -->
+                  <div class="relative">
+                    <button id="import-menu-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                      <i class="fa fa-upload"></i>
+                      <span>导入题目</span>
+                      <i class="fa fa-caret-down"></i>
+                    </button>
+                    <div id="import-menu" class="hidden absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10 overflow-hidden">
+                      <button id="upload-image-btn" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100">
+                        <i class="fa fa-image text-blue-600"></i>
+                        <span>上传图片</span>
+                      </button>
+                      <button id="upload-docx-btn" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3">
+                        <i class="fa fa-file-word-o text-blue-600"></i>
+                        <span>导入Word文档</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- 智能解析按钮 -->
+                  <button id="parse-description" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <span>智能解析</span>
+                  </button>
+                </div>
+                
+                <!-- 隐藏的文件输�?-->
+                <input id="upload-image" type="file" accept="image/*" class="hidden">
+                <input id="upload-docx" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden">
+              </div>
+              
+              <!-- 图片上传显示区域 -->
+              <div id="image-upload-area" class="mb-4 hidden">
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2 text-sm font-medium">
+                      <i class="fa fa-image text-blue-600"></i>
+                      <span>图片已上�?/span>
+                    </div>
+                    <button id="remove-image" class="text-red-600 hover:text-red-700 text-sm">
+                      <i class="fa fa-times"></i> 删除
+                    </button>
+                  </div>
+                  <div id="ocr-result" class="text-sm text-gray-700 bg-white p-3 rounded border border-gray-200 max-h-32 overflow-y-auto">
+                    识别�?..
+                  </div>
+                  <button id="apply-ocr" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
+                    <i class="fa fa-eye"></i>
+                    <span>识别并填�?/span>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 参数设置 -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">参数设置</label>
+                <!-- 动态参数区域（不同题型显示不同字段�?-->
+                <div id="dynamic-params"></div>
+              </div>
+              
+              <!-- 生成可视化按�?-->
+              <button id="generate-animation" class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 hover:from-blue-700 hover:via-purple-700 hover:to-orange-600 text-white py-3 px-6 rounded-lg text-lg font-medium flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg">
+                <i class="fa fa-play-circle"></i>
+                <span>生成可视�?/span>
+              </button>
+            </div>
+            
+            <!-- 右侧：可视化展示�?-->
+            <div class="md:col-span-2 p-6 bg-gray-50 flex flex-col" style="min-height: 700px;">
+              <h3 class="text-lg font-semibold mb-4">运动过程演示</h3>
+              
+              <!-- 动画画布 - Canvas场景绘制 -->
+              <div id="animation-container" class="bg-white rounded-lg border-2 border-gray-900 relative overflow-hidden" style="height: 500px;">
+                <!-- Canvas用于物理场景绘制 -->
+                <canvas id="physics-canvas" class="absolute inset-0 w-full h-full"></canvas>
+                
+                <!-- 实时数据显示（覆盖在Canvas上） -->
+                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 border border-gray-300 shadow-sm z-10">
+                  <div class="text-xs space-y-1 font-mono">
+                    <div><span class="text-gray-600">时间:</span> <span id="animation-time" class="font-bold">0.00 s</span></div>
+                    <div><span class="text-gray-600">速度:</span> <span id="animation-velocity" class="font-bold">0.00 m/s</span></div>
+                    <div><span class="text-gray-600">位置:</span> <span id="animation-position" class="font-bold">0.00 m</span></div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 控制面板 -->
+              <div class="mt-4 flex flex-wrap gap-4 items-center">
+                <!-- 播放控制 -->
+                <button id="play-animation" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                  <i class="fa fa-play"></i>
+                  <span>播放</span>
+                </button>
+                <button id="pause-animation" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg hidden flex items-center gap-2 shadow-sm transition-all">
+                  <i class="fa fa-pause"></i>
+                  <span>暂停</span>
+                </button>
+                <button id="reset-animation" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                  <i class="fa fa-refresh"></i>
+                  <span>重置</span>
+                </button>
+                
+                <div class="flex items-center ml-4">
+                  <label class="text-sm text-gray-600 mr-2">播放速度:</label>
+                  <input type="range" min="0.1" max="2" step="0.1" value="1" class="w-32" id="animation-speed">
+                  <span id="speed-display" class="ml-2 text-sm font-mono bg-gray-100 px-2 py-1 rounded">1.0x</span>
+                </div>
+                
+                <!-- 全屏按钮 -->
+                <button id="fullscreen-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all" title="全屏显示">
+                  <i class="fa fa-expand"></i>
+                  <span>全屏</span>
+                </button>
+                
+                <!-- 导出按钮 -->
+                <div class="relative ml-auto">
+                  <button id="export-menu-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                    <i class="fa fa-download"></i>
+                    <span>导出动画</span>
+                  </button>
+                  <div id="export-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                    <button id="export-mp4" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg">
+                      <i class="fa fa-file-video-o text-blue-600"></i>
+                      <span>导出�?MP4</span>
+                    </button>
+                    <button id="export-gif" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-b-lg">
+                      <i class="fa fa-file-image-o text-orange-600"></i>
+                      <span>导出�?GIF</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 精准可视化图表：位置/速度随时�?-->
+              <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white rounded-md p-3 border border-gray-100">
+                  <h4 class="text-sm font-medium mb-2">位移 s(t)（m�?/h4>
+                  <canvas id="chart-position" width="400" height="200"></canvas>
+                </div>
+                <div class="bg-white rounded-md p-3 border border-gray-100">
+                  <h4 class="text-sm font-medium mb-2">速度 v(t)（m/s�?/h4>
+                  <canvas id="chart-velocity" width="400" height="200"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 知识点库 -->
+    <section id="knowledge" class="py-16 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold mb-4">物理知识点库</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">系统整理高中物理知识点，随时查阅学习</p>
+        </div>
+        
+        <div class="grid md:grid-cols-4 gap-6">
+          <!-- 知识点分类导�?-->
+          <div class="md:col-span-1">
+            <div class="bg-light rounded-xl p-4 sticky top-24">
+              <h3 class="font-semibold mb-4 pb-2 border-b border-gray-200">知识点分�?/h3>
+              <ul class="space-y-1">
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md bg-primary/10 text-primary text-sm font-medium">
+                    运动�?
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    力学
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    能量与动�?
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    电磁�?
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    光学
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    热学
+                  </button>
+                </li>
+                <li>
+                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+                    近代物理
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- 知识点内�?-->
+          <div class="md:col-span-3">
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h3 class="text-xl font-semibold">匀变速直线运�?/h3>
+                  <p class="text-gray-500 text-sm">运动�?> 直线运动</p>
+                </div>
+                <button class="text-gray-400 hover:text-primary">
+                  <i class="fa fa-star-o"></i>
+                </button>
+              </div>
+              
+              <div class="prose max-w-none">
+                <p>物体在一条直线上运动，如果在相等的时间内速度的变化相等，这种运动就叫做匀变速直线运动�?/p>
+                
+                <h4 class="text-lg font-medium mt-4 mb-2">基本公式</h4>
+                <div class="bg-gray-50 p-4 rounded-md mb-4">
+                  <p class="mb-2">1. 速度公式：v = v₀ + at</p>
+                  <p class="mb-2">2. 位移公式：s = v₀t + ½at²</p>
+                  <p class="mb-2">3. 速度-位移公式：v² - v₀² = 2as</p>
+                  <p>4. 平均速度公式：v̄ = (v₀ + v)/2 = s/t</p>
+                </div>
+                
+                <h4 class="text-lg font-medium mt-4 mb-2">重要推论</h4>
+                <ul class="list-disc pl-5 mb-4">
+                  <li>在连续相等的时间间隔内的位移之差为一恒量：Δs = aT²</li>
+                  <li>某段时间内的平均速度等于这段时间中间时刻的瞬时速度</li>
+                  <li>某段位移中点的瞬时速度等于初速度和末速度平方和一半的平方�?/li>
+                </ul>
+                
+                <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-100">
+                  <div class="flex items-center text-sm text-gray-500">
+                    <span class="mr-4"><i class="fa fa-eye mr-1"></i> 1245</span>
+                    <span><i class="fa fa-bookmark mr-1"></i> 328</span>
+                  </div>
+                  <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                    查看例题 <i class="fa fa-angle-right ml-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 相关知识�?-->
+            <div>
+              <h3 class="font-semibold mb-4">相关知识�?/h3>
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                  <h4 class="font-medium mb-1">自由落体运动</h4>
+                  <p class="text-sm text-gray-600">初速度为零，加速度为重力加速度的匀加速直线运�?/p>
+                </div>
+                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                  <h4 class="font-medium mb-1">竖直上抛运动</h4>
+                  <p class="text-sm text-gray-600">加速度为重力加速度的匀变速直线运�?/p>
+                </div>
+                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                  <h4 class="font-medium mb-1">运动的合成与分解</h4>
+                  <p class="text-sm text-gray-600">遵循平行四边形定则的矢量合成法则</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 题型分类 -->
+    <section id="question-types" class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold mb-4">物理题型分类</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">按知识点和难度整理，掌握各类题型的解题方�?/p>
+        </div>
+        
+        <!-- 题型筛�?-->
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-8">
+          <div class="flex flex-wrap gap-3">
+            <button class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium">
+              全部题型
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              基础�?
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              中档�?
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              难题
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              运动�?
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              力学
+            </button>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+              电磁�?
+            </button>
+          </div>
+        </div>
+        
+        <!-- 题型列表 -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- 题型1 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">自由落体运动问题</h3>
+                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">基础�?/span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查自由落体运动的速度、位移与时间的关系，重力加速度的应用�?/p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动�?/span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">匀加�?/span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">公式应用</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 12</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型2 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">平抛运动综合问题</h3>
+                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">中档�?/span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查平抛运动在水平和竖直方向的分解，运动时间与高度的关系�?/p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动�?/span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">曲线运动</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动分解</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 18</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型3 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">传送带问题</h3>
+                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查摩擦力分析、运动状态判断及多过程运动的综合计算�?/p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">力学</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">摩擦�?/span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">多过�?/span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 15</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型4 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">天体运动问题</h3>
+                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">中档�?/span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查万有引力定律应用，卫星运动参数计算，宇宙速度等知识点�?/p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">万有引力</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">圆周运动</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">卫星运动</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 14</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型5 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">碰撞与动量守�?/h3>
+                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查动量守恒定律的应用，弹性碰撞与非弹性碰撞的区别与计算�?/p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">动量</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">能量</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">碰撞</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 16</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 题型6 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold">带电粒子在磁场中的运�?/h3>
+                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
+              </div>
+              
+              <p class="text-gray-600 text-sm mb-4">考查洛伦兹力、圆周运动半径与周期计算，磁场边界问题分析�?/p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">电磁�?/span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">圆周运动</span>
+                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">洛伦兹力</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">例题数量: 20</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 加载更多 -->
+        <div class="text-center mt-10">
+          <button class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-md font-medium transition-colors">
+            加载更多题型 <i class="fa fa-angle-down ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 使用帮助 -->
+    <section id="help" class="py-16 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold mb-4">使用帮助</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">快速了解如何使用平台功�?/p>
+        </div>
+        
+        <div class="max-w-3xl mx-auto">
+          <div class="space-y-6">
+            <!-- 问题1 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">如何导入物理题目并生成可视化�?/h3>
+                <i class="fa fa-minus text-primary"></i>
+              </button>
+              <div class="mt-4 text-gray-600">
+                <p>您可以通过两种方式生成物理运动可视化：</p>
+                <ol class="list-decimal pl-5 mt-2 space-y-1">
+                  <li>�?运动可视�?页面的题目输入区，选择题目类型并填写题目描述和关键参数，点�?生成可视�?按钮</li>
+                  <li>直接上传包含物理题目的图片，系统会自动识别题目内容并提取关键参数生成可视�?/li>
+                </ol>
+                <p class="mt-2">生成后，您可以通过播放、暂停、重置按钮控制动画，并可调整动画速度和显示选项�?/p>
+              </div>
+            </div>
+            
+            <!-- 问题2 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">平台支持哪些类型的物理题目可视化�?/h3>
+                <i class="fa fa-plus text-gray-400"></i>
+              </button>
+            </div>
+            
+            <!-- 问题3 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">如何查找特定的知识点和题型？</h3>
+                <i class="fa fa-plus text-gray-400"></i>
+              </button>
+            </div>
+            
+            <!-- 问题4 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">能否保存和导出可视化动画�?/h3>
+                <i class="fa fa-plus text-gray-400"></i>
+              </button>
+            </div>
+            
+            <!-- 问题5 -->
+            <div class="bg-light rounded-xl p-6">
+              <button class="flex justify-between items-center w-full text-left focus:outline-none">
+                <h3 class="font-semibold text-lg">平台是否支持自定义物理参数？</h3>
+                <i class="fa fa-plus text-gray-400"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="mt-10 text-center">
+            <p class="text-gray-600 mb-4">还有其他问题�?/p>
+            <button class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-colors">
+              联系客服 <i class="fa fa-envelope ml-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white pt-12 pb-6">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <i class="fa fa-cubes text-2xl mr-2"></i>
+            <span class="font-bold text-xl">物理可视�?/span>
+          </div>
+          <p class="text-gray-400 text-sm">让高中物理学习变得直观简单，助力学生理解抽象概念，提高学习效率�?/p>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold mb-4">功能导航</h3>
+          <ul class="space-y-2 text-gray-400 text-sm">
+            <li><a href="#visualization" class="hover:text-white transition-colors">运动可视�?/a></li>
+            <li><a href="#knowledge" class="hover:text-white transition-colors">知识点库</a></li>
+            <li><a href="#question-types" class="hover:text-white transition-colors">题型分类</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">错题�?/a></li>
+            <li><a href="#" class="hover:text-white transition-colors">学习计划</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold mb-4">帮助支持</h3>
+          <ul class="space-y-2 text-gray-400 text-sm">
+            <li><a href="#help" class="hover:text-white transition-colors">使用帮助</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">常见问题</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">联系我们</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">意见反馈</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-semibold mb-4">关注我们</h3>
+          <div class="flex space-x-4 mb-4">
+            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-weixin"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-weibo"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-qq"></i>
+            </a>
+          </div>
+          <p class="text-gray-400 text-sm">扫码关注公众号，获取更多学习资源</p>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-700 pt-6 text-center text-gray-500 text-sm">
+        <p>© 2023 物理可视化学习平�?版权所�?/p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // ========== Canvas场景绘制系统 ==========
+    let canvas, ctx;
+    let animationFrameId = null;
+    let currentTime = 0;
+    let isPlaying = false;
+    let playSpeed = 1;
+    let sceneParams = null;
+    let animationContainer; // 全局声明，避免重复声�?
+    
+    // 初始化Canvas
+    function initCanvas() {
+      canvas = document.getElementById('physics-canvas');
+      if (!canvas) {
+        console.error('找不到physics-canvas元素');
+        return;
+      }
+      
+      ctx = canvas.getContext('2d');
+      
+      // 初始化容器引�?
+      if (!animationContainer) {
+        animationContainer = document.getElementById('animation-container');
+      }
+      
+      // 设置Canvas尺寸
+      const container = document.getElementById('animation-container');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      
+      console.log('�?Canvas已初始化:', canvas.width, 'x', canvas.height);
+      
+      // 绘制初始提示
+      drawWelcomeScreen();
+    }
+    
+    // 绘制欢迎屏幕
+    function drawWelcomeScreen() {
+      if (!ctx) return;
+      
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      // 白色背景
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      
+      // 提示文字
+      ctx.fillStyle = '#666666';
+      ctx.font = '20px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('👆 导入题目并点�?生成可视�?', w / 2, h / 2 - 20);
+      ctx.font = '16px Arial';
+      ctx.fillText('即可在此查看完整的物理场景动�?, w / 2, h / 2 + 20);
+      
+      ctx.textAlign = 'left';
+    }
+    
+    // 页面加载时初始化
+    window.addEventListener('load', () => {
+      setTimeout(initCanvas, 100);
+    });
+    
+    // 窗口大小改变时重新调整Canvas
+    window.addEventListener('resize', () => {
+      if (canvas && canvas.parentElement) {
+        const container = canvas.parentElement;
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        if (sceneParams) {
+          drawScene();
+        } else {
+          drawWelcomeScreen();
+        }
+      }
+    });
+    
+    // 绘制场景（根据参数类型）
+    function drawScene() {
+      if (!ctx || !sceneParams) return;
+      
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      // 清空画布
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      
+      // 设置默认样式
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.font = '14px Arial';
+      
+      // 根据类型绘制
+      switch(sceneParams.type) {
+        case 'uniform':
+          if (sceneParams.direction === 'horizontal') {
+            drawHorizontalMotion();
+          } else {
+            drawVerticalMotion();
+          }
+          break;
+        case 'projectile':
+          drawProjectileMotion();
+          break;
+        case 'circular':
+          drawCircularMotion();
+          break;
+        case 'collision':
+          drawCollision();
+          break;
+        default:
+          drawVerticalMotion();
+      }
+    }
+    
+    // 通知提示函数（需要在控制函数之前定义�?
+    function showNotification(message, type = 'info', duration = 2000) {
+      const colors = {
+        success: 'bg-green-500',
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500',
+        error: 'bg-red-500'
+      };
+      
+      const notification = document.createElement('div');
+      notification.className = `fixed top-20 right-4 ${colors[type]} text-white px-4 py-2 rounded-md shadow-lg z-50`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, duration);
+    }
+    
+    // ========== 初始化控制按�?==========
+    // 确保DOM加载完成后再绑定按钮
+    let buttonsInitialized = false;
+    
+    function initControlButtons() {
+      if (buttonsInitialized) return;
+      
+      const playBtn = document.getElementById('play-animation');
+      const pauseBtn = document.getElementById('pause-animation');
+      const resetBtn = document.getElementById('reset-animation');
+      const speedSlider = document.getElementById('animation-speed');
+      const speedDisplay = document.getElementById('speed-display');
+      
+      console.log('🎮 初始化控制按�?', {
+        playBtn: !!playBtn,
+        pauseBtn: !!pauseBtn,
+        resetBtn: !!resetBtn,
+        speedSlider: !!speedSlider
+      });
+      
+      if (!playBtn || !pauseBtn || !resetBtn) {
+        console.error('�?控制按钮未找到！将在500ms后重�?..');
+        setTimeout(initControlButtons, 500);
+        return;
+      }
+      
+      // 绑定控制按钮
+      playBtn.addEventListener('click', () => {
+        console.log('🖱�?播放按钮被点�?);
+        startAnimation();
+      });
+      pauseBtn.addEventListener('click', () => {
+        console.log('🖱�?暂停按钮被点�?);
+        pauseAnimation();
+      });
+      resetBtn.addEventListener('click', () => {
+        console.log('🖱�?重置按钮被点�?);
+        resetAnimation();
+      });
+      speedSlider?.addEventListener('input', (e) => {
+        playSpeed = parseFloat(e.target.value);
+        if (speedDisplay) {
+          speedDisplay.textContent = playSpeed.toFixed(1) + 'x';
+        }
+      });
+      
+      buttonsInitialized = true;
+      console.log('�?控制按钮已绑�?);
+    }
+    
+    // 播放/暂停/重置控制函数
+    function startAnimation() {
+      if (!sceneParams) {
+        console.warn('⚠️ 请先生成可视化场�?);
+        showNotification('请先生成可视化场�?, 'warning', 2000);
+        return;
+      }
+      if (isPlaying) return;
+      
+      console.log('▶️ 开始播放动�?);
+      isPlaying = true;
+      
+      const playBtn = document.getElementById('play-animation');
+      const pauseBtn = document.getElementById('pause-animation');
+      playBtn?.classList.add('hidden');
+      pauseBtn?.classList.remove('hidden');
+      animate();
+    }
+    
+    function pauseAnimation() {
+      console.log('⏸️ 暂停动画');
+      isPlaying = false;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      
+      const playBtn = document.getElementById('play-animation');
+      const pauseBtn = document.getElementById('pause-animation');
+      playBtn?.classList.remove('hidden');
+      pauseBtn?.classList.add('hidden');
+    }
+    
+    function resetAnimation() {
+      console.log('🔄 重置动画');
+      pauseAnimation();
+      currentTime = 0;
+      if (sceneParams) {
+        drawScene();
+      } else {
+        drawWelcomeScreen();
+      }
+    }
+    
+    function animate() {
+      if (!isPlaying) return;
+      
+      currentTime += 0.05 * playSpeed;
+      drawScene();
+      
+      animationFrameId = requestAnimationFrame(animate);
+    }
+    
+    // 页面加载完成后初始化按钮（脚本已在底部，DOM已加载）
+    // 使用 setTimeout 确保DOM完全渲染
+    setTimeout(() => {
+      console.log('📄 初始化控制按�?..');
+      initControlButtons();
+      initFullscreenButton();
+      initExportButtons();
+    }, 100);
+    
+    // ========== 全屏功能 ==========
+    let isFullscreen = false;
+    let fullscreenInitialized = false;
+    
+    function initFullscreenButton() {
+      if (fullscreenInitialized) return;
+      
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      
+      console.log('🖥�?初始化全屏按�?', !!fullscreenBtn);
+      
+      if (!fullscreenBtn) {
+        console.error('�?全屏按钮未找到！将在500ms后重�?..');
+        setTimeout(initFullscreenButton, 500);
+        return;
+      }
+      
+      fullscreenBtn.addEventListener('click', () => {
+        console.log('🖱�?全屏按钮被点�? 当前状�?', isFullscreen);
+        if (!isFullscreen) {
+          enterFullscreen();
+        } else {
+          exitFullscreen();
+        }
+      });
+      
+      fullscreenInitialized = true;
+      console.log('�?全屏按钮已绑�?);
+    }
+    
+    function enterFullscreen() {
+      if (!animationContainer) {
+        animationContainer = document.getElementById('animation-container');
+      }
+      
+      if (!animationContainer) {
+        console.error('animationContainer 未初始化');
+        showNotification('无法进入全屏模式', 'error', 2000);
+        return;
+      }
+      
+      console.log('🖥�?进入全屏模式');
+      isFullscreen = true;
+      document.body.classList.add('fullscreen-active');
+      animationContainer.classList.add('fullscreen');
+      
+      // 创建退出按�?
+      const exitBtn = document.createElement('button');
+      exitBtn.className = 'fullscreen-exit-btn';
+      exitBtn.id = 'fullscreen-exit-btn';
+      exitBtn.innerHTML = '<i class="fa fa-times"></i> 退出全�?(ESC)';
+      exitBtn.onclick = exitFullscreen;
+      document.body.appendChild(exitBtn);
+      
+      // 调整Canvas大小
+      setTimeout(() => {
+        if (canvas) {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          
+          // 重新绘制场景或欢迎屏�?
+          if (sceneParams) {
+            drawScene();
+          } else {
+            drawWelcomeScreen();
+          }
+        }
+      }, 100);
+      
+      // 更新按钮图标
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      if (fullscreenBtn) {
+        fullscreenBtn.innerHTML = '<i class="fa fa-compress"></i><span>退出全�?/span>';
+      }
+    }
+    
+    function exitFullscreen() {
+      console.log('🖥�?退出全屏模�?);
+      isFullscreen = false;
+      document.body.classList.remove('fullscreen-active');
+      
+      if (animationContainer) {
+        animationContainer.classList.remove('fullscreen');
+      }
+      
+      // 移除退出按�?
+      const exitBtn = document.getElementById('fullscreen-exit-btn');
+      if (exitBtn) exitBtn.remove();
+      
+      // 恢复Canvas大小
+      setTimeout(() => {
+        if (!animationContainer) {
+          animationContainer = document.getElementById('animation-container');
+        }
+        canvas.width = animationContainer.clientWidth;
+        canvas.height = animationContainer.clientHeight;
+        
+        // 重新绘制场景或欢迎屏�?
+        if (sceneParams) {
+          drawScene();
+        } else {
+          drawWelcomeScreen();
+        }
+      }, 100);
+      
+      // 恢复按钮图标
+      fullscreenBtn.innerHTML = '<i class="fa fa-expand"></i><span>全屏</span>';
+    }
+    
+    // ESC键退出全�?
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        exitFullscreen();
+      }
+    });
+    
+    // ========== 导出功能 ==========
+    let mediaRecorder;
+    let recordedChunks = [];
+    
+    function initExportButtons() {
+      const exportMenuBtn = document.getElementById('export-menu-btn');
+      const exportMenu = document.getElementById('export-menu');
+      const exportMP4Btn = document.getElementById('export-mp4');
+      const exportGIFBtn = document.getElementById('export-gif');
+      
+      console.log('💾 初始化导出按�?', {
+        exportMenuBtn: !!exportMenuBtn,
+        exportMenu: !!exportMenu,
+        exportMP4Btn: !!exportMP4Btn,
+        exportGIFBtn: !!exportGIFBtn
+      });
+      
+      if (!exportMenuBtn || !exportMenu) {
+        console.error('�?导出按钮未找到！');
+        return;
+      }
+      
+      // 切换导出菜单
+      exportMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportMenu.classList.toggle('hidden');
+      });
+      
+      // 点击其他地方关闭菜单
+      document.addEventListener('click', () => {
+        exportMenu.classList.add('hidden');
+      });
+      
+      exportMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      
+      // 导出�?MP4
+      exportMP4Btn?.addEventListener('click', async () => {
+        exportMenu.classList.add('hidden');
+        
+        if (!sceneParams) {
+          showNotification('请先生成动画场景', 'warning', 2000);
+          return;
+        }
+        
+        // 显示录制提示
+        showNotification('🎬 开始录制动�?..', 'info', 3000);
+        
+        try {
+          // 准备录制
+          const stream = canvas.captureStream(30); // 30 FPS
+          mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'video/webm;codecs=vp9',
+            videoBitsPerSecond: 2500000
+          });
+          
+          recordedChunks = [];
+          
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              recordedChunks.push(e.data);
+            }
+          };
+          
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `physics-animation-${Date.now()}.webm`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('�?视频已导�?(WebM格式)', 'success', 3000);
+          };
+          
+          // 从头开始录�?
+          const wasPlaying = isPlaying;
+          pauseAnimation();
+          currentTime = 0;
+          drawScene();
+          
+          mediaRecorder.start();
+          
+          // 自动播放并录�?
+          setTimeout(() => {
+            startAnimation();
+            
+            // 录制完整动画周期 (根据运动类型估算时长)
+            const duration = estimateAnimationDuration();
+            setTimeout(() => {
+              mediaRecorder.stop();
+              if (!wasPlaying) pauseAnimation();
+            }, duration);
+          }, 500);
+        } catch (error) {
+          console.error('录制失败:', error);
+          showNotification('录制失败: ' + error.message, 'error', 3000);
+        }
+      });
+      
+      // 导出�?GIF
+      exportGIFBtn?.addEventListener('click', async () => {
+        const exportMenu = document.getElementById('export-menu');
+        exportMenu?.classList.add('hidden');
+        
+        if (!sceneParams) {
+          showNotification('请先生成动画场景', 'warning', 2000);
+          return;
+        }
+        
+        showNotification('🎨 正在生成GIF...', 'info', 5000);
+        
+        try {
+          // 使用 gif.js �?
+          const gif = new GIF({
+            workers: 2,
+            quality: 10,
+            width: canvas.width,
+            height: canvas.height,
+            workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+          });
+          
+          const wasPlaying = isPlaying;
+          pauseAnimation();
+          currentTime = 0;
+          
+          // 捕获�?
+          const frameCount = 60; // 60�?
+          const frameDelay = 50; // 50ms per frame
+          
+          for (let i = 0; i < frameCount; i++) {
+            drawScene();
+            gif.addFrame(canvas, { copy: true, delay: frameDelay });
+            currentTime += 0.1;
+          }
+          
+          gif.on('finished', (blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `physics-animation-${Date.now()}.gif`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('�?GIF已导�?, 'success', 3000);
+            
+            // 恢复原状�?
+            currentTime = 0;
+            drawScene();
+            if (wasPlaying) startAnimation();
+          });
+          
+          gif.render();
+        } catch (error) {
+          console.error('GIF生成失败:', error);
+          showNotification('GIF生成失败: ' + error.message, 'error', 3000);
+        }
+      });
+      
+      console.log('�?导出按钮已绑�?);
+    }    // 估算动画时长
+    function estimateAnimationDuration() {
+      if (!sceneParams) return 5000;
+      
+      const type = sceneParams.type;
+      if (type === 'projectile') return 8000;
+      if (type === 'circular') return 10000;
+      if (type === 'collision') return 6000;
+      return 5000; // 默认5�?
+    }
+    
+    // ========== 场景绘制函数 ==========
+    
+    // 辅助函数：绘制地�?
+    function drawGround(y) {
+      const w = canvas.width;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      
+      // 双线地面
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(0, y + 5);
+      ctx.lineTo(w, y + 5);
+      ctx.stroke();
+      
+      // 斜线阴影
+      ctx.lineWidth = 1;
+      for (let i = 0; i < w; i += 10) {
+        ctx.beginPath();
+        ctx.moveTo(i, y + 5);
+        ctx.lineTo(i + 10, y + 15);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 2;
+    }
+    
+    // 1. 垂直运动（自由落�?竖直上抛�?
+    function drawVerticalMotion() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const scale = 40; // 40像素 = 1�?
+      const groundY = h - 60;
+      
+      drawGround(groundY);
+      
+      const g = 10;
+      const v0 = sceneParams.v0 || 0;
+      const h0 = sceneParams.height || 8;
+      const t = currentTime;
+      
+      // 运动方程
+      const y = h0 + v0 * t - 0.5 * g * t * t;
+      const v = v0 - g * t;
+      
+      // 更新显示
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = Math.abs(v).toFixed(2) + ' m/s';
+      document.getElementById('animation-position').textContent = y.toFixed(2) + ' m';
+      
+      // 落地检�?
+      if (y <= 0) {
+        pauseAnimation();
+        return;
+      }
+      
+      const ballY = groundY - y * scale;
+      
+      // 绘制物体
+      ctx.fillStyle = '#ff6b00';
+      ctx.beginPath();
+      ctx.arc(w / 2, ballY, 12, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // 高度标注�?
+      ctx.strokeStyle = '#666666';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(w / 2 - 40, ballY);
+      ctx.lineTo(w / 2 - 40, groundY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      ctx.fillStyle = '#000000';
+      ctx.fillText('h = ' + y.toFixed(2) + ' m', w / 2 - 100, ballY + 5);
+      
+      // 速度箭头
+      if (Math.abs(v) > 0.5) {
+        const arrowLen = Math.min(Math.abs(v) * 5, 100);
+        ctx.strokeStyle = '#0066ff';
+        ctx.fillStyle = '#0066ff';
+        
+        const startY = ballY;
+        const endY = ballY + (v < 0 ? -arrowLen : arrowLen);
+        
+        ctx.beginPath();
+        ctx.moveTo(w / 2 + 30, startY);
+        ctx.lineTo(w / 2 + 30, endY);
+        ctx.stroke();
+        
+        // 箭头头部
+        ctx.beginPath();
+        ctx.moveTo(w / 2 + 30, endY);
+        ctx.lineTo(w / 2 + 25, endY - (v < 0 ? 8 : -8));
+        ctx.lineTo(w / 2 + 35, endY - (v < 0 ? 8 : -8));
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillText('v = ' + v.toFixed(2) + ' m/s', w / 2 + 45, (startY + endY) / 2);
+      }
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 2. 水平运动（汽�?滑块�?
+    function drawHorizontalMotion() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const scale = 50;
+      const roadY = h / 2;
+      
+      // 绘制公路
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, roadY);
+      ctx.lineTo(w, roadY);
+      ctx.stroke();
+      
+      // 虚线
+      ctx.setLineDash([15, 10]);
+      ctx.strokeStyle = '#666666';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, roadY - 20);
+      ctx.lineTo(w, roadY - 20);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      const a = sceneParams.a || 0;
+      const v0 = sceneParams.v0 || 10;
+      const t = currentTime;
+      
+      const x = v0 * t + 0.5 * a * t * t;
+      const v = v0 + a * t;
+      
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = Math.abs(v).toFixed(2) + ' m/s';
+      document.getElementById('animation-position').textContent = x.toFixed(2) + ' m';
+      
+      const carX = 100 + x * scale;
+      
+      if (carX > w - 50 || carX < 0 || (a < 0 && v <= 0)) {
+        pauseAnimation();
+      }
+      
+      // 绘制汽车
+      const carW = 60, carH = 30;
+      ctx.fillStyle = '#ff6b00';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.fillRect(carX - carW/2, roadY - carH - 20, carW, carH);
+      ctx.strokeRect(carX - carW/2, roadY - carH - 20, carW, carH);
+      
+      // 轮子
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(carX - 15, roadY - 5, 8, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(carX + 15, roadY - 5, 8, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // 速度箭头
+      if (Math.abs(v) > 0.1) {
+        const arrowLen = Math.min(Math.abs(v) * 8, 120);
+        ctx.strokeStyle = '#0066ff';
+        ctx.fillStyle = '#0066ff';
+        
+        const arrowY = roadY - carH - 50;
+        ctx.beginPath();
+        ctx.moveTo(carX, arrowY);
+        ctx.lineTo(carX + (v > 0 ? arrowLen : -arrowLen), arrowY);
+        ctx.stroke();
+        
+        // 箭头头部
+        const endX = carX + (v > 0 ? arrowLen : -arrowLen);
+        ctx.beginPath();
+        ctx.moveTo(endX, arrowY);
+        ctx.lineTo(endX - (v > 0 ? 8 : -8), arrowY - 5);
+        ctx.lineTo(endX - (v > 0 ? 8 : -8), arrowY + 5);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillText('v = ' + v.toFixed(2) + ' m/s', carX + arrowLen/2, arrowY - 15);
+      }
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 3. 抛体运动
+    function drawProjectileMotion() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const scale = 30;
+      const groundY = h - 60;
+      
+      drawGround(groundY);
+      
+      const v0 = sceneParams.speed || 10;
+      const angle = (sceneParams.angle || 30) * Math.PI / 180;
+      const h0 = sceneParams.height || 5;
+      const g = 10;
+      const t = currentTime;
+      
+      const vx = v0 * Math.cos(angle);
+      const vy0 = v0 * Math.sin(angle);
+      
+      const x = vx * t;
+      const y = h0 + vy0 * t - 0.5 * g * t * t;
+      const vy = vy0 - g * t;
+      const vTotal = Math.sqrt(vx * vx + vy * vy);
+      
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = vTotal.toFixed(2) + ' m/s';
+      document.getElementById('animation-position').textContent = '(' + x.toFixed(2) + ', ' + y.toFixed(2) + ') m';
+      
+      if (y <= 0 || x * scale > w - 100) {
+        pauseAnimation();
+        return;
+      }
+      
+      const ballX = 100 + x * scale;
+      const ballY = groundY - y * scale;
+      
+      // 抛出平台
+      ctx.fillStyle = '#cccccc';
+      ctx.strokeStyle = '#000000';
+      ctx.fillRect(50, groundY - h0 * scale, 100, 20);
+      ctx.strokeRect(50, groundY - h0 * scale, 100, 20);
+      
+      // 物体
+      ctx.fillStyle = '#ff6b00';
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, 12, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // 轨迹
+      ctx.strokeStyle = '#cccccc';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      for (let dt = 0; dt <= t; dt += 0.05) {
+        const tx = 100 + vx * dt * scale;
+        const ty = groundY - (h0 + vy0 * dt - 0.5 * g * dt * dt) * scale;
+        if (dt === 0) ctx.moveTo(tx, ty);
+        else ctx.lineTo(tx, ty);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // 速度箭头
+      const vAngle = Math.atan2(-vy, vx);
+      const arrowLen = Math.min(vTotal * 5, 80);
+      ctx.strokeStyle = '#0066ff';
+      ctx.fillStyle = '#0066ff';
+      
+      const endX = ballX + arrowLen * Math.cos(vAngle);
+      const endY = ballY - arrowLen * Math.sin(vAngle);
+      
+      ctx.beginPath();
+      ctx.moveTo(ballX, ballY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      
+      // 箭头头部
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(endX - 8 * Math.cos(vAngle - Math.PI/6), endY + 8 * Math.sin(vAngle - Math.PI/6));
+      ctx.lineTo(endX - 8 * Math.cos(vAngle + Math.PI/6), endY + 8 * Math.sin(vAngle + Math.PI/6));
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.fillText('v = ' + vTotal.toFixed(2) + ' m/s', ballX + 20, ballY - 20);
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 4. 圆周运动
+    function drawCircularMotion() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const centerX = w / 2;
+      const centerY = h / 2;
+      
+      const R = (sceneParams.radius || 2) * 40;
+      const omega = sceneParams.angular || 1;
+      const t = currentTime;
+      const theta = omega * t;
+      
+      // 圆形轨道
+      ctx.strokeStyle = '#666666';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, R, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // 中心�?
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillText('O', centerX + 10, centerY - 10);
+      
+      const ballX = centerX + R * Math.cos(theta);
+      const ballY = centerY + R * Math.sin(theta);
+      
+      // 绳子
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(ballX, ballY);
+      ctx.stroke();
+      
+      // 物体
+      ctx.fillStyle = '#ff6b00';
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, 12, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      const v = omega * R / 40;
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = v.toFixed(2) + ' m/s';
+      document.getElementById('animation-position').textContent = 'θ = ' + (theta * 180 / Math.PI % 360).toFixed(1) + '°';
+      
+      // 速度箭头（切线方向）
+      const arrowLen = Math.min(v * 10, 60);
+      ctx.strokeStyle = '#0066ff';
+      ctx.fillStyle = '#0066ff';
+      
+      const endX = ballX - arrowLen * Math.sin(theta);
+      const endY = ballY + arrowLen * Math.cos(theta);
+      
+      ctx.beginPath();
+      ctx.moveTo(ballX, ballY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      
+      // 箭头头部
+      const vAngle = theta + Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(endX - 8 * Math.cos(vAngle - Math.PI/6), endY - 8 * Math.sin(vAngle - Math.PI/6));
+      ctx.lineTo(endX - 8 * Math.cos(vAngle + Math.PI/6), endY - 8 * Math.sin(vAngle + Math.PI/6));
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.fillText('v = ' + v.toFixed(2) + ' m/s', ballX + 20, ballY - 20);
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 5. 碰撞
+    function drawCollision() {
+      // 简化实现：待后续扩�?
+      drawVerticalMotion();
+    }
+    
+    // ========== 原有代码继续 ==========
+    
+    // 移动端菜单切�?
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 导航栏滚动效�?
+    const navbar = document.getElementById('navbar');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        navbar.classList.add('shadow');
+        navbar.classList.remove('shadow-sm');
+      } else {
+        navbar.classList.remove('shadow');
+        navbar.classList.add('shadow-sm');
+      }
+    });
+    
+    // ========== 旧的DOM动画代码已移除，使用Canvas系统 ==========
+
+    // 图片背景功能已移除（简化界面）
+
+    // Motion type dispatch: wrap physics functions to support multiple motions
+    // 图片背景功能已移除（简化界面）
+
+    // Motion type dispatch: wrap physics functions to support multiple motions
+    function getParams() {
+      // collect generic params
+      const type = questionTypeSelect.value;
+      const params = { type };
+      // common
+      const v0 = document.getElementById('input-initial-velocity'); if (v0) params.v0 = parseFloat(v0.value || 0);
+      const a = document.getElementById('input-acceleration'); if (a) params.a = parseFloat(a.value || 0);
+      const t = document.getElementById('input-time'); if (t) params.t = parseFloat(t.value || 0);
+      // type-specific
+      if (type === 'projectile') {
+        params.speed = parseFloat((document.getElementById('input-speed')||{}).value || 0);
+        params.angle = parseFloat((document.getElementById('input-angle')||{}).value || 0) * Math.PI/180;
+        params.height = parseFloat((document.getElementById('input-height')||{}).value || 0);
+      }
+      if (type === 'circular') {
+        params.radius = parseFloat((document.getElementById('input-radius')||{}).value || 1);
+        params.angular = parseFloat((document.getElementById('input-angular')||{}).value || 1);
+      }
+      if (type === 'collision') {
+        params.m1 = parseFloat((document.getElementById('input-m1')||{}).value || 1);
+        params.v1 = parseFloat((document.getElementById('input-v1')||{}).value || 0);
+        params.m2 = parseFloat((document.getElementById('input-m2')||{}).value || 1);
+        params.v2 = parseFloat((document.getElementById('input-v2')||{}).value || 0);
+      }
+      if (type === 'magnetic') {
+        params.q = parseFloat((document.getElementById('input-charge')||{}).value || 0);
+        params.v = parseFloat((document.getElementById('input-vel')||{}).value || 0);
+        params.B = parseFloat((document.getElementById('input-field')||{}).value || 0);
+      }
+      if (type === 'astrodynamics') {
+        params.M = parseFloat((document.getElementById('input-mass-central')||{}).value || 5.97e24);
+        params.r = parseFloat((document.getElementById('input-radius-orbit')||{}).value || 7e6);
+      }
+      return params;
+    }
+
+    // Override previous simple physics functions to consult GRAVITY_OVERRIDE if set
+    function effectiveGravity() { return typeof window.GRAVITY_OVERRIDE === 'number' ? window.GRAVITY_OVERRIDE : gravity; }
+
+    // dispatch-based updateAnimation: short-circuit to type-specific routines
+    function updateAnimation() {
+      const params = getParams();
+      if (params.type === 'uniform') {
+        // collect data for precise charts
+        if (!window.chartPosition || !window.chartVelocity) initializeUniformCharts();
+        // reuse original free-fall-like logic but with custom acceleration
+        const g = effectiveGravity();
+        const distance = 0.5 * params.a * Math.pow(currentTime, 2) + (params.v0||0) * currentTime;
+        const velocity = (params.v0||0) + (params.a||0) * currentTime;
+        pixelsPerMeter = computePixelsPerMeter();
+        const position = 20 + distance * pixelsPerMeter;
+        animatedObject.style.top = `${position}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(1)}s`;
+        animationVelocity.textContent = `速度: ${velocity.toFixed(1)}m/s`;
+        animationPosition.textContent = `位置: ${distance.toFixed(1)}m`;
+        // update charts with analytic values
+        appendUniformData(currentTime, distance, velocity);
+        if (showTrail.checked && currentTime % 0.5 < 0.1) addTrailPoint(position);
+        currentTime += 0.1 / animationSpeed.value;
+  // record frame
+  exportData.push({ t: currentTime, x: 0, y: distance, v: velocity, type: 'uniform' });
+  animationId = requestAnimationFrame(updateAnimation);
+      } else if (params.type === 'projectile') {
+        // projectile motion in 2D (x horizontally, y vertically)
+        pixelsPerMeter = computePixelsPerMeter();
+        const vx = params.speed * Math.cos(params.angle || 0);
+        const vy0 = params.speed * Math.sin(params.angle || 0);
+        const y = (params.height || 0) + vy0 * currentTime - 0.5 * effectiveGravity() * Math.pow(currentTime, 2);
+        const x = vx * currentTime;
+        // position mapping: use x to move left-right, y to top-bottom
+        const containerW = animationContainer.clientWidth;
+        const left = Math.min(containerW - 40, Math.max(0, containerW/2 + x * pixelsPerMeter));
+        const top = 20 + Math.max(0, (params.height || 0) + Math.max(0, -y)) * pixelsPerMeter; // simplistic mapping
+        animatedObject.style.left = `${left}px`;
+        animatedObject.style.top = `${top}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(2)}s`;
+        animationVelocity.textContent = `速度垂直: ${(vy0 - effectiveGravity()*currentTime).toFixed(2)}m/s`;
+        animationPosition.textContent = `x: ${x.toFixed(2)}m y: ${y.toFixed(2)}m`;
+        if (showTrail.checked && currentTime % 0.2 < 0.05) addTrailPoint(top);
+        currentTime += 0.05 / animationSpeed.value;
+        if (y < -50) { // left the view
+          stopAnimation(); return;
+        }
+  // record projectile frame
+  exportData.push({ t: currentTime, x: x, y: y, v: Math.sqrt(vx*vx + (vy0 - effectiveGravity()*currentTime)*(vy0 - effectiveGravity()*currentTime)), type: 'projectile' });
+  animationId = requestAnimationFrame(updateAnimation);
+      } else if (params.type === 'circular') {
+        pixelsPerMeter = computePixelsPerMeter();
+        const theta = (params.angular || 1) * currentTime;
+        const r = params.radius || 2;
+        const cx = animationContainer.clientWidth/2;
+        const cy = animationContainer.clientHeight/2;
+        const x = cx + r * pixelsPerMeter * Math.cos(theta);
+        const y = cy + r * pixelsPerMeter * Math.sin(theta);
+        animatedObject.style.left = `${x - 12}px`;
+        animatedObject.style.top = `${y - 12}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(2)}s`;
+        animationVelocity.textContent = `角度: ${theta.toFixed(2)}rad`;
+        animationPosition.textContent = `半径: ${r}m`;
+        currentTime += 0.05 / animationSpeed.value;
+  exportData.push({ t: currentTime, x: x - 12, y: y - 12, v: (params.angular||1)*r, type: 'circular' });
+  animationId = requestAnimationFrame(updateAnimation);
+      } else if (params.type === 'collision') {
+        // simple 1D elastic collision visualization: two objects approach center
+        pixelsPerMeter = computePixelsPerMeter();
+        const L = animationContainer.clientWidth;
+        const x1 = L/4 + (params.v1 || 0) * currentTime * pixelsPerMeter;
+        const x2 = L*3/4 + (params.v2 || 0) * currentTime * pixelsPerMeter;
+        // map two objects: we'll reuse animatedObject for the first and create a second if missing
+        animatedObject.style.left = `${x1}px`;
+        // second
+        let obj2 = document.getElementById('animated-object-2');
+        if (!obj2) {
+          obj2 = document.createElement('div');
+          obj2.id = 'animated-object-2';
+          obj2.className = 'absolute w-8 h-8 bg-secondary rounded-full';
+          animationContainer.appendChild(obj2);
+        }
+        obj2.style.top = `${animationContainer.clientHeight/2}px`;
+        obj2.style.left = `${x2}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(2)}s`;
+        currentTime += 0.05 / animationSpeed.value;
+        // stop if they cross
+        if (x1 + 16 >= x2) { stopAnimation(); return; }
+  exportData.push({ t: currentTime, x1: x1, x2: x2, type: 'collision' });
+  animationId = requestAnimationFrame(updateAnimation);
+      } else if (params.type === 'magnetic') {
+        // charged particle circular motion approximation
+        pixelsPerMeter = computePixelsPerMeter();
+        const q = params.q || 1e-6;
+        const v = params.v || 100;
+        const B = params.B || 0.1;
+        const m = parseFloat((document.getElementById('input-mass')||{}).value || 1);
+        const r = Math.abs(m * v / (q * B + 1e-12));
+        const omega = v / r;
+        const cx = animationContainer.clientWidth/2;
+        const cy = animationContainer.clientHeight/2;
+        const x = cx + r * pixelsPerMeter * Math.cos(omega * currentTime);
+        const y = cy + r * pixelsPerMeter * Math.sin(omega * currentTime);
+        animatedObject.style.left = `${x - 12}px`;
+        animatedObject.style.top = `${y - 12}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(2)}s`;
+        animationVelocity.textContent = `速率: ${v.toFixed(1)}m/s`;
+        animationPosition.textContent = `半径: ${r.toExponential(2)}m`;
+        currentTime += 0.05 / animationSpeed.value;
+  exportData.push({ t: currentTime, x: x - 12, y: y - 12, v: v, type: 'magnetic' });
+  animationId = requestAnimationFrame(updateAnimation);
+      } else {
+        // default fallback: use original free-fall
+        const distance = calculateDistance(currentTime);
+        const velocity = calculateVelocity(currentTime);
+        pixelsPerMeter = computePixelsPerMeter();
+        const position = 20 + distance * pixelsPerMeter;
+        animatedObject.style.top = `${position}px`;
+        animationTime.textContent = `时间: ${currentTime.toFixed(1)}s`;
+        animationVelocity.textContent = `速度: ${velocity.toFixed(1)}m/s`;
+        animationPosition.textContent = `位置: ${distance.toFixed(1)}m`;
+        if (showTrail.checked && currentTime % 0.5 < 0.1) addTrailPoint(position);
+        currentTime += 0.1 / animationSpeed.value;
+        exportData.push({ t: currentTime, x: 0, y: distance, v: velocity, type: 'default' });
+        animationId = requestAnimationFrame(updateAnimation);
+      }
+    }
+
+    // ensure generate button resets state and uses new updateAnimation
+    generateButton.removeEventListener && generateButton.removeEventListener('click', () => {});
+    generateButton.addEventListener('click', () => {
+      // Get form parameters
+      const params = getParams();
+      console.log('🎬 生成Canvas场景:', params);
+      
+      // Set global scene parameters for rendering
+      sceneParams = params;
+      
+      // Initialize canvas if needed
+      if (!canvas) initCanvas();
+      
+      // Reset time and redraw scene
+      currentTime = 0;
+      isPlaying = false;
+      drawScene();
+      
+      // Update UI
+      playBtn?.classList.remove('hidden');
+      pauseBtn?.classList.add('hidden');
+      
+      // Show notification
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+      notification.textContent = '�?场景已生�?点击"播放"开始演�?;
+      document.body.appendChild(notification);
+      setTimeout(() => { notification.remove(); }, 2000);
+      
+      // Highlight play button briefly
+      playBtn?.classList.add('animate-pulse');
+      setTimeout(() => playBtn?.classList.remove('animate-pulse'), 2000);
+    });
+
+    // Export animation data as CSV
+    const exportButton = document.getElementById('export-animation');
+    function downloadCSV(filename, rows) {
+      const header = Object.keys(rows[0]);
+      const csv = [header.join(',')].concat(rows.map(r => header.map(h => r[h] === undefined ? '' : r[h]).join(','))).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+    if (exportButton) exportButton.addEventListener('click', () => {
+      if (!exportData || exportData.length === 0) {
+        const notice = document.createElement('div');
+        notice.className = 'fixed top-20 right-4 bg-yellow-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+        notice.textContent = '当前没有可导出的动画数据（先生成并播放动画）';
+        document.body.appendChild(notice); setTimeout(()=>notice.remove(),2200); return;
+      }
+      try { downloadCSV('animation-export.csv', exportData); } catch(e) { console.error(e); }
+    });
+
+    
+
+    // --------------- Chart.js for uniform motion ----------------
+    function initializeUniformCharts() {
+      const ctxS = document.getElementById('chart-position').getContext('2d');
+      const ctxV = document.getElementById('chart-velocity').getContext('2d');
+      window.chartPosition = new Chart(ctxS, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 's(t) (m)', data: [], borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.08)', tension: 0.2 }] },
+        options: { animation: false, responsive: true, scales: { x: { title: { display: true, text: '时间 (s)' } }, y: { title: { display: true, text: '位移 (m)' } } } }
+      });
+
+      window.chartVelocity = new Chart(ctxV, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'v(t) (m/s)', data: [], borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.06)', tension: 0.2 }] },
+        options: { animation: false, responsive: true, scales: { x: { title: { display: true, text: '时间 (s)' } }, y: { title: { display: true, text: '速度 (m/s)' } } } }
+      });
+    }
+
+    function appendUniformData(t, s, v) {
+      if (!window.chartPosition || !window.chartVelocity) return;
+      const maxPoints = 200; // limit to avoid huge accumulation
+      const pos = window.chartPosition;
+      const vel = window.chartVelocity;
+      pos.data.labels.push(t.toFixed(2));
+      pos.data.datasets[0].data.push(s);
+      vel.data.labels.push(t.toFixed(2));
+      vel.data.datasets[0].data.push(v);
+      if (pos.data.labels.length > maxPoints) {
+        pos.data.labels.shift(); pos.data.datasets[0].data.shift();
+        vel.data.labels.shift(); vel.data.datasets[0].data.shift();
+      }
+      pos.update('none');
+      vel.update('none');
+    }
+
+    function clearUniformCharts() {
+      if (window.chartPosition) { window.chartPosition.data.labels = []; window.chartPosition.data.datasets[0].data = []; window.chartPosition.update(); }
+      if (window.chartVelocity) { window.chartVelocity.data.labels = []; window.chartVelocity.data.datasets[0].data = []; window.chartVelocity.update(); }
+    }
+  </script>
+</body>
+</html>

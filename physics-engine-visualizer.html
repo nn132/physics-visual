@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物理引擎可视化 - 专业版</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Matter.js 物理引擎 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --accent: #f59e0b;
+    }
+    
+    body {
+      font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+      overflow-x: hidden;
+    }
+    
+    #render-canvas {
+      background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
+      border-radius: 12px;
+      box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.1);
+    }
+    
+    .scene-card {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .scene-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .scene-card.active {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+    }
+    
+    .mode-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background: #cbd5e1;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .mode-switch.active {
+      background: var(--primary);
+    }
+    
+    .mode-switch-handle {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .mode-switch.active .mode-switch-handle {
+      transform: translateX(30px);
+    }
+    
+    .control-panel {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- 顶部导航 -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-atom text-primary text-2xl"></i>
+          <h1 class="text-xl font-bold">物理场景可视化</h1>
+          <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">物理引擎驱动</span>
+        </div>
+        
+        <!-- 模式切换 -->
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-600">场景模式</span>
+            <div id="mode-switch" class="mode-switch active">
+              <div class="mode-switch-handle"></div>
+            </div>
+            <span class="text-sm text-gray-600">参数模式</span>
+          </div>
+          <a href="index1.0.3.html" class="text-sm text-gray-600 hover:text-primary transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>返回主页
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto px-4 py-6">
+    
+    <!-- 场景模式（默认） -->
+    <div id="scene-mode" class="grid lg:grid-cols-4 gap-6">
+      
+      <!-- 左侧：场景库 -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-md p-6 sticky top-24">
+          <h2 class="text-lg font-bold mb-4 pb-3 border-b flex items-center gap-2">
+            <i class="fas fa-layer-group text-primary"></i>
+            精选场景
+          </h2>
+          
+          <div class="space-y-3">
+            <!-- 场景1：弹簧小车 -->
+            <div class="scene-card active border-2 rounded-lg p-3" data-scene="spring-cart">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-arrows-alt-h text-yellow-600 text-xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate">弹簧小车系统</div>
+                  <div class="text-xs text-gray-500">弹簧+小车+斜坡</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 场景2：碰撞摆球 -->
+            <div class="scene-card border-2 border-transparent rounded-lg p-3" data-scene="pendulum-collision">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-circle text-blue-600 text-xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate">摆球碰撞</div>
+                  <div class="text-xs text-gray-500">单摆+碰撞</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 场景3：滑块弹簧 -->
+            <div class="scene-card border-2 border-transparent rounded-lg p-3" data-scene="block-spring">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-square text-green-600 text-xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate">滑块弹簧振动</div>
+                  <div class="text-xs text-gray-500">简谐运动</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 场景4：抛体运动 -->
+            <div class="scene-card border-2 border-transparent rounded-lg p-3" data-scene="projectile">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-baseball-ball text-purple-600 text-xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate">抛体运动</div>
+                  <div class="text-xs text-gray-500">斜抛+平台</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 场景5：复合轨道 -->
+            <div class="scene-card border-2 border-transparent rounded-lg p-3" data-scene="complex-track">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-road text-pink-600 text-xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate">复合轨道</div>
+                  <div class="text-xs text-gray-500">圆弧+滑板</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 场景说明 -->
+          <div class="mt-6 pt-6 border-t">
+            <h3 class="text-sm font-medium mb-2 text-gray-700">
+              <i class="fas fa-info-circle text-blue-500 mr-2"></i>场景说明
+            </h3>
+            <p id="scene-description" class="text-xs text-gray-600 leading-relaxed">
+              点击上方场景卡片，体验真实的物理模拟效果。使用Matter.js物理引擎，精确计算碰撞、摩擦、弹性等物理现象。
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右侧：可视化画布 -->
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+          <!-- 工具栏 -->
+          <div class="bg-gray-50 px-6 py-4 border-b flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+              <button id="play-btn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center gap-2">
+                <i class="fas fa-play"></i>
+                <span>开始模拟</span>
+              </button>
+              <button id="pause-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md hidden flex items-center gap-2">
+                <i class="fas fa-pause"></i>
+                <span>暂停</span>
+              </button>
+              <button id="reset-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center gap-2">
+                <i class="fas fa-redo"></i>
+                <span>重置</span>
+              </button>
+            </div>
+            
+            <div class="flex items-center gap-4 flex-wrap">
+              <label class="flex items-center text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" id="show-debug" class="mr-2 rounded">
+                <span>调试模式</span>
+              </label>
+              <label class="flex items-center text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" id="show-vectors" checked class="mr-2 rounded">
+                <span>显示矢量</span>
+              </label>
+              <label class="flex items-center text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" id="show-trail" checked class="mr-2 rounded">
+                <span>显示轨迹</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Canvas 容器 -->
+          <div class="relative" style="height: 600px;">
+            <div id="render-canvas" class="w-full h-full"></div>
+            
+            <!-- 实时数据面板 -->
+            <div class="absolute top-4 left-4 control-panel p-4 min-w-[240px]">
+              <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <i class="fas fa-tachometer-alt text-primary"></i>
+                实时数据
+              </h3>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">时间:</span>
+                  <span id="data-time" class="font-mono font-medium text-gray-900">0.00 s</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">能量:</span>
+                  <span id="data-energy" class="font-mono font-medium text-gray-900">0.00 J</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">速度:</span>
+                  <span id="data-velocity" class="font-mono font-medium text-gray-900">0.00 m/s</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">物体数:</span>
+                  <span id="data-objects" class="font-mono font-medium text-gray-900">0</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 加载提示 -->
+            <div id="loading-overlay" class="absolute inset-0 bg-white/90 flex items-center justify-center hidden">
+              <div class="text-center">
+                <div class="loading text-4xl text-primary mb-3">
+                  <i class="fas fa-cog fa-spin"></i>
+                </div>
+                <div class="text-gray-600">正在初始化物理引擎...</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 速度和时间控制 -->
+          <div class="bg-gray-50 px-6 py-4 border-t">
+            <div class="flex items-center gap-4">
+              <label class="text-sm text-gray-600 whitespace-nowrap min-w-[80px]">
+                <i class="fas fa-clock mr-2"></i>时间倍速:
+              </label>
+              <input type="range" id="time-scale" min="0.1" max="2" step="0.1" value="1" class="flex-1">
+              <span id="time-scale-value" class="text-sm font-mono text-gray-700 min-w-[50px] text-right">1.0x</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 场景参数调节 -->
+        <div id="scene-params-panel" class="mt-6 bg-white rounded-xl shadow-md p-6">
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <i class="fas fa-sliders-h text-primary"></i>
+            场景参数
+          </h3>
+          <div id="scene-params" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- 动态生成参数控制 -->
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- 参数模式（隐藏） -->
+    <div id="param-mode" class="hidden">
+      <div class="bg-white rounded-xl shadow-md p-8 text-center">
+        <i class="fas fa-cog text-6xl text-gray-300 mb-4"></i>
+        <h2 class="text-2xl font-bold mb-2">参数调节模式</h2>
+        <p class="text-gray-600 mb-6">手动调整物理参数，精确控制运动过程</p>
+        <a href="index1.0.3.html" class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg transition-colors">
+          <i class="fas fa-arrow-right"></i>
+          <span>前往参数模式页面</span>
+        </a>
+      </div>
+    </div>
+    
+  </div>
+
+  <script>
+    // ========== Matter.js 物理引擎初始化 ==========
+    const Engine = Matter.Engine;
+    const Render = Matter.Render;
+    const Runner = Matter.Runner;
+    const Bodies = Matter.Bodies;
+    const Composite = Matter.Composite;
+    const Constraint = Matter.Constraint;
+    const Body = Matter.Body;
+    const Events = Matter.Events;
+    const Mouse = Matter.Mouse;
+    const MouseConstraint = Matter.MouseConstraint;
+    
+    // 创建引擎
+    const engine = Engine.create();
+    engine.gravity.y = 1; // 重力加速度(相对值)
+    
+    // 获取容器
+    const container = document.getElementById('render-canvas');
+    
+    // 创建渲染器
+    const render = Render.create({
+      element: container,
+      engine: engine,
+      options: {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        wireframes: false,
+        background: 'transparent',
+        pixelRatio: window.devicePixelRatio || 1
+      }
+    });
+    
+    // 启动渲染
+    Render.run(render);
+    
+    // 创建运行器
+    const runner = Runner.create();
+    
+    // 添加鼠标控制
+    const mouse = Mouse.create(render.canvas);
+    const mouseConstraint = MouseConstraint.create(engine, {
+      mouse: mouse,
+      constraint: {
+        stiffness: 0.2,
+        render: {
+          visible: false
+        }
+      }
+    });
+    Composite.add(engine.world, mouseConstraint);
+    render.mouse = mouse;
+    
+    // 全局变量
+    let currentScene = null;
+    let isRunning = false;
+    let startTime = 0;
+    let elapsedTime = 0;
+    let trackedBody = null; // 跟踪的主要物体
+    
+    // ========== 场景定义 ==========
+    
+    // 场景1：弹簧小车系统
+    class SpringCartScene {
+      constructor() {
+        this.name = "弹簧小车系统";
+        this.description = "黄色小球通过弹簧连接到小车上，小车可以在斜坡和平台上运动，展示能量转换和振动现象";
+        this.bodies = [];
+      }
+      
+      create() {
+        const { width, height } = render.options;
+        this.bodies = [];
+        
+        // 清空世界
+        Composite.clear(engine.world);
+        Composite.add(engine.world, mouseConstraint);
+        
+        // 地面
+        const ground = Bodies.rectangle(width / 2, height - 20, width, 40, {
+          isStatic: true,
+          render: {
+            fillStyle: '#10b981',
+            strokeStyle: '#059669',
+            lineWidth: 2
+          }
+        });
+        this.bodies.push(ground);
+        
+        // 左侧斜坡
+        const ramp = Bodies.rectangle(150, height - 120, 250, 20, {
+          isStatic: true,
+          angle: -Math.PI / 12,
+          render: {
+            fillStyle: '#64748b',
+            strokeStyle: '#475569',
+            lineWidth: 2
+          },
+          chamfer: { radius: 5 }
+        });
+        this.bodies.push(ramp);
+        
+        // 中间平台
+        const platform = Bodies.rectangle(width / 2, height - 80, 400, 20, {
+          isStatic: true,
+          render: {
+            fillStyle: '#64748b',
+            strokeStyle: '#475569',
+            lineWidth: 2
+          },
+          chamfer: { radius: 5 }
+        });
+        this.bodies.push(platform);
+        
+        // 右侧水槽容器（蓝色）
+        const wallLeft = Bodies.rectangle(width - 200, height - 150, 20, 200, {
+          isStatic: true,
+          render: {
+            fillStyle: '#3b82f6',
+            strokeStyle: '#2563eb',
+            lineWidth: 2
+          }
+        });
+        
+        const wallRight = Bodies.rectangle(width - 50, height - 150, 20, 200, {
+          isStatic: true,
+          render: {
+            fillStyle: '#3b82f6',
+            strokeStyle: '#2563eb',
+            lineWidth: 2
+          }
+        });
+        
+        const wallBottom = Bodies.rectangle(width - 125, height - 60, 150, 20, {
+          isStatic: true,
+          render: {
+            fillStyle: '#3b82f6',
+            strokeStyle: '#2563eb',
+            lineWidth: 2
+          }
+        });
+        
+        this.bodies.push(wallLeft, wallRight, wallBottom);
+        
+        // 小车（红色方块，带轮子）
+        const cart = Bodies.rectangle(width / 2 - 50, height - 140, 80, 40, {
+          density: 0.01,
+          friction: 0.1,
+          restitution: 0.3,
+          render: {
+            fillStyle: '#ef4444',
+            strokeStyle: '#dc2626',
+            lineWidth: 2
+          }
+        });
+        
+        // 小车轮子
+        const wheel1 = Bodies.circle(width / 2 - 75, height - 105, 12, {
+          density: 0.01,
+          friction: 1,
+          restitution: 0.3,
+          render: {
+            fillStyle: '#1f2937',
+            strokeStyle: '#111827',
+            lineWidth: 2
+          }
+        });
+        
+        const wheel2 = Bodies.circle(width / 2 - 25, height - 105, 12, {
+          density: 0.01,
+          friction: 1,
+          restitution: 0.3,
+          render: {
+            fillStyle: '#1f2937',
+            strokeStyle: '#111827',
+            lineWidth: 2
+          }
+        });
+        
+        // 轮子约束
+        const axle1 = Constraint.create({
+          bodyA: cart,
+          pointA: { x: -30, y: 20 },
+          bodyB: wheel1,
+          stiffness: 1,
+          length: 0
+        });
+        
+        const axle2 = Constraint.create({
+          bodyA: cart,
+          pointA: { x: 30, y: 20 },
+          bodyB: wheel2,
+          stiffness: 1,
+          length: 0
+        });
+        
+        this.bodies.push(cart, wheel1, wheel2, axle1, axle2);
+        
+        // 黄色小球（弹簧连接）
+        const ball = Bodies.circle(width / 2 - 50, height - 220, 20, {
+          density: 0.005,
+          restitution: 0.8,
+          render: {
+            fillStyle: '#fbbf24',
+            strokeStyle: '#f59e0b',
+            lineWidth: 3
+          }
+        });
+        
+        // 弹簧约束
+        const spring = Constraint.create({
+          bodyA: cart,
+          pointA: { x: 0, y: -20 },
+          bodyB: ball,
+          stiffness: 0.02,
+          damping: 0.01,
+          render: {
+            strokeStyle: '#64748b',
+            lineWidth: 2,
+            type: 'spring',
+            anchors: false
+          }
+        });
+        
+        this.bodies.push(ball, spring);
+        trackedBody = ball;
+        
+        // 添加所有物体到世界
+        Composite.add(engine.world, this.bodies);
+        
+        return this.bodies;
+      }
+      
+      getParams() {
+        return {
+          springStiffness: { label: '弹簧刚度', value: 0.02, min: 0.01, max: 0.1, step: 0.01 },
+          ballMass: { label: '小球质量', value: 0.005, min: 0.001, max: 0.02, step: 0.001 },
+          gravity: { label: '重力', value: 1, min: 0.5, max: 2, step: 0.1 }
+        };
+      }
+      
+      updateParam(key, value) {
+        // 更新参数逻辑
+        if (key === 'gravity') {
+          engine.gravity.y = parseFloat(value);
+        }
+        // 其他参数需要重新创建场景
+      }
+    }
+    
+    // 场景2：摆球碰撞
+    class PendulumCollisionScene {
+      constructor() {
+        this.name = "摆球碰撞";
+        this.description = "多个摆球碰撞，展示动量守恒和能量传递";
+        this.bodies = [];
+      }
+      
+      create() {
+        const { width, height } = render.options;
+        this.bodies = [];
+        
+        Composite.clear(engine.world);
+        Composite.add(engine.world, mouseConstraint);
+        
+        // 地面
+        const ground = Bodies.rectangle(width / 2, height - 20, width, 40, {
+          isStatic: true,
+          render: {
+            fillStyle: '#10b981',
+            strokeStyle: '#059669',
+            lineWidth: 2
+          }
+        });
+        this.bodies.push(ground);
+        
+        // 顶部支架
+        const support = Bodies.rectangle(width / 2, 50, width * 0.8, 20, {
+          isStatic: true,
+          render: {
+            fillStyle: '#64748b',
+            strokeStyle: '#475569',
+            lineWidth: 2
+          }
+        });
+        this.bodies.push(support);
+        
+        // 创建5个摆球
+        const ballCount = 5;
+        const ballRadius = 25;
+        const spacing = 55;
+        const stringLength = 300;
+        const startX = width / 2 - (ballCount - 1) * spacing / 2;
+        
+        for (let i = 0; i < ballCount; i++) {
+          const x = startX + i * spacing;
+          const y = 50 + stringLength;
+          
+          const ball = Bodies.circle(x, y, ballRadius, {
+            density: 0.01,
+            restitution: 1,
+            friction: 0,
+            frictionAir: 0,
+            render: {
+              fillStyle: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'][i],
+              strokeStyle: ['#dc2626', '#d97706', '#059669', '#2563eb', '#7c3aed'][i],
+              lineWidth: 3
+            }
+          });
+          
+          const string = Constraint.create({
+            pointA: { x: x, y: 50 },
+            bodyB: ball,
+            stiffness: 1,
+            length: stringLength,
+            render: {
+              strokeStyle: '#64748b',
+              lineWidth: 2
+            }
+          });
+          
+          this.bodies.push(ball, string);
+          
+          if (i === 0) trackedBody = ball;
+        }
+        
+        // 将第一个球拉高
+        Body.setPosition(this.bodies[0], { x: startX - 150, y: 150 });
+        
+        Composite.add(engine.world, this.bodies);
+        return this.bodies;
+      }
+      
+      getParams() {
+        return {
+          stringLength: { label: '摆长', value: 300, min: 200, max: 400, step: 10 },
+          gravity: { label: '重力', value: 1, min: 0.5, max: 2, step: 0.1 }
+        };
+      }
+      
+      updateParam(key, value) {
+        if (key === 'gravity') {
+          engine.gravity.y = parseFloat(value);
+        }
+      }
+    }
+    
+    // 场景3：滑块弹簧振动
+    class BlockSpringScene {
+      constructor() {
+        this.name = "滑块弹簧振动";
+        this.description = "水平弹簧连接的滑块，展示简谐振动";
+        this.bodies = [];
+      }
+      
+      create() {
+        const { width, height } = render.options;
+        this.bodies = [];
+        
+        Composite.clear(engine.world);
+        Composite.add(engine.world, mouseConstraint);
+        
+        // 临时关闭重力
+        engine.gravity.y = 0;
+        
+        // 水平轨道
+        const track = Bodies.rectangle(width / 2, height / 2, width * 0.8, 20, {
+          isStatic: true,
+          render: {
+            fillStyle: '#64748b',
+            strokeStyle: '#475569',
+            lineWidth: 2
+          }
+        });
+        this.bodies.push(track);
+        
+        // 左侧固定墙
+        const wall = Bodies.rectangle(100, height / 2 - 50, 20, 120, {
+          isStatic: true,
+          render: {
+            fillStyle: '#1f2937',
+            strokeStyle: '#111827',
+            lineWidth: 2
+          }
+        });
+        this.bodies.push(wall);
+        
+        // 滑块
+        const block = Bodies.rectangle(width / 2, height / 2 - 40, 60, 60, {
+          density: 0.01,
+          friction: 0,
+          frictionAir: 0.001,
+          restitution: 0,
+          render: {
+            fillStyle: '#3b82f6',
+            strokeStyle: '#2563eb',
+            lineWidth: 3
+          }
+        });
+        
+        // 弹簧
+        const spring = Constraint.create({
+          pointA: { x: 100, y: height / 2 - 50 },
+          bodyB: block,
+          stiffness: 0.005,
+          damping: 0.01,
+          render: {
+            strokeStyle: '#f59e0b',
+            lineWidth: 3,
+            type: 'spring'
+          }
+        });
+        
+        this.bodies.push(block, spring);
+        trackedBody = block;
+        
+        // 给滑块初始速度
+        Body.setVelocity(block, { x: 5, y: 0 });
+        
+        Composite.add(engine.world, this.bodies);
+        return this.bodies;
+      }
+      
+      getParams() {
+        return {
+          springStiffness: { label: '弹簧刚度', value: 0.005, min: 0.001, max: 0.02, step: 0.001 },
+          blockMass: { label: '滑块质量', value: 0.01, min: 0.005, max: 0.05, step: 0.005 }
+        };
+      }
+      
+      updateParam(key, value) {
+        // 需要重新创建场景
+      }
+    }
+    
+    // 场景4：抛体运动
+    class ProjectileScene {
+      constructor() {
+        this.name = "抛体运动";
+        this.description = "从高台抛出的物体，展示抛物线轨迹";
+        this.bodies = [];
+      }
+      
+      create() {
+        const { width, height } = render.options;
+        this.bodies = [];
+        
+        Composite.clear(engine.world);
+        Composite.add(engine.world, mouseConstraint);
+        
+        engine.gravity.y = 1;
+        
+        // 地面
+        const ground = Bodies.rectangle(width / 2, height - 20, width, 40, {
+          isStatic: true,
+          render: {
+            fillStyle: '#10b981',
+            strokeStyle: '#059669',
+            lineWidth: 2
+          }
+        });
+        this.bodies.push(ground);
+        
+        // 高台
+        const platform = Bodies.rectangle(150, height - 200, 200, 20, {
+          isStatic: true,
+          render: {
+            fillStyle: '#64748b',
+            strokeStyle: '#475569',
+            lineWidth: 2
+          }
+        });
+        this.bodies.push(platform);
+        
+        // 抛出的球
+        const ball = Bodies.circle(250, height - 240, 20, {
+          density: 0.01,
+          restitution: 0.6,
+          render: {
+            fillStyle: '#f59e0b',
+            strokeStyle: '#d97706',
+            lineWidth: 3
+          }
+        });
+        
+        // 给球初速度
+        Body.setVelocity(ball, { x: 8, y: -5 });
+        
+        this.bodies.push(ball);
+        trackedBody = ball;
+        
+        Composite.add(engine.world, this.bodies);
+        return this.bodies;
+      }
+      
+      getParams() {
+        return {
+          initialVx: { label: '水平速度', value: 8, min: 0, max: 15, step: 0.5 },
+          initialVy: { label: '垂直速度', value: -5, min: -10, max: 0, step: 0.5 },
+          gravity: { label: '重力', value: 1, min: 0.5, max: 2, step: 0.1 }
+        };
+      }
+      
+      updateParam(key, value) {
+        if (key === 'gravity') {
+          engine.gravity.y = parseFloat(value);
+        }
+      }
+    }
+    
+    // 场景5：复合轨道（简化版）
+    class ComplexTrackScene {
+      constructor() {
+        this.name = "复合轨道";
+        this.description = "物体沿复杂轨道运动";
+        this.bodies = [];
+      }
+      
+      create() {
+        const { width, height } = render.options;
+        this.bodies = [];
+        
+        Composite.clear(engine.world);
+        Composite.add(engine.world, mouseConstraint);
+        
+        engine.gravity.y = 1;
+        
+        // 创建轨道段
+        // 这里简化实现，使用静态矩形组成轨道
+        
+        // 地面
+        const ground = Bodies.rectangle(width / 2, height - 20, width, 40, {
+          isStatic: true,
+          render: {
+            fillStyle: '#10b981',
+            strokeStyle: '#059669',
+            lineWidth: 2
+          }
+        });
+        this.bodies.push(ground);
+        
+        // 添加一些平台
+        for (let i = 0; i < 5; i++) {
+          const platform = Bodies.rectangle(
+            150 + i * 120,
+            height - 100 - i * 50,
+            100,
+            15,
+            {
+              isStatic: true,
+              angle: i * 0.1,
+              render: {
+                fillStyle: '#64748b',
+                strokeStyle: '#475569',
+                lineWidth: 2
+              }
+            }
+          );
+          this.bodies.push(platform);
+        }
+        
+        // 滚动的球
+        const ball = Bodies.circle(200, height - 300, 20, {
+          density: 0.01,
+          restitution: 0.5,
+          friction: 0.01,
+          render: {
+            fillStyle: '#3b82f6',
+            strokeStyle: '#2563eb',
+            lineWidth: 3
+          }
+        });
+        
+        this.bodies.push(ball);
+        trackedBody = ball;
+        
+        Composite.add(engine.world, this.bodies);
+        return this.bodies;
+      }
+      
+      getParams() {
+        return {
+          gravity: { label: '重力', value: 1, min: 0.5, max: 2, step: 0.1 }
+        };
+      }
+      
+      updateParam(key, value) {
+        if (key === 'gravity') {
+          engine.gravity.y = parseFloat(value);
+        }
+      }
+    }
+    
+    // 场景管理器
+    const scenes = {
+      'spring-cart': new SpringCartScene(),
+      'pendulum-collision': new PendulumCollisionScene(),
+      'block-spring': new BlockSpringScene(),
+      'projectile': new ProjectileScene(),
+      'complex-track': new ComplexTrackScene()
+    };
+    
+    // ========== UI 控制 ==========
+    
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const timeScaleSlider = document.getElementById('time-scale');
+    const timeScaleValue = document.getElementById('time-scale-value');
+    const modeSwitch = document.getElementById('mode-switch');
+    const sceneMode = document.getElementById('scene-mode');
+    const paramMode = document.getElementById('param-mode');
+    
+    // 加载场景
+    function loadScene(sceneName) {
+      const scene = scenes[sceneName];
+      if (!scene) return;
+      
+      currentScene = scene;
+      pause();
+      scene.create();
+      
+      // 更新说明
+      document.getElementById('scene-description').textContent = scene.description;
+      
+      // 更新参数面板
+      const paramsPanel = document.getElementById('scene-params');
+      paramsPanel.innerHTML = '';
+      
+      const params = scene.getParams();
+      Object.entries(params).forEach(([key, param]) => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label class="block text-sm font-medium text-gray-700 mb-2">${param.label}</label>
+          <div class="flex items-center gap-3">
+            <input type="range" 
+                   class="flex-1 param-slider" 
+                   data-key="${key}"
+                   min="${param.min}" 
+                   max="${param.max}" 
+                   step="${param.step}" 
+                   value="${param.value}">
+            <span class="param-value text-sm font-mono bg-gray-100 px-3 py-1 rounded min-w-[60px] text-center">${param.value}</span>
+          </div>
+        `;
+        paramsPanel.appendChild(div);
+      });
+      
+      // 绑定参数变化
+      document.querySelectorAll('.param-slider').forEach(slider => {
+        slider.addEventListener('input', (e) => {
+          const key = e.target.dataset.key;
+          const value = e.target.value;
+          e.target.nextElementSibling.textContent = parseFloat(value).toFixed(3);
+          scene.updateParam(key, value);
+        });
+      });
+    }
+    
+    // 播放/暂停
+    function play() {
+      if (!isRunning) {
+        Runner.run(runner, engine);
+        isRunning = true;
+        startTime = Date.now() - elapsedTime;
+        playBtn.classList.add('hidden');
+        pauseBtn.classList.remove('hidden');
+      }
+    }
+    
+    function pause() {
+      if (isRunning) {
+        Runner.stop(runner);
+        isRunning = false;
+        elapsedTime = Date.now() - startTime;
+        playBtn.classList.remove('hidden');
+        pauseBtn.classList.add('hidden');
+      }
+    }
+    
+    function reset() {
+      pause();
+      elapsedTime = 0;
+      if (currentScene) {
+        currentScene.create();
+      }
+    }
+    
+    // 更新数据面板
+    function updateDataPanel() {
+      if (!isRunning) return;
+      
+      const time = (Date.now() - startTime) / 1000;
+      document.getElementById('data-time').textContent = time.toFixed(2) + ' s';
+      
+      // 计算总能量
+      let totalEnergy = 0;
+      let maxVelocity = 0;
+      
+      Composite.allBodies(engine.world).forEach(body => {
+        if (!body.isStatic) {
+          const ke = 0.5 * body.mass * (body.velocity.x ** 2 + body.velocity.y ** 2);
+          const pe = body.mass * engine.gravity.y * (render.options.height - body.position.y);
+          totalEnergy += ke + pe;
+          
+          const v = Math.sqrt(body.velocity.x ** 2 + body.velocity.y ** 2);
+          if (v > maxVelocity) maxVelocity = v;
+        }
+      });
+      
+      document.getElementById('data-energy').textContent = totalEnergy.toFixed(2) + ' J';
+      document.getElementById('data-velocity').textContent = maxVelocity.toFixed(2) + ' m/s';
+      document.getElementById('data-objects').textContent = Composite.allBodies(engine.world).filter(b => !b.isStatic).length;
+      
+      requestAnimationFrame(updateDataPanel);
+    }
+    
+    // 事件绑定
+    playBtn.addEventListener('click', () => {
+      play();
+      updateDataPanel();
+    });
+    pauseBtn.addEventListener('click', pause);
+    resetBtn.addEventListener('click', reset);
+    
+    timeScaleSlider.addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      engine.timing.timeScale = value;
+      timeScaleValue.textContent = value.toFixed(1) + 'x';
+    });
+    
+    // 场景切换
+    document.querySelectorAll('.scene-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.scene-card').forEach(c => {
+          c.classList.remove('active', 'border-primary', 'bg-gradient-to-br', 'from-blue-50', 'to-sky-50');
+          c.classList.add('border-transparent');
+        });
+        card.classList.add('active', 'border-primary');
+        
+        const sceneName = card.dataset.scene;
+        loadScene(sceneName);
+      });
+    });
+    
+    // 模式切换
+    modeSwitch.addEventListener('click', () => {
+      modeSwitch.classList.toggle('active');
+      if (modeSwitch.classList.contains('active')) {
+        sceneMode.classList.remove('hidden');
+        paramMode.classList.add('hidden');
+      } else {
+        sceneMode.classList.add('hidden');
+        paramMode.classList.remove('hidden');
+      }
+    });
+    
+    // 初始化默认场景
+    loadScene('spring-cart');
+    
+    // 响应式调整
+    window.addEventListener('resize', () => {
+      render.canvas.width = container.clientWidth;
+      render.canvas.height = container.clientHeight;
+      render.options.width = container.clientWidth;
+      render.options.height = container.clientHeight;
+      if (currentScene) {
+        currentScene.create();
+      }
+    });
+    
+    // 调试模式
+    document.getElementById('show-debug').addEventListener('change', (e) => {
+      render.options.wireframes = e.target.checked;
+    });
+    
+  </script>
+
+</body>
+</html>

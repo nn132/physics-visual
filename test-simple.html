@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试 - 物理可视化</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">测试页面</h1>
+    
+    <div class="bg-white p-4 rounded shadow">
+      <label class="block mb-2">题目类型</label>
+      <select id="question-type-select" class="w-full p-2 border rounded mb-4">
+        <option value="uniform">匀变速直线运动</option>
+        <option value="projectile">抛体运动</option>
+        <option value="circular">圆周运动</option>
+      </select>
+      
+      <div id="dynamic-params" class="mb-4 border-2 border-blue-300 p-4 min-h-[100px]">
+        <!-- 参数将在这里动态生成 -->
+      </div>
+      
+      <button id="generate-btn" class="bg-blue-500 text-white px-4 py-2 rounded">
+        生成可视化
+      </button>
+      
+      <div id="output" class="mt-4 p-4 bg-gray-100 rounded">
+        <!-- 输出信息 -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('🚀 脚本开始执行');
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('📌 DOM加载完成');
+      
+      const questionTypeSelect = document.getElementById('question-type-select');
+      const dynamicParams = document.getElementById('dynamic-params');
+      const generateBtn = document.getElementById('generate-btn');
+      const output = document.getElementById('output');
+      
+      console.log('元素检查:', {
+        questionTypeSelect: !!questionTypeSelect,
+        dynamicParams: !!dynamicParams,
+        generateBtn: !!generateBtn
+      });
+      
+      function createParamField(id, label, value) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mb-2';
+        wrapper.innerHTML = `
+          <label class="text-xs text-gray-500">${label}</label>
+          <input id="${id}" type="number" class="w-full p-2 border rounded" value="${value}">
+        `;
+        return wrapper;
+      }
+      
+      function populateParams(type) {
+        console.log('📝 填充参数:', type);
+        dynamicParams.innerHTML = '';
+        
+        if (type === 'uniform') {
+          dynamicParams.appendChild(createParamField('v0', '初速度 (m/s)', '0'));
+          dynamicParams.appendChild(createParamField('a', '加速度 (m/s²)', '10'));
+          dynamicParams.appendChild(createParamField('t', '时间 (s)', '5'));
+        } else if (type === 'projectile') {
+          dynamicParams.appendChild(createParamField('speed', '初速度 (m/s)', '10'));
+          dynamicParams.appendChild(createParamField('angle', '角度 (度)', '45'));
+        } else if (type === 'circular') {
+          dynamicParams.appendChild(createParamField('radius', '半径 (m)', '2'));
+          dynamicParams.appendChild(createParamField('omega', '角速度 (rad/s)', '1'));
+        }
+        
+        console.log('✅ 参数填充完成，子元素数量:', dynamicParams.children.length);
+      }
+      
+      // 初始填充
+      populateParams(questionTypeSelect.value);
+      
+      // 监听变化
+      questionTypeSelect.addEventListener('change', () => {
+        populateParams(questionTypeSelect.value);
+      });
+      
+      // 生成按钮
+      generateBtn.addEventListener('click', () => {
+        console.log('🎬 生成按钮被点击');
+        const inputs = dynamicParams.querySelectorAll('input');
+        const params = {};
+        inputs.forEach(input => {
+          params[input.id] = input.value;
+        });
+        output.innerHTML = `<pre>${JSON.stringify(params, null, 2)}</pre>`;
+      });
+      
+      console.log('✅ 初始化完成');
+    });
+  </script>
+</body>
+</html>
