@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -10,6 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <!-- Mammoth.js for client-side .docx parsing -->
   <script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
+  <!-- gif.js for GIF export -->
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   
   
   <!-- 配置Tailwind -->
@@ -46,6 +48,117 @@
       }
       .physics-animation {
         transition-timing-function: cubic-bezier(0.17, 0.67, 0.83, 0.67);
+      }
+      
+      /* 全屏模式样式 */
+      #animation-container.fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        border-radius: 0 !important;
+        min-height: 100vh !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+      
+      /* 全屏时Canvas样式（无论在哪个父元素下） */
+      body.fullscreen-active #physics-canvas {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: block !important;
+        z-index: 10000 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        background-color: white !important;
+      }
+      
+      /* 全屏时只隐藏特定元素，不影响数据 */
+      body.fullscreen-active > header,
+      body.fullscreen-active > section,
+      body.fullscreen-active > footer,
+      body.fullscreen-active > nav {
+        display: none !important;
+      }
+      
+      /* 全屏退出按钮 */
+      .fullscreen-exit-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10002;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 14px 24px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      }
+      
+      .fullscreen-exit-btn:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      }
+      
+      .fullscreen-exit-btn:active {
+        transform: translateY(0);
+      }
+      
+      /* 全屏控制面板 */
+      .fullscreen-controls {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10002;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 20px 30px;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      .fullscreen-controls button {
+        transition: all 0.2s ease;
+      }
+      
+      .fullscreen-controls button:hover {
+        transform: translateY(-2px);
+      }
+      
+      /* 全屏数据显示优化 */
+      body.fullscreen-active .data-display {
+        position: fixed !important;
+        top: 20px !important;
+        left: 20px !important;
+        z-index: 10002 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        padding: 20px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+        font-size: 18px !important;
       }
     }
   </style>
@@ -200,14 +313,15 @@
         </div>
         
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
-    <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200 items-stretch">
+    <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
             <!-- 左侧：题目输入区 -->
             <div class="p-6 flex flex-col">
               <h3 class="text-lg font-semibold mb-4">输入物理题目</h3>
               
+              <!-- 题目类型 -->
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">题目类型</label>
-                <select id="question-type-select" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                <label class="block text-sm font-medium text-gray-700 mb-2">题目类型</label>
+                <select id="question-type-select" class="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   <option value="uniform">匀变速直线运动</option>
                   <option value="projectile">平抛/抛体运动</option>
                   <option value="circular">圆周运动</option>
@@ -217,110 +331,143 @@
                 </select>
               </div>
               
+              <!-- 题目描述 -->
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">题目描述（可填自然语言）</label>
-                <textarea id="problem-description" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-32" placeholder="例如：一个物体从高处自由下落，初始速度为0，重力加速度取10m/s²，5秒后的速度和下落距离..."></textarea>
-                <div class="mt-2 flex items-center gap-2">
-                  <input id="parse-description" type="button" class="bg-primary hover:bg-primary/90 text-white py-1 px-3 rounded-md text-sm" value="从文字解析参数">
-                  <!-- 隐藏的 docx input（触发由下面按钮完成） -->
-                  <input id="upload-docx" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" aria-hidden="true">
-                  <button id="import-docx-button" class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-md text-sm">从 Word 导入</button>
+                <label class="block text-sm font-medium text-gray-700 mb-2">题目描述</label>
+                <textarea id="problem-description" class="w-full p-3 border-2 border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" rows="6" placeholder="输入题目或点击下方导入..."></textarea>
+                
+                <!-- 导入按钮组 - 等宽并排 -->
+                <div class="mt-3 grid grid-cols-2 gap-3">
+                  <!-- 导入题目下拉菜单 -->
+                  <div class="relative">
+                    <button id="import-menu-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                      <i class="fa fa-upload"></i>
+                      <span>导入题目</span>
+                      <i class="fa fa-caret-down"></i>
+                    </button>
+                    <div id="import-menu" class="hidden absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10 overflow-hidden">
+                      <button id="upload-image-btn" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100">
+                        <i class="fa fa-image text-blue-600"></i>
+                        <span>上传图片</span>
+                      </button>
+                      <button id="upload-docx-btn" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3">
+                        <i class="fa fa-file-word-o text-blue-600"></i>
+                        <span>导入Word文档</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- 智能解析按钮 -->
+                  <button id="parse-description" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <span>智能解析</span>
+                  </button>
+                </div>
+                
+                <!-- 隐藏的文件输入 -->
+                <input id="upload-image" type="file" accept="image/*" class="hidden">
+                <input id="upload-docx" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden">
+              </div>
+              
+              <!-- 图片上传显示区域 -->
+              <div id="image-upload-area" class="mb-4 hidden">
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2 text-sm font-medium">
+                      <i class="fa fa-image text-blue-600"></i>
+                      <span>图片已上传</span>
+                    </div>
+                    <button id="remove-image" class="text-red-600 hover:text-red-700 text-sm">
+                      <i class="fa fa-times"></i> 删除
+                    </button>
+                  </div>
+                  <div id="ocr-result" class="text-sm text-gray-700 bg-white p-3 rounded border border-gray-200 max-h-32 overflow-y-auto">
+                    识别中...
+                  </div>
+                  <button id="apply-ocr" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
+                    <i class="fa fa-eye"></i>
+                    <span>识别并填充</span>
+                  </button>
                 </div>
               </div>
               
+              <!-- 参数设置 -->
               <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">关键参数</label>
-                <div class="grid grid-cols-2 gap-2">
-                  <div>
-                    <label class="text-xs text-gray-500">初始速度 (m/s)</label>
-                    <input id="input-initial-velocity" type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="0">
-                  </div>
-                  <div>
-                    <label class="text-xs text-gray-500">加速度 (m/s²)</label>
-                    <input id="input-acceleration" type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="10">
-                  </div>
-                  <div>
-                    <label class="text-xs text-gray-500">时间 (s)</label>
-                    <input id="input-time" type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="5">
-                  </div>
-                  <div>
-                    <label class="text-xs text-gray-500">质量 (kg)</label>
-                    <input id="input-mass" type="number" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="1">
-                  </div>
-                </div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">参数设置</label>
                 <!-- 动态参数区域（不同题型显示不同字段） -->
-                <div id="dynamic-params" class="mt-3"></div>
+                <div id="dynamic-params"></div>
               </div>
               
-              <button id="generate-animation" class="w-full bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-md transition-colors">
-                生成可视化 <i class="fa fa-magic ml-1"></i>
+              <!-- 生成可视化按钮 -->
+              <button id="generate-animation" class="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 hover:from-blue-700 hover:via-purple-700 hover:to-orange-600 text-white py-3 px-6 rounded-lg text-lg font-medium flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg">
+                <i class="fa fa-play-circle"></i>
+                <span>生成可视化</span>
               </button>
-              
-              <div class="mt-4 text-center text-sm text-gray-500">
-                或 <button class="text-primary hover:underline">上传题目图片</button>
-              </div>
             </div>
             
             <!-- 右侧：可视化展示区 -->
-            <div class="md:col-span-2 p-6 bg-gray-50 flex flex-col">
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">运动过程演示</h3>
-                <div class="flex space-x-2">
-                  <button id="toggle-animation" type="button" class="bg-primary/10 hover:bg-primary/20 text-primary p-2 rounded-md transition-colors" aria-pressed="false" aria-label="播放动画" title="播放/暂停">
-                    <!-- inline SVG play icon (uses currentColor) -->
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                      <path d="M5 3v18l15-9L5 3z" fill="currentColor"></path>
-                    </svg>
-                  </button>
-                  <button id="reset-animation" class="bg-gray-200 hover:bg-gray-300 text-gray-700 p-2 rounded-md transition-colors">
-                    <i class="fa fa-refresh"></i>
-                  </button>
-                </div>
-              </div>
+            <div class="md:col-span-2 p-6 bg-gray-50 flex flex-col" style="min-height: 700px;">
+              <h3 class="text-lg font-semibold mb-4">运动过程演示</h3>
               
-              <!-- 动画画布 -->
-              <div id="animation-container" class="bg-white rounded-lg border border-gray-200 h-64 md:h-80 relative overflow-hidden flex-1">
-                <!-- 网格覆盖层（受 #show-grid 控制） -->
-                <div id="grid-overlay" class="absolute inset-0 pointer-events-none opacity-80" style="display:none; background-size: 40px 40px;"></div>
-                <!-- 自由落体动画示例 -->
-                <div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-accent rounded-full" id="animated-object"></div>
+              <!-- 动画画布 - Canvas场景绘制 -->
+              <div id="animation-container" class="bg-white rounded-lg border-2 border-gray-900 relative overflow-hidden" style="height: 500px;">
+                <!-- Canvas用于物理场景绘制 -->
+                <canvas id="physics-canvas" class="absolute inset-0 w-full h-full"></canvas>
                 
-                <!-- 地面参考线 -->
-                <div class="absolute bottom-10 left-0 right-0 h-1 bg-gray-400"></div>
-                
-                <!-- 时间标记 -->
-                <div class="absolute left-4 top-4 text-sm text-gray-500" id="animation-time">时间: 0s</div>
-                
-                <!-- 速度标记 -->
-                <div class="absolute left-4 top-10 text-sm text-gray-500" id="animation-velocity">速度: 0m/s</div>
-                
-                <!-- 位置标记 -->
-                <div class="absolute left-4 top-16 text-sm text-gray-500" id="animation-position">位置: 0m</div>
-                
-                <!-- 特殊点标记 (初始位置) -->
-                <div class="absolute top-4 left-1/2 transform -translate-x-1/2 -translate-y-6 text-xs text-gray-500">起点</div>
+                <!-- 实时数据显示（覆盖在Canvas上） -->
+                <div class="data-display absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 border border-gray-300 shadow-sm z-10">
+                  <div class="text-xs space-y-1 font-mono">
+                    <div><span class="text-gray-600">时间:</span> <span id="animation-time" class="font-bold">0.00 s</span></div>
+                    <div><span class="text-gray-600">速度:</span> <span id="animation-velocity" class="font-bold">0.00 m/s</span></div>
+                    <div><span class="text-gray-600">位置:</span> <span id="animation-position" class="font-bold">0.00 m</span></div>
+                  </div>
+                </div>
               </div>
               
               <!-- 控制面板 -->
               <div class="mt-4 flex flex-wrap gap-4 items-center">
-                <div class="flex items-center">
-                  <label class="text-sm text-gray-600 mr-2">速度:</label>
-                  <input type="range" min="0.1" max="2" step="0.1" value="1" class="w-32" id="animation-speed">
-                </div>
-                
-                <div class="flex items-center">
-                  <label class="text-sm text-gray-600 mr-2">显示轨迹:</label>
-                  <input type="checkbox" checked class="rounded text-primary focus:ring-primary" id="show-trail">
-                </div>
-                
-                <div class="flex items-center">
-                  <label class="text-sm text-gray-600 mr-2">显示网格:</label>
-                  <input type="checkbox" class="rounded text-primary focus:ring-primary" id="show-grid">
-                </div>
-                
-                <button id="export-animation" class="ml-auto bg-gray-200 hover:bg-gray-300 text-gray-700 py-1 px-3 rounded-md text-sm transition-colors">
-                  导出动画 <i class="fa fa-download ml-1"></i>
+                <!-- 播放控制 -->
+                <button id="play-animation" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                  <i class="fa fa-play"></i>
+                  <span>播放</span>
                 </button>
+                <button id="pause-animation" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg hidden flex items-center gap-2 shadow-sm transition-all">
+                  <i class="fa fa-pause"></i>
+                  <span>暂停</span>
+                </button>
+                <button id="reset-animation" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                  <i class="fa fa-refresh"></i>
+                  <span>重置</span>
+                </button>
+                
+                <div class="flex items-center ml-4">
+                  <label class="text-sm text-gray-600 mr-2">播放速度:</label>
+                  <input type="range" min="0.1" max="2" step="0.1" value="1" class="w-32" id="animation-speed">
+                  <span id="speed-display" class="ml-2 text-sm font-mono bg-gray-100 px-2 py-1 rounded">1.0x</span>
+                </div>
+                
+                <!-- 全屏按钮 -->
+                <button id="fullscreen-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all" title="全屏显示">
+                  <i class="fa fa-expand"></i>
+                  <span>全屏</span>
+                </button>
+                
+                <!-- 导出按钮 -->
+                <div class="relative ml-auto">
+                  <button id="export-menu-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                    <i class="fa fa-download"></i>
+                    <span>导出动画</span>
+                  </button>
+                  <div id="export-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                    <button id="export-mp4" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg">
+                      <i class="fa fa-file-video-o text-blue-600"></i>
+                      <span>导出为 MP4</span>
+                    </button>
+                    <button id="export-gif" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 rounded-b-lg">
+                      <i class="fa fa-file-image-o text-orange-600"></i>
+                      <span>导出为 GIF</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <!-- 精准可视化图表：位置/速度随时间 -->
@@ -784,6 +931,1376 @@
 
   <!-- JavaScript -->
   <script>
+    // ========== Canvas场景绘制系统 ==========
+    let canvas, ctx;
+    let animationFrameId = null;
+    let currentTime = 0;
+    let isPlaying = false;
+    let playSpeed = 1;
+    let sceneParams = null;
+    let animationContainer; // 全局声明，避免重复声明
+    let questionTypeSelect, generateButton, playBtn, pauseBtn; // 控制元素引用
+    
+    // 初始化Canvas
+    function initCanvas() {
+      canvas = document.getElementById('physics-canvas');
+      if (!canvas) {
+        console.error('找不到physics-canvas元素');
+        return;
+      }
+      
+      ctx = canvas.getContext('2d');
+      
+      // 初始化容器引用
+      if (!animationContainer) {
+        animationContainer = document.getElementById('animation-container');
+      }
+      
+      // 设置Canvas尺寸
+      const container = document.getElementById('animation-container');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      
+      console.log('✓ Canvas已初始化:', canvas.width, 'x', canvas.height);
+      
+      // 绘制初始提示
+      drawWelcomeScreen();
+    }
+    
+    // 绘制欢迎屏幕
+    function drawWelcomeScreen() {
+      if (!ctx) return;
+      
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      // 白色背景
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      
+      // 提示文字
+      ctx.fillStyle = '#666666';
+      ctx.font = '20px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('👆 导入题目并点击"生成可视化"', w / 2, h / 2 - 20);
+      ctx.font = '16px Arial';
+      ctx.fillText('即可在此查看完整的物理场景动画', w / 2, h / 2 + 20);
+      
+      ctx.textAlign = 'left';
+    }
+    
+    // 页面加载时初始化
+    window.addEventListener('load', () => {
+      setTimeout(initCanvas, 100);
+    });
+    
+    // 窗口大小改变时重新调整Canvas
+    window.addEventListener('resize', () => {
+      if (canvas && canvas.parentElement) {
+        const container = canvas.parentElement;
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        if (sceneParams) {
+          drawScene();
+        } else {
+          drawWelcomeScreen();
+        }
+      }
+    });
+    
+    // 绘制场景（根据参数类型）
+    function drawScene() {
+      console.log('🎨 drawScene() 被调用');
+      console.log('   ctx:', !!ctx);
+      console.log('   sceneParams:', !!sceneParams);
+      console.log('   canvas.width:', canvas?.width);
+      console.log('   canvas.height:', canvas?.height);
+      
+      if (!ctx || !sceneParams) {
+        console.warn('⚠️ drawScene() 提前返回：ctx 或 sceneParams 不存在');
+        return;
+      }
+      
+      const w = canvas.width;
+      const h = canvas.height;
+      console.log('   准备绘制，尺寸:', w, 'x', h);
+      
+      // 清空画布
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      console.log('   已清空画布（白色背景）');
+      
+      // 设置默认样式
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.font = '14px Arial';
+      
+      // 根据类型绘制
+      switch(sceneParams.type) {
+        case 'uniform':
+          if (sceneParams.direction === 'horizontal') {
+            drawHorizontalMotion();
+          } else {
+            drawVerticalMotion();
+          }
+          break;
+        case 'projectile':
+          drawProjectileMotion();
+          break;
+        case 'circular':
+          drawCircularMotion();
+          break;
+        case 'collision':
+          drawCollision();
+          break;
+        default:
+          drawVerticalMotion();
+      }
+    }
+    
+    // 通知提示函数（需要在控制函数之前定义）
+    function showNotification(message, type = 'info', duration = 2000) {
+      const colors = {
+        success: 'bg-green-500',
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500',
+        error: 'bg-red-500'
+      };
+      
+      const notification = document.createElement('div');
+      notification.className = `fixed top-20 right-4 ${colors[type]} text-white px-4 py-2 rounded-md shadow-lg z-50`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, duration);
+    }
+    
+    // ========== 初始化控制按钮 ==========
+    // 确保DOM加载完成后再绑定按钮
+    let buttonsInitialized = false;
+    
+    function initControlButtons() {
+      if (buttonsInitialized) return;
+      
+      const playBtn = document.getElementById('play-animation');
+      const pauseBtn = document.getElementById('pause-animation');
+      const resetBtn = document.getElementById('reset-animation');
+      const speedSlider = document.getElementById('animation-speed');
+      const speedDisplay = document.getElementById('speed-display');
+      
+      console.log('🎮 初始化控制按钮:', {
+        playBtn: !!playBtn,
+        pauseBtn: !!pauseBtn,
+        resetBtn: !!resetBtn,
+        speedSlider: !!speedSlider
+      });
+      
+      if (!playBtn || !pauseBtn || !resetBtn) {
+        console.error('❌ 控制按钮未找到！将在500ms后重试...');
+        setTimeout(initControlButtons, 500);
+        return;
+      }
+      
+      // 绑定控制按钮
+      playBtn.addEventListener('click', () => {
+        console.log('🖱️ 播放按钮被点击');
+        startAnimation();
+      });
+      pauseBtn.addEventListener('click', () => {
+        console.log('🖱️ 暂停按钮被点击');
+        pauseAnimation();
+      });
+      resetBtn.addEventListener('click', () => {
+        console.log('🖱️ 重置按钮被点击');
+        resetAnimation();
+      });
+      speedSlider?.addEventListener('input', (e) => {
+        playSpeed = parseFloat(e.target.value);
+        if (speedDisplay) {
+          speedDisplay.textContent = playSpeed.toFixed(1) + 'x';
+        }
+      });
+      
+      buttonsInitialized = true;
+      console.log('✅ 控制按钮已绑定');
+    }
+    
+    // 播放/暂停/重置控制函数
+    function startAnimation() {
+      if (!sceneParams) {
+        console.warn('⚠️ 请先生成可视化场景');
+        showNotification('请先生成可视化场景', 'warning', 2000);
+        return;
+      }
+      if (isPlaying) {
+        console.log('⚠️ 动画已在播放中，跳过');
+        return;
+      }
+      
+      console.log('▶️ 开始播放动画');
+      console.log('   设置前 isPlaying =', isPlaying);
+      isPlaying = true;
+      console.log('   设置后 isPlaying =', isPlaying);
+      
+      // 更新正常模式按钮
+      const playBtn = document.getElementById('play-animation');
+      const pauseBtn = document.getElementById('pause-animation');
+      playBtn?.classList.add('hidden');
+      pauseBtn?.classList.remove('hidden');
+      
+      // 更新全屏模式按钮
+      const fsPlayBtn = document.getElementById('fs-play');
+      const fsPauseBtn = document.getElementById('fs-pause');
+      if (fsPlayBtn) fsPlayBtn.style.display = 'none';
+      if (fsPauseBtn) fsPauseBtn.style.display = 'flex';
+      
+      console.log('   即将调用 animate()...');
+      animate();
+      console.log('   animate() 已调用');
+    }
+    
+    function pauseAnimation() {
+      console.log('⏸️ 暂停动画');
+      isPlaying = false;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      
+      // 更新正常模式按钮
+      const playBtn = document.getElementById('play-animation');
+      const pauseBtn = document.getElementById('pause-animation');
+      playBtn?.classList.remove('hidden');
+      pauseBtn?.classList.add('hidden');
+      
+      // 更新全屏模式按钮
+      const fsPlayBtn = document.getElementById('fs-play');
+      const fsPauseBtn = document.getElementById('fs-pause');
+      if (fsPlayBtn) fsPlayBtn.style.display = 'flex';
+      if (fsPauseBtn) fsPauseBtn.style.display = 'none';
+    }
+    
+    function resetAnimation() {
+      console.log('🔄 重置动画');
+      pauseAnimation();
+      currentTime = 0;
+      
+      // 清除反弹状态
+      if (sceneParams) {
+        delete sceneParams.bounceCount;
+        delete sceneParams.lastBounceTime;
+        delete sceneParams.bounceVy;
+        delete sceneParams.bounceTime;
+        delete sceneParams.bounces;
+        delete sceneParams.projectileBounces;
+        delete sceneParams.currentBounceIndex;
+      }
+      
+      if (sceneParams) {
+        drawScene();
+      } else {
+        drawWelcomeScreen();
+      }
+    }
+    
+    function animate() {
+      console.log('🎬 animate() 被调用, isPlaying =', isPlaying);
+      
+      if (!isPlaying) {
+        console.log('⚠️ animate() 停止：isPlaying = false');
+        return;
+      }
+      
+      currentTime += 0.05 * playSpeed;
+      console.log('   时间更新到:', currentTime.toFixed(2), 's');
+      
+      drawScene();
+      
+      animationFrameId = requestAnimationFrame(animate);
+      console.log('   已请求下一帧');
+    }
+    
+    // 页面加载完成后初始化按钮（脚本已在底部，DOM已加载）
+    // 使用 setTimeout 确保DOM完全渲染
+    setTimeout(() => {
+      console.log('📄 初始化控制按钮...');
+      initControlButtons();
+      initFullscreenButton();
+      initExportButtons();
+    }, 100);
+    
+    // ========== 全屏功能 ==========
+    let isFullscreen = false;
+    let fullscreenInitialized = false;
+    
+    function initFullscreenButton() {
+      if (fullscreenInitialized) return;
+      
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      
+      console.log('🖥️ 初始化全屏按钮:', !!fullscreenBtn);
+      
+      if (!fullscreenBtn) {
+        console.error('❌ 全屏按钮未找到！将在500ms后重试...');
+        setTimeout(initFullscreenButton, 500);
+        return;
+      }
+      
+      fullscreenBtn.addEventListener('click', () => {
+        console.log('🖱️ 全屏按钮被点击, 当前状态:', isFullscreen);
+        if (!isFullscreen) {
+          enterFullscreen();
+        } else {
+          exitFullscreen();
+        }
+      });
+      
+      fullscreenInitialized = true;
+      console.log('✅ 全屏按钮已绑定');
+    }
+    
+    function enterFullscreen() {
+      console.log('🖥️ === 开始进入全屏模式 ===');
+      console.log('   当前状态: isPlaying =', isPlaying, ', currentTime =', currentTime);
+      
+      if (!animationContainer) {
+        animationContainer = document.getElementById('animation-container');
+      }
+      
+      if (!animationContainer) {
+        console.error('❌ animationContainer 未找到');
+        showNotification('无法进入全屏模式', 'error', 2000);
+        return;
+      }
+      
+      // 设置全屏状态
+      isFullscreen = true;
+      document.body.classList.add('fullscreen-active');
+      animationContainer.classList.add('fullscreen');
+      console.log('✅ 已添加fullscreen类');
+      
+      // 创建退出按钮
+      const exitBtn = document.createElement('button');
+      exitBtn.className = 'fullscreen-exit-btn';
+      exitBtn.id = 'fullscreen-exit-btn';
+      exitBtn.innerHTML = '<i class="fa fa-times-circle"></i> 退出全屏 (ESC)';
+      exitBtn.onclick = exitFullscreen;
+      document.body.appendChild(exitBtn);
+      console.log('✅ 已创建退出按钮');
+      
+      // 创建全屏控制面板
+      const controlsPanel = document.createElement('div');
+      controlsPanel.className = 'fullscreen-controls';
+      controlsPanel.id = 'fullscreen-controls';
+      
+      const currentSpeed = document.getElementById('animation-speed')?.value || 1;
+      
+      controlsPanel.innerHTML = `
+        <button id="fs-play" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg items-center gap-2 shadow-lg transition-all" style="display: ${isPlaying ? 'none' : 'flex'};">
+          <i class="fa fa-play"></i>
+          <span class="font-semibold">播放</span>
+        </button>
+        <button id="fs-pause" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg items-center gap-2 shadow-lg transition-all" style="display: ${isPlaying ? 'flex' : 'none'};">
+          <i class="fa fa-pause"></i>
+          <span class="font-semibold">暂停</span>
+        </button>
+        <button id="fs-reset" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transition-all">
+          <i class="fa fa-refresh"></i>
+          <span class="font-semibold">重置</span>
+        </button>
+        <div class="flex items-center ml-4 bg-white px-4 py-2 rounded-lg shadow-md">
+          <label class="text-sm text-gray-600 mr-3 font-medium">速度:</label>
+          <input type="range" min="0.1" max="2" step="0.1" value="${currentSpeed}" class="w-32" id="fs-speed">
+          <span id="fs-speed-display" class="ml-3 text-sm font-mono bg-gray-100 px-3 py-1 rounded font-semibold">${parseFloat(currentSpeed).toFixed(1)}x</span>
+        </div>
+      `;
+      document.body.appendChild(controlsPanel);
+      console.log('✅ 已创建全屏控制面板，isPlaying =', isPlaying);
+      
+      // 绑定全屏控制按钮事件
+      document.getElementById('fs-play')?.addEventListener('click', startAnimation);
+      document.getElementById('fs-pause')?.addEventListener('click', pauseAnimation);
+      document.getElementById('fs-reset')?.addEventListener('click', resetAnimation);
+      
+      const fsSpeed = document.getElementById('fs-speed');
+      const fsSpeedDisplay = document.getElementById('fs-speed-display');
+      if (fsSpeed && fsSpeedDisplay) {
+        fsSpeed.addEventListener('input', (e) => {
+          const speed = parseFloat(e.target.value);
+          fsSpeedDisplay.textContent = speed.toFixed(1) + 'x';
+          // 同步原始速度滑块
+          const originalSpeed = document.getElementById('animation-speed');
+          if (originalSpeed) {
+            originalSpeed.value = speed;
+            document.getElementById('speed-display').textContent = speed.toFixed(1) + 'x';
+          }
+        });
+      }
+      
+      // 等待CSS完全生效后调整Canvas
+      setTimeout(() => {
+        console.log('⏱️ 开始调整Canvas...');
+        
+        // 获取Canvas元素
+        canvas = document.getElementById('physics-canvas');
+        if (!canvas) {
+          console.error('❌ Canvas元素未找到！');
+          return;
+        }
+        console.log('✅ Canvas元素已找到');
+        console.log('   Canvas的父元素:', canvas.parentElement?.id);
+        console.log('   Canvas在DOM中:', document.body.contains(canvas));
+        
+        // ！！！暴力解决：直接把Canvas移动到body下
+        console.log('🔧 将Canvas移动到body下...');
+        document.body.appendChild(canvas);
+        console.log('✅ Canvas已移动到body');
+        
+        // 获取2D上下文
+        ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.error('❌ 无法获取Canvas 2D上下文！');
+          return;
+        }
+        console.log('✅ Canvas 2D上下文已获取');
+        
+        // 设置Canvas尺寸
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        console.log('📐 窗口尺寸:', w, 'x', h);
+        
+        canvas.width = w;
+        canvas.height = h;
+        console.log('✅ Canvas尺寸已设置:', canvas.width, 'x', canvas.height);
+        console.log('   Canvas.style:', canvas.style.width, canvas.style.height);
+        console.log('   Canvas offset:', canvas.offsetWidth, 'x', canvas.offsetHeight);
+        
+        // ！！！强制设置Canvas的内联样式
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        canvas.style.zIndex = '10000';
+        canvas.style.display = 'block';
+        canvas.style.backgroundColor = '#ffffff';  // 设置白色背景
+        canvas.style.visibility = 'visible';
+        canvas.style.opacity = '1';
+        console.log('✅ 强制设置Canvas内联样式');
+        
+        // ！！！关键：Canvas尺寸改变后必须重新获取上下文
+        ctx = canvas.getContext('2d');
+        console.log('✅ 重新获取上下文');
+        console.log('   ctx 存在:', !!ctx);
+        console.log('   sceneParams 存在:', !!sceneParams);
+        console.log('   当前动画播放状态 isPlaying:', isPlaying);
+        
+        // 清除Canvas背景
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // 立即绘制场景或欢迎屏幕
+        if (sceneParams) {
+          console.log('🎬 准备绘制场景, sceneParams.type =', sceneParams.type);
+          try {
+            drawScene();
+            console.log('✅ drawScene() 调用完成');
+            
+            // ！！！关键修复：如果动画正在播放，绘制一帧后需要继续动画循环
+            if (isPlaying) {
+              console.log('🎬 检测到动画正在播放，无需重启（animate循环会自动继续）');
+              // animate() 循环会自动调用 drawScene()，不需要手动干预
+            }
+          } catch (error) {
+            console.error('❌ drawScene() 执行出错:', error);
+          }
+        } else {
+          console.log('👋 准备绘制欢迎屏幕...');
+          try {
+            drawWelcomeScreen();
+            console.log('✅ drawWelcomeScreen() 调用完成');
+          } catch (error) {
+            console.error('❌ drawWelcomeScreen() 执行出错:', error);
+          }
+        }
+        
+        console.log('🖥️ === 全屏模式设置完成 ===');
+        
+      }, 250);
+      
+      // 更新按钮图标
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      if (fullscreenBtn) {
+        fullscreenBtn.innerHTML = '<i class="fa fa-compress"></i><span>退出全屏</span>';
+      }
+      
+      showNotification('已进入全屏模式，按 ESC 退出', 'info', 2000);
+    }
+    
+    function exitFullscreen() {
+      console.log('🖥️ === 开始退出全屏模式 ===');
+      isFullscreen = false;
+      document.body.classList.remove('fullscreen-active');
+      
+      if (!animationContainer) {
+        animationContainer = document.getElementById('animation-container');
+      }
+      
+      if (animationContainer) {
+        animationContainer.classList.remove('fullscreen');
+      }
+      
+      // 移除退出按钮和控制面板
+      const exitBtn = document.getElementById('fullscreen-exit-btn');
+      if (exitBtn) {
+        exitBtn.remove();
+        console.log('✅ 已移除退出按钮');
+      }
+      
+      const controlsPanel = document.getElementById('fullscreen-controls');
+      if (controlsPanel) {
+        controlsPanel.remove();
+        console.log('✅ 已移除全屏控制面板');
+      }
+      
+      // ！！！关键：把Canvas移回animationContainer
+      setTimeout(() => {
+        if (canvas && animationContainer) {
+          console.log('🔧 将Canvas移回容器...');
+          
+          // 移回容器
+          animationContainer.appendChild(canvas);
+          console.log('✅ Canvas已移回 #animation-container');
+          
+          // 清除内联样式（恢复CSS控制）
+          canvas.style.position = '';
+          canvas.style.top = '';
+          canvas.style.left = '';
+          canvas.style.width = '';
+          canvas.style.height = '';
+          canvas.style.zIndex = '';
+          canvas.style.backgroundColor = '';
+          console.log('✅ 已清除Canvas内联样式');
+          
+          // 重新设置Canvas尺寸
+          const newWidth = animationContainer.clientWidth;
+          const newHeight = animationContainer.clientHeight;
+          console.log('📐 恢复Canvas尺寸:', newWidth, 'x', newHeight);
+          
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+          
+          // 重新获取上下文
+          ctx = canvas.getContext('2d');
+          console.log('✅ 重新获取Canvas上下文');
+          
+          // 重新绘制内容
+          if (sceneParams) {
+            console.log('🎬 重绘场景...');
+            drawScene();
+          } else {
+            console.log('👋 显示欢迎屏幕...');
+            drawWelcomeScreen();
+          }
+          
+          console.log('🖥️ === 退出全屏完成 ===');
+        }
+      }, 150);
+      
+      // 更新按钮图标
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      if (fullscreenBtn) {
+        fullscreenBtn.innerHTML = '<i class="fa fa-expand"></i><span>全屏</span>';
+      }
+      
+      showNotification('已退出全屏模式', 'info', 2000);
+    }
+    
+    // ESC键退出全屏
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        exitFullscreen();
+      }
+    });
+    
+    // ========== 导出功能 ==========
+    let mediaRecorder;
+    let recordedChunks = [];
+    
+    function initExportButtons() {
+      const exportMenuBtn = document.getElementById('export-menu-btn');
+      const exportMenu = document.getElementById('export-menu');
+      const exportMP4Btn = document.getElementById('export-mp4');
+      const exportGIFBtn = document.getElementById('export-gif');
+      
+      console.log('💾 初始化导出按钮:', {
+        exportMenuBtn: !!exportMenuBtn,
+        exportMenu: !!exportMenu,
+        exportMP4Btn: !!exportMP4Btn,
+        exportGIFBtn: !!exportGIFBtn
+      });
+      
+      if (!exportMenuBtn || !exportMenu) {
+        console.error('❌ 导出按钮未找到！');
+        return;
+      }
+      
+      // 切换导出菜单
+      exportMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportMenu.classList.toggle('hidden');
+      });
+      
+      // 点击其他地方关闭菜单
+      document.addEventListener('click', () => {
+        exportMenu.classList.add('hidden');
+      });
+      
+      exportMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      
+      // 导出为 MP4
+      exportMP4Btn?.addEventListener('click', async () => {
+        exportMenu.classList.add('hidden');
+        
+        if (!sceneParams) {
+          showNotification('请先生成动画场景', 'warning', 2000);
+          return;
+        }
+        
+        // 显示录制提示
+        showNotification('🎬 开始录制动画...', 'info', 3000);
+        
+        try {
+          // 准备录制
+          const stream = canvas.captureStream(30); // 30 FPS
+          mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'video/webm;codecs=vp9',
+            videoBitsPerSecond: 2500000
+          });
+          
+          recordedChunks = [];
+          
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              recordedChunks.push(e.data);
+            }
+          };
+          
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `physics-animation-${Date.now()}.webm`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('✓ 视频已导出 (WebM格式)', 'success', 3000);
+          };
+          
+          // 从头开始录制
+          const wasPlaying = isPlaying;
+          pauseAnimation();
+          currentTime = 0;
+          drawScene();
+          
+          mediaRecorder.start();
+          
+          // 自动播放并录制
+          setTimeout(() => {
+            startAnimation();
+            
+            // 录制完整动画周期 (根据运动类型估算时长)
+            const duration = estimateAnimationDuration();
+            setTimeout(() => {
+              mediaRecorder.stop();
+              if (!wasPlaying) pauseAnimation();
+            }, duration);
+          }, 500);
+        } catch (error) {
+          console.error('录制失败:', error);
+          showNotification('录制失败: ' + error.message, 'error', 3000);
+        }
+      });
+      
+      // 导出为 GIF
+      exportGIFBtn?.addEventListener('click', async () => {
+        const exportMenu = document.getElementById('export-menu');
+        exportMenu?.classList.add('hidden');
+        
+        if (!sceneParams) {
+          showNotification('请先生成动画场景', 'warning', 2000);
+          return;
+        }
+        
+        showNotification('🎨 正在生成GIF...', 'info', 5000);
+        
+        try {
+          // 使用 gif.js 库
+          const gif = new GIF({
+            workers: 2,
+            quality: 10,
+            width: canvas.width,
+            height: canvas.height,
+            workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+          });
+          
+          const wasPlaying = isPlaying;
+          pauseAnimation();
+          currentTime = 0;
+          
+          // 捕获帧
+          const frameCount = 60; // 60帧
+          const frameDelay = 50; // 50ms per frame
+          
+          for (let i = 0; i < frameCount; i++) {
+            drawScene();
+            gif.addFrame(canvas, { copy: true, delay: frameDelay });
+            currentTime += 0.1;
+          }
+          
+          gif.on('finished', (blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `physics-animation-${Date.now()}.gif`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('✓ GIF已导出', 'success', 3000);
+            
+            // 恢复原状态
+            currentTime = 0;
+            drawScene();
+            if (wasPlaying) startAnimation();
+          });
+          
+          gif.render();
+        } catch (error) {
+          console.error('GIF生成失败:', error);
+          showNotification('GIF生成失败: ' + error.message, 'error', 3000);
+        }
+      });
+      
+      console.log('✅ 导出按钮已绑定');
+    }    // 估算动画时长
+    function estimateAnimationDuration() {
+      if (!sceneParams) return 5000;
+      
+      const type = sceneParams.type;
+      if (type === 'projectile') return 8000;
+      if (type === 'circular') return 10000;
+      if (type === 'collision') return 6000;
+      return 5000; // 默认5秒
+    }
+    
+    // ========== 场景绘制函数 ==========
+    
+    // 辅助函数：绘制地面
+    function drawGround(y) {
+      const w = canvas.width;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      
+      // 双线地面
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(0, y + 5);
+      ctx.lineTo(w, y + 5);
+      ctx.stroke();
+      
+      // 斜线阴影
+      ctx.lineWidth = 1;
+      for (let i = 0; i < w; i += 10) {
+        ctx.beginPath();
+        ctx.moveTo(i, y + 5);
+        ctx.lineTo(i + 10, y + 15);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 2;
+    }
+    
+    // 1. 垂直运动（自由落体/竖直上抛）
+    function drawVerticalMotion() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const scale = isFullscreen ? Math.min(w, h) / 20 : 40; // 全屏时使用更大的比例
+      const groundY = isFullscreen ? h * 0.85 : h - 60;
+      
+      drawGround(groundY);
+      
+      const g = 10;
+      const v0 = sceneParams.v0 || 0;
+      const h0 = sceneParams.height || 8;
+      const t = currentTime;
+      
+      // 初始化反弹追踪器
+      if (sceneParams.bounces === undefined) {
+        sceneParams.bounces = [];
+        sceneParams.currentBounceIndex = -1;
+      }
+      
+      let y, v;
+      
+      // 计算当前所处的反弹阶段
+      let effectiveT = t;
+      let currentV0 = v0;
+      let currentH0 = h0;
+      
+      // 遍历所有已发生的反弹，找到当前阶段
+      for (let i = 0; i < sceneParams.bounces.length; i++) {
+        const bounce = sceneParams.bounces[i];
+        if (t >= bounce.time) {
+          effectiveT = t - bounce.time;
+          currentV0 = bounce.v0;
+          currentH0 = 0; // 反弹后从地面开始
+          sceneParams.currentBounceIndex = i;
+        }
+      }
+      
+      // 使用当前阶段的运动方程
+      y = currentH0 + currentV0 * effectiveT - 0.5 * g * effectiveT * effectiveT;
+      v = currentV0 - g * effectiveT;
+      
+      // 检测是否需要触发新的反弹
+      if (y < 0 && v < 0) {
+        const restitution = 0.7;
+        const newV0 = Math.abs(v) * restitution;
+        
+        // 如果反弹速度太小或反弹次数太多，停止
+        if (newV0 < 0.8 || sceneParams.bounces.length >= 5) {
+          y = 0;
+          v = 0;
+          pauseAnimation();
+        } else {
+          // 记录新的反弹
+          sceneParams.bounces.push({
+            time: t,
+            v0: newV0
+          });
+          // 立即使用新的反弹参数
+          y = 0;
+          v = newV0;
+        }
+      }
+      
+      // 更新显示
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = Math.abs(v).toFixed(2) + ' m/s';
+      document.getElementById('animation-position').textContent = y.toFixed(2) + ' m';
+      
+      const ballY = groundY - y * scale;
+      
+      // 绘制物体
+      ctx.fillStyle = '#ff6b00';
+      ctx.beginPath();
+      ctx.arc(w / 2, ballY, 12, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // 高度标注线
+      ctx.strokeStyle = '#666666';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(w / 2 - 40, ballY);
+      ctx.lineTo(w / 2 - 40, groundY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      ctx.fillStyle = '#000000';
+      ctx.fillText('h = ' + y.toFixed(2) + ' m', w / 2 - 100, ballY + 5);
+      
+      // 速度箭头
+      if (Math.abs(v) > 0.5) {
+        const arrowLen = Math.min(Math.abs(v) * 5, 100);
+        ctx.strokeStyle = '#0066ff';
+        ctx.fillStyle = '#0066ff';
+        
+        const startY = ballY;
+        const endY = ballY + (v < 0 ? -arrowLen : arrowLen);
+        
+        ctx.beginPath();
+        ctx.moveTo(w / 2 + 30, startY);
+        ctx.lineTo(w / 2 + 30, endY);
+        ctx.stroke();
+        
+        // 箭头头部
+        ctx.beginPath();
+        ctx.moveTo(w / 2 + 30, endY);
+        ctx.lineTo(w / 2 + 25, endY - (v < 0 ? 8 : -8));
+        ctx.lineTo(w / 2 + 35, endY - (v < 0 ? 8 : -8));
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillText('v = ' + v.toFixed(2) + ' m/s', w / 2 + 45, (startY + endY) / 2);
+      }
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 2. 水平运动（汽车/滑块）
+    function drawHorizontalMotion() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const scale = isFullscreen ? Math.min(w, h) / 15 : 50;
+      const roadY = isFullscreen ? h * 0.6 : h / 2;
+      const startX = isFullscreen ? w * 0.15 : 100;
+      
+      // 绘制公路
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, roadY);
+      ctx.lineTo(w, roadY);
+      ctx.stroke();
+      
+      // 虚线
+      ctx.setLineDash([15, 10]);
+      ctx.strokeStyle = '#666666';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, roadY - 20);
+      ctx.lineTo(w, roadY - 20);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      const a = sceneParams.a || 0;
+      const v0 = sceneParams.v0 || 10;
+      const t = currentTime;
+      
+      const x = v0 * t + 0.5 * a * t * t;
+      const v = v0 + a * t;
+      
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = Math.abs(v).toFixed(2) + ' m/s';
+      document.getElementById('animation-position').textContent = x.toFixed(2) + ' m';
+      
+      const carX = startX + x * scale;
+      
+      // ！！！修复：放宽停止边界
+      const maxX = isFullscreen ? w * 0.9 : w - 30;
+      if (carX > maxX || carX < -30 || (a < 0 && v <= 0)) {
+        console.log('⏸️ 水平运动结束，自动暂停');
+        pauseAnimation();
+      }
+      
+      // 绘制汽车
+      const carW = 60, carH = 30;
+      ctx.fillStyle = '#ff6b00';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.fillRect(carX - carW/2, roadY - carH - 20, carW, carH);
+      ctx.strokeRect(carX - carW/2, roadY - carH - 20, carW, carH);
+      
+      // 轮子
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(carX - 15, roadY - 5, 8, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(carX + 15, roadY - 5, 8, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // 速度箭头
+      if (Math.abs(v) > 0.1) {
+        const arrowLen = Math.min(Math.abs(v) * 8, 120);
+        ctx.strokeStyle = '#0066ff';
+        ctx.fillStyle = '#0066ff';
+        
+        const arrowY = roadY - carH - 50;
+        ctx.beginPath();
+        ctx.moveTo(carX, arrowY);
+        ctx.lineTo(carX + (v > 0 ? arrowLen : -arrowLen), arrowY);
+        ctx.stroke();
+        
+        // 箭头头部
+        const endX = carX + (v > 0 ? arrowLen : -arrowLen);
+        ctx.beginPath();
+        ctx.moveTo(endX, arrowY);
+        ctx.lineTo(endX - (v > 0 ? 8 : -8), arrowY - 5);
+        ctx.lineTo(endX - (v > 0 ? 8 : -8), arrowY + 5);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillText('v = ' + v.toFixed(2) + ' m/s', carX + arrowLen/2, arrowY - 15);
+      }
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 3. 抛体运动
+    function drawProjectileMotion() {
+      console.log('🎾 drawProjectileMotion() 被调用');
+      console.log('   currentTime:', currentTime);
+      console.log('   canvas尺寸:', canvas.width, 'x', canvas.height);
+      
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      // 全屏时使用更大的比例，并让场景居中
+      const scale = isFullscreen ? Math.min(w, h) / 25 : 30;
+      const groundY = isFullscreen ? h * 0.8 : h - 60;
+      const startX = isFullscreen ? w * 0.1 : 100;
+      
+      console.log('   groundY:', groundY);
+      
+      drawGround(groundY);
+      console.log('   地面绘制完成');
+      
+      const v0 = sceneParams.speed || 10;
+      const angle = (sceneParams.angle || 30) * Math.PI / 180;
+      const h0 = sceneParams.height || 5;
+      const g = 10;
+      const t = currentTime;
+      
+      console.log('   参数: v0=' + v0 + ', angle=' + (angle*180/Math.PI).toFixed(1) + '°, h0=' + h0);
+      
+      const vx = v0 * Math.cos(angle);
+      const initialVy = v0 * Math.sin(angle);
+      
+      // 初始化反弹追踪器
+      if (sceneParams.projectileBounces === undefined) {
+        sceneParams.projectileBounces = [];
+      }
+      
+      let x = vx * t;
+      let y, vy;
+      
+      // 计算当前所处的反弹阶段
+      let effectiveT = t;
+      let currentVy0 = initialVy;
+      let currentH0 = h0;
+      
+      // 遍历所有已发生的反弹
+      for (let i = 0; i < sceneParams.projectileBounces.length; i++) {
+        const bounce = sceneParams.projectileBounces[i];
+        if (t >= bounce.time) {
+          effectiveT = t - bounce.time;
+          currentVy0 = bounce.vy0;
+          currentH0 = 0;
+        }
+      }
+      
+      // 使用当前阶段的运动方程
+      y = currentH0 + currentVy0 * effectiveT - 0.5 * g * effectiveT * effectiveT;
+      vy = currentVy0 - g * effectiveT;
+      
+      // 检测是否需要触发新的反弹
+      if (y < 0 && vy < 0) {
+        const restitution = 0.7;
+        const newVy0 = Math.abs(vy) * restitution;
+        
+        // 如果反弹速度太小或反弹次数太多，停止垂直运动
+        if (newVy0 < 0.8 || sceneParams.projectileBounces.length >= 5) {
+          y = 0;
+          vy = 0;
+          // 继续水平移动，只有完全超出画布才停止
+          if (x * scale > w - 30) {
+            console.log('⏸️ 抛体落地并超出边界，自动暂停');
+            pauseAnimation();
+          }
+        } else {
+          // 记录新的反弹
+          sceneParams.projectileBounces.push({
+            time: t,
+            vy0: newVy0
+          });
+          // 立即使用新的反弹参数
+          y = 0;
+          vy = newVy0;
+        }
+      }
+      
+      const vTotal = Math.sqrt(vx * vx + vy * vy);
+      
+      console.log('   计算结果: x=' + x.toFixed(2) + 'm, y=' + y.toFixed(2) + 'm, vy=' + vy.toFixed(2) + 'm/s');
+      
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = vTotal.toFixed(2) + ' m/s';
+      document.getElementById('animation-position').textContent = '(' + x.toFixed(2) + ', ' + y.toFixed(2) + ') m';
+      
+      // ！！！修复：增加停止边界，让动画有足够空间
+      // 只有当小球完全超出画布右侧时才停止
+      const maxX = isFullscreen ? w * 0.9 : w - 50;
+      if (x * scale > maxX - startX) {
+        console.log('⏸️ 抛体超出画布边界，自动暂停');
+        pauseAnimation();
+        return;
+      }
+      
+      const ballX = startX + x * scale;
+      const ballY = groundY - y * scale;
+      
+      console.log('   小球像素位置: ballX=' + ballX.toFixed(0) + ', ballY=' + ballY.toFixed(0));
+      console.log('   画布范围: 0~' + w + ' x 0~' + h);
+      
+      if (ballY < -100 || ballY > h + 100) {
+        console.warn('⚠️ 小球Y坐标超出画布！ballY=' + ballY.toFixed(0) + ', 画布高度=' + h);
+      }
+      
+      // 抛出平台
+      const platformWidth = isFullscreen ? 120 : 100;
+      const platformX = isFullscreen ? startX - 60 : 50;
+      ctx.fillStyle = '#cccccc';
+      ctx.strokeStyle = '#000000';
+      ctx.fillRect(platformX, groundY - h0 * scale, platformWidth, 20);
+      ctx.strokeRect(platformX, groundY - h0 * scale, platformWidth, 20);
+      
+      // 物体
+      const ballRadius = isFullscreen ? 18 : 12;
+      ctx.fillStyle = '#ff6b00';
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, ballRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // 轨迹
+      ctx.strokeStyle = '#cccccc';
+      ctx.setLineDash([3, 3]);
+      ctx.lineWidth = isFullscreen ? 2 : 1;
+      ctx.beginPath();
+      for (let dt = 0; dt <= t; dt += 0.05) {
+        const tx = startX + vx * dt * scale;
+        const ty = groundY - (h0 + initialVy * dt - 0.5 * g * dt * dt) * scale;
+        if (dt === 0) ctx.moveTo(tx, ty);
+        else ctx.lineTo(tx, ty);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+      
+      // 速度箭头
+      const vAngle = Math.atan2(-vy, vx);
+      const arrowLen = Math.min(vTotal * 5, 80);
+      ctx.strokeStyle = '#0066ff';
+      ctx.fillStyle = '#0066ff';
+      
+      const endX = ballX + arrowLen * Math.cos(vAngle);
+      const endY = ballY - arrowLen * Math.sin(vAngle);
+      
+      ctx.beginPath();
+      ctx.moveTo(ballX, ballY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      
+      // 箭头头部
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(endX - 8 * Math.cos(vAngle - Math.PI/6), endY + 8 * Math.sin(vAngle - Math.PI/6));
+      ctx.lineTo(endX - 8 * Math.cos(vAngle + Math.PI/6), endY + 8 * Math.sin(vAngle + Math.PI/6));
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.fillText('v = ' + vTotal.toFixed(2) + ' m/s', ballX + 20, ballY - 20);
+      
+      console.log('✅ drawProjectileMotion() 绘制完成');
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 4. 圆周运动
+    function drawCircularMotion() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const centerX = w / 2;
+      const centerY = h / 2;
+      
+      const R = (sceneParams.radius || 2) * 40;
+      const omega = sceneParams.angular || 1;
+      const t = currentTime;
+      const theta = omega * t;
+      
+      // 圆形轨道
+      ctx.strokeStyle = '#666666';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, R, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // 中心点
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillText('O', centerX + 10, centerY - 10);
+      
+      const ballX = centerX + R * Math.cos(theta);
+      const ballY = centerY + R * Math.sin(theta);
+      
+      // 绳子
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(ballX, ballY);
+      ctx.stroke();
+      
+      // 物体
+      ctx.fillStyle = '#ff6b00';
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, 12, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      const v = omega * R / 40;
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = v.toFixed(2) + ' m/s';
+      document.getElementById('animation-position').textContent = 'θ = ' + (theta * 180 / Math.PI % 360).toFixed(1) + '°';
+      
+      // 速度箭头（切线方向）
+      const arrowLen = Math.min(v * 10, 60);
+      ctx.strokeStyle = '#0066ff';
+      ctx.fillStyle = '#0066ff';
+      
+      const endX = ballX - arrowLen * Math.sin(theta);
+      const endY = ballY + arrowLen * Math.cos(theta);
+      
+      ctx.beginPath();
+      ctx.moveTo(ballX, ballY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      
+      // 箭头头部
+      const vAngle = theta + Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(endX - 8 * Math.cos(vAngle - Math.PI/6), endY - 8 * Math.sin(vAngle - Math.PI/6));
+      ctx.lineTo(endX - 8 * Math.cos(vAngle + Math.PI/6), endY - 8 * Math.sin(vAngle + Math.PI/6));
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.fillText('v = ' + v.toFixed(2) + ' m/s', ballX + 20, ballY - 20);
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 5. 碰撞
+    function drawCollision() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const groundY = h - 60;
+      
+      drawGround(groundY);
+      
+      const m1 = sceneParams.m1 || 1;
+      const v1_init = sceneParams.v1 || 2;
+      const m2 = sceneParams.m2 || 1;
+      const v2_init = sceneParams.v2 || 0;
+      const t = currentTime;
+      
+      // 碰撞时刻（假设在中间相遇）
+      const t_collision = 2;
+      
+      let x1, x2, v1, v2;
+      
+      if (t < t_collision) {
+        // 碰撞前
+        x1 = 100 + v1_init * t * 50;
+        x2 = 600 - Math.abs(v2_init) * t * 50;
+        v1 = v1_init;
+        v2 = v2_init;
+      } else {
+        // 碰撞后（动量守恒和能量守恒）
+        // 一维弹性碰撞公式
+        const v1_final = ((m1 - m2) * v1_init + 2 * m2 * v2_init) / (m1 + m2);
+        const v2_final = ((m2 - m1) * v2_init + 2 * m1 * v1_init) / (m1 + m2);
+        
+        const dt = t - t_collision;
+        x1 = 100 + v1_init * t_collision * 50 + v1_final * dt * 50;
+        x2 = 600 - Math.abs(v2_init) * t_collision * 50 + v2_final * dt * 50;
+        v1 = v1_final;
+        v2 = v2_final;
+      }
+      
+      // 更新显示
+      document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('animation-velocity').textContent = `v1=${v1.toFixed(2)}, v2=${v2.toFixed(2)} m/s`;
+      document.getElementById('animation-position').textContent = `x1=${(x1/50).toFixed(2)}, x2=${(x2/50).toFixed(2)} m`;
+      
+      // 停止条件
+      if (x1 > w || x2 > w || x1 < 0 || x2 < 0 || t > 6) {
+        pauseAnimation();
+        return;
+      }
+      
+      const ballY = groundY - 50;
+      
+      // 绘制物体1
+      ctx.fillStyle = '#ff6b00';
+      ctx.beginPath();
+      ctx.arc(x1, ballY, 10 + m1 * 5, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillText(`m1=${m1}kg`, x1 - 20, ballY - 20);
+      
+      // 绘制物体2
+      ctx.fillStyle = '#0066ff';
+      ctx.beginPath();
+      ctx.arc(x2, ballY, 10 + m2 * 5, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillText(`m2=${m2}kg`, x2 - 20, ballY - 20);
+      
+      // 碰撞瞬间的视觉效果
+      if (Math.abs(t - t_collision) < 0.1) {
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc((x1 + x2) / 2, ballY, 30, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.lineWidth = 2;
+      }
+      
+      // 速度箭头
+      if (Math.abs(v1) > 0.1) {
+        drawVelocityArrow(x1, ballY, v1, '#ff6b00');
+      }
+      if (Math.abs(v2) > 0.1) {
+        drawVelocityArrow(x2, ballY, v2, '#0066ff');
+      }
+      
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
+    }
+    
+    // 辅助函数：绘制速度箭头
+    function drawVelocityArrow(x, y, v, color) {
+      const arrowLen = Math.min(Math.abs(v) * 20, 80);
+      const direction = v > 0 ? 1 : -1;
+      
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      
+      const endX = x + arrowLen * direction;
+      
+      // 箭头线
+      ctx.beginPath();
+      ctx.moveTo(x, y - 30);
+      ctx.lineTo(endX, y - 30);
+      ctx.stroke();
+      
+      // 箭头头部
+      ctx.beginPath();
+      ctx.moveTo(endX, y - 30);
+      ctx.lineTo(endX - 8 * direction, y - 35);
+      ctx.lineTo(endX - 8 * direction, y - 25);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.fillText(`v=${v.toFixed(2)}m/s`, x, y - 45);
+    }
+    
+    // ========== 原有代码继续 ==========
+    
     // 移动端菜单切换
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
@@ -805,534 +2322,7 @@
       }
     });
     
-    // 动画控制
-  const animatedObject = document.getElementById('animated-object');
-  const animationTime = document.getElementById('animation-time');
-  const animationVelocity = document.getElementById('animation-velocity');
-  const animationPosition = document.getElementById('animation-position');
-  const toggleButton = document.getElementById('toggle-animation');
-  const resetButton = document.getElementById('reset-animation');
-    const animationSpeed = document.getElementById('animation-speed');
-    const showTrail = document.getElementById('show-trail');
-    const generateButton = document.getElementById('generate-animation');
-    
-    let animationId = null;
-    let currentTime = 0;
-    let isAnimating = false;
-  // export data per frame for '导出动画'
-  let exportData = [];
-    const gravity = 10; // 重力加速度 m/s²
-    // 默认容器高度（桌面端）
-    let containerHeight = 400; // 容器高度 px
-    const maxFallDistance = 125; // 最大下落距离 m (5秒自由下落距离)
-    // 根据当前视口在运行时计算 pixelsPerMeter，以便移动端自适配
-    function computePixelsPerMeter() {
-      // 在窄屏时使用动画容器真实高度（相对单位在 CSS 中已设置为 40vh）
-      const containerEl = document.getElementById('animation-container');
-      const rect = containerEl.getBoundingClientRect();
-      containerHeight = rect.height || containerHeight;
-      const ppm = containerHeight / maxFallDistance;
-      // 更新网格显示
-      try { pixelsPerMeter = ppm; updateGrid(); } catch(e) {}
-      return ppm;
-    }
-    let pixelsPerMeter = computePixelsPerMeter();
-
-    window.addEventListener('resize', () => {
-      pixelsPerMeter = computePixelsPerMeter();
-      updateGrid();
-    });
-
-    // Grid overlay control and update
-    const gridOverlay = document.getElementById('grid-overlay');
-    const showGridCheckbox = document.getElementById('show-grid');
-    function updateGrid() {
-      if (!gridOverlay) return;
-      if (!showGridCheckbox || !showGridCheckbox.checked) { gridOverlay.style.display = 'none'; return; }
-      // choose a sensible pixel step for grid lines (e.g., 0.5m or 1m depending on pixelsPerMeter)
-      const pixelsPerUnit = Math.max(6, Math.round(pixelsPerMeter));
-      gridOverlay.style.display = 'block';
-      gridOverlay.style.backgroundImage = `repeating-linear-gradient(to right, rgba(203,213,225,0.6) 0, rgba(203,213,225,0.6) 1px, transparent 1px, transparent ${pixelsPerUnit}px), repeating-linear-gradient(to bottom, rgba(203,213,225,0.6) 0, rgba(203,213,225,0.6) 1px, transparent 1px, transparent ${pixelsPerUnit}px)`;
-      gridOverlay.style.backgroundSize = `${pixelsPerUnit}px ${pixelsPerUnit}px`;
-    }
-
-    // call updateGrid when computing pixelsPerMeter or when checkbox toggles
-    if (showGridCheckbox) showGridCheckbox.addEventListener('change', updateGrid);
-    
-    // 计算下落距离 (自由落体)
-    function calculateDistance(time) {
-      return 0.5 * gravity * Math.pow(time, 2);
-    }
-    
-    // 计算速度
-    function calculateVelocity(time) {
-      return gravity * time;
-    }
-    
-    // 添加轨迹点
-    function addTrailPoint(yPosition) {
-      const trailPoint = document.createElement('div');
-      trailPoint.className = 'absolute w-2 h-2 bg-accent/50 rounded-full';
-      trailPoint.style.left = '50%';
-      trailPoint.style.top = `${yPosition}px`;
-      trailPoint.style.transform = 'translateX(-50%)';
-      document.getElementById('animation-container').appendChild(trailPoint);
-      
-      // 轨迹点逐渐消失
-      setTimeout(() => {
-        trailPoint.style.opacity = '0';
-        trailPoint.style.transition = 'opacity 1s';
-        setTimeout(() => trailPoint.remove(), 1000);
-      }, 3000);
-    }
-    
-    // 开始动画
-    function startAnimation() {
-      if (!isAnimating) {
-        isAnimating = true;
-        updateAnimation();
-        // update toggle button to show pause state (SVG)
-        if (toggleButton) {
-          const pauseSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="6" y="4" width="4" height="16" fill="currentColor"></rect><rect x="14" y="4" width="4" height="16" fill="currentColor"></rect></svg>';
-          toggleButton.classList.remove('bg-primary/10', 'text-primary');
-          toggleButton.classList.add('bg-gray-200', 'text-gray-700');
-          toggleButton.innerHTML = pauseSvg;
-          toggleButton.setAttribute('aria-pressed', 'true');
-          toggleButton.setAttribute('aria-label', '暂停动画');
-        }
-      }
-    }
-    
-    // 停止动画
-    function stopAnimation() {
-      if (isAnimating) {
-        isAnimating = false;
-        cancelAnimationFrame(animationId);
-        // update toggle button to show play state (SVG)
-        if (toggleButton) {
-          const playSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M5 3v18l15-9L5 3z" fill="currentColor"></path></svg>';
-          toggleButton.classList.remove('bg-gray-200', 'text-gray-700');
-          toggleButton.classList.add('bg-primary/10', 'text-primary');
-          toggleButton.innerHTML = playSvg;
-          toggleButton.setAttribute('aria-pressed', 'false');
-          toggleButton.setAttribute('aria-label', '播放动画');
-        }
-      }
-    }
-    
-    // 重置动画
-    function resetAnimation() {
-      stopAnimation();
-      currentTime = 0;
-      
-      // 清除轨迹
-      document.querySelectorAll('#animation-container > div:not(#animated-object)').forEach(el => {
-        if (!el.id) el.remove();
-      });
-      
-  // 重置物体位置（回到顶部中间）
-  // 使用像素定位以避免百分比 + transform 的混用导致偏差
-  const cw = animationContainer.clientWidth || 400;
-  animatedObject.style.top = '20px';
-  animatedObject.style.left = `${Math.round(cw/2 - 12)}px`; // 12 = half object width
-  animatedObject.style.transform = '';
-      
-      // 重置显示信息
-      animationTime.textContent = '时间: 0s';
-      animationVelocity.textContent = '速度: 0m/s';
-      animationPosition.textContent = '位置: 0m';
-      // 清空匀变速图表数据（如果存在）
-      try { clearUniformCharts(); } catch(e){}
-    }
-    
-    // 事件监听（单一切换按钮）
-    if (toggleButton) toggleButton.addEventListener('click', () => {
-      if (isAnimating) stopAnimation(); else startAnimation();
-    });
-    resetButton.addEventListener('click', resetAnimation);
-    
-    // 帮助部分的折叠/展开功能
-    document.querySelectorAll('#help button').forEach(button => {
-      button.addEventListener('click', () => {
-        const content = button.nextElementSibling;
-        const icon = button.querySelector('i');
-        
-        if (content) {
-          content.classList.toggle('hidden');
-          
-          if (content.classList.contains('hidden')) {
-            icon.classList.remove('fa-minus', 'text-primary');
-            icon.classList.add('fa-plus', 'text-gray-400');
-          } else {
-            icon.classList.remove('fa-plus', 'text-gray-400');
-            icon.classList.add('fa-minus', 'text-primary');
-          }
-        }
-      });
-    });
-    
-    // 初始隐藏部分帮助内容
-    document.querySelectorAll('#help > div > div:nth-child(n+2) > div').forEach(content => {
-      if (content.tagName === 'DIV' && !content.classList.contains('hidden')) {
-        content.classList.add('hidden');
-      }
-    });
-    
-    // 平滑滚动
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
-        
-        if (targetElement) {
-          window.scrollTo({
-            top: targetElement.offsetTop - 80,
-            behavior: 'smooth'
-          });
-          
-          // 关闭移动端菜单
-          if (!mobileMenu.classList.contains('hidden')) {
-            mobileMenu.classList.add('hidden');
-          }
-        }
-      });
-    });
-
-    // ========== 新增：题型切换、文字解析、图片上传和多运动类型支持 ==========
-    const questionTypeSelect = document.getElementById('question-type-select');
-    const dynamicParams = document.getElementById('dynamic-params');
-  const descriptionEl = document.getElementById('problem-description');
-  const parseButton = document.getElementById('parse-description');
-    const animationContainer = document.getElementById('animation-container');
-
-    // helper: clear dynamic params
-    function clearDynamicParams() {
-      dynamicParams.innerHTML = '';
-    }
-
-    // create input helper
-    function createParamField(id, label, value, type='number') {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'mb-2';
-      wrapper.innerHTML = `
-        <label class="text-xs text-gray-500">${label}</label>
-        <input id="${id}" type="${type}" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="${value}">
-      `;
-      return wrapper;
-    }
-
-    // Populate dynamic params depending on type
-    function populateParamsForType(type) {
-      clearDynamicParams();
-      if (type === 'uniform') {
-        dynamicParams.appendChild(createParamField('input-initial-velocity', '初始速度 (m/s)', '0'));
-        dynamicParams.appendChild(createParamField('input-acceleration', '加速度 (m/s^2)', '10'));
-        dynamicParams.appendChild(createParamField('input-time', '时间 (s)', '5'));
-      } else if (type === 'projectile') {
-        dynamicParams.appendChild(createParamField('input-speed', '初速度 (m/s)', '10'));
-        dynamicParams.appendChild(createParamField('input-angle', '角度 (度)', '45'));
-        dynamicParams.appendChild(createParamField('input-height', '初始高度 (m)', '0'));
-      } else if (type === 'circular') {
-        dynamicParams.appendChild(createParamField('input-radius', '半径 (m)', '2'));
-        dynamicParams.appendChild(createParamField('input-angular', '角速度 (rad/s)', '1'));
-      } else if (type === 'collision') {
-        dynamicParams.appendChild(createParamField('input-m1', '质量 m1 (kg)', '1'));
-        dynamicParams.appendChild(createParamField('input-v1', '速度 v1 (m/s)', '2'));
-        dynamicParams.appendChild(createParamField('input-m2', '质量 m2 (kg)', '1'));
-        dynamicParams.appendChild(createParamField('input-v2', '速度 v2 (m/s)', '-1'));
-      } else if (type === 'magnetic') {
-        dynamicParams.appendChild(createParamField('input-charge', '电荷 q (C)', '1e-6', 'text'));
-        dynamicParams.appendChild(createParamField('input-vel', '速度 v (m/s)', '100'));
-        dynamicParams.appendChild(createParamField('input-field', '磁场 B (T)', '0.1'));
-      } else if (type === 'astrodynamics') {
-        dynamicParams.appendChild(createParamField('input-mass-central', '中心天体质量 (kg)', '5.97e24', 'text'));
-        dynamicParams.appendChild(createParamField('input-radius-orbit', '轨道半径 (m)', '7e6', 'text'));
-      }
-    }
-
-    // initial populate
-    populateParamsForType(questionTypeSelect.value || 'uniform');
-
-    questionTypeSelect.addEventListener('change', () => {
-      populateParamsForType(questionTypeSelect.value);
-    });
-
-  // ========== AI 驱动的自然语言解析（调用后端 DeepSeek API） ==========
-  // Use the deployed workers.dev URL so the front-end can call the Worker directly
-  // This avoids needing a Cloudflare Zone to create a route for pages.dev.
-  const BACKEND_PATH = 'https://physics-visual-worker.yywf08125.workers.dev/api/parse-problem';
-    
-    /**
-     * 本地简单解析（不依赖后端）
-     * @param {string} text - 题目描述文本
-     * @returns {Object} 解析结果
-     */
-    function parseLocalFallback(text) {
-      const t = text.toLowerCase();
-      
-      // 检测抛体运动
-      if (t.includes('抛') || t.includes('角度') || t.includes('°') || t.includes('度')) {
-        return {
-          success: true,
-          type: 'projectile',
-          params: { speed: 10, angle: 45, height: 0 },
-          reasoning: '检测到抛体运动关键词（本地解析模式）'
-        };
-      }
-      
-      // 检测圆周运动
-      if (t.includes('圆周') || t.includes('角速度') || t.includes('转动')) {
-        return {
-          success: true,
-          type: 'circular',
-          params: { radius: 2, angular: 1 },
-          reasoning: '检测到圆周运动关键词（本地解析模式）'
-        };
-      }
-      
-      // 检测碰撞
-      if (t.includes('碰撞') || t.includes('相撞')) {
-        return {
-          success: true,
-          type: 'collision',
-          params: { m1: 1, v1: 2, m2: 1, v2: -1 },
-          reasoning: '检测到碰撞关键词（本地解析模式）'
-        };
-      }
-      
-      // 默认：自由落体/匀变速
-      return {
-        success: true,
-        type: 'uniform',
-        params: { v0: 0, a: 10, time: 5 },
-        reasoning: '默认为自由落体运动（本地解析模式）'
-      };
-    }
-    
-    /**
-     * 调用 AI 后端解析物理题目
-     * @param {string} text - 题目描述文本
-     * @returns {Promise<Object>} 解析结果 {success, type, params, reasoning}
-     */
-    async function parseDescriptionWithAI(text) {
-      try {
-        // 创建一个带超时的 fetch (30秒超时)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        
-        const response = await fetch(BACKEND_PATH, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ description: text }),
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          throw new Error(`后端返回错误: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        return result;
-      } catch (error) {
-        console.error('AI 解析失败，尝试本地解析:', error);
-        
-        // 网络失败时自动使用本地解析
-        console.log('使用本地 fallback 解析模式');
-        return parseLocalFallback(text);
-      }
-    }
-    
-    /**
-     * 根据 AI 返回的参数填充表单
-     * @param {string} type - 题型
-     * @param {Object} params - 参数对象
-     */
-    function fillFormFromAI(type, params) {
-      // 1. 切换题型下拉框
-      if (questionTypeSelect.value !== type) {
-        questionTypeSelect.value = type;
-        populateParamsForType(type);  // 重新生成动态参数字段
-      }
-      
-      // 2. 填充通用参数
-      const setInput = (id, value) => {
-        const el = document.getElementById(id);
-        if (el && value !== undefined && value !== null) {
-          el.value = value;
-        }
-      };
-      
-      // 匀变速相关
-      setInput('input-initial-velocity', params.v0);
-      setInput('input-acceleration', params.a);
-      setInput('input-time', params.time);
-      setInput('input-mass', params.mass);
-      
-      // 抛体运动
-      setInput('input-speed', params.speed);
-      setInput('input-angle', params.angle);
-      setInput('input-height', params.height);
-      
-      // 圆周运动
-      setInput('input-radius', params.radius);
-      setInput('input-angular', params.angular || params.omega);
-      
-      // 碰撞
-      setInput('input-m1', params.m1);
-      setInput('input-v1', params.v1);
-      setInput('input-m2', params.m2);
-      setInput('input-v2', params.v2);
-      
-      // 磁场
-      setInput('input-charge', params.q || params.charge);
-      setInput('input-vel', params.v || params.velocity);
-      setInput('input-field', params.B || params.field);
-      
-      // 天体运动
-      setInput('input-mass-central', params.M || params.centralMass);
-      setInput('input-radius-orbit', params.r || params.orbitRadius);
-      
-      // 重力加速度特殊处理
-      if (params.g !== undefined) {
-        window.GRAVITY_OVERRIDE = params.g;
-      }
-    }
-
-    parseButton.addEventListener('click', async () => {
-      const text = descriptionEl.value || '';
-      
-      if (!text.trim()) {
-        showNotice('请先输入题目描述', 'warning');
-        return;
-      }
-      
-      // 显示加载提示
-      parseButton.disabled = true;
-      parseButton.textContent = '正在解析...';
-      let loadingNotice = showNotice('AI 正在理解题目，请稍候...', 'info', 0);
-      
-      try {
-        // 调用 AI 后端
-        const result = await parseDescriptionWithAI(text);
-        
-        if (result.success) {
-          // 填充表单
-          fillFormFromAI(result.type, result.params);
-          
-          // 显示成功提示（包含推理过程）
-          if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
-          const message = result.reasoning 
-            ? `✓ 已识别为【${getTypeNameZh(result.type)}】\n${result.reasoning}`
-            : `✓ 已识别为【${getTypeNameZh(result.type)}】并填充参数`;
-          showNotice(message, 'success', 3000);
-        } else {
-          throw new Error(result.error || '解析失败');
-        }
-        
-      } catch (error) {
-        // 确保移除加载提示
-        if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
-        console.error('解析错误:', error);
-        
-        // 如果后端不可用，根据后端配置给出更精确的提示
-        const isLocal = (typeof BACKEND_PATH === 'string') && /localhost|127\.0\.0\.1/.test(BACKEND_PATH);
-        let errorMsg;
-        if (isLocal && error.message && error.message.toLowerCase().includes('fetch')) {
-          // 前端指向本地后端但无法连接，提示启动本地后端
-          errorMsg = '⚠️ 无法连接到本地后端。\n请在项目目录启动本地服务器：\ncd backend ; python server.py\n或在界面中手动填写参数（若您没有本地后端）。';
-        } else if (!isLocal && error.message && error.message.toLowerCase().includes('fetch')) {
-          // 指向已部署的后端但 fetch 仍然失败，可能是网络或浏览器扩展拦截
-          errorMsg = `⚠️ 无法连接到解析后端（网络或浏览器扩展可能阻止请求）。\n请检查网络、浏览器扩展（尝试无痕/禁用扩展）或确保后端可达：\n${BACKEND_PATH}`;
-        } else {
-          errorMsg = `解析失败: ${error.message}`;
-        }
-        showNotice(errorMsg, 'error', 7000);
-        
-      } finally {
-        // 确保无论如何都恢复按钮状态并移除加载提示
-        parseButton.disabled = false;
-        parseButton.textContent = '从文字解析参数';
-        if (loadingNotice && loadingNotice.remove) {
-          try { loadingNotice.remove(); } catch(e) {}
-        }
-      }
-    });
-    
-    // 辅助函数：显示通知
-    function showNotice(message, type = 'info', duration = 2000) {
-      const colors = {
-        success: 'bg-green-500',
-        error: 'bg-red-500',
-        warning: 'bg-yellow-500',
-        info: 'bg-blue-500'
-      };
-      
-      const notice = document.createElement('div');
-      notice.className = `fixed top-20 right-4 ${colors[type]} text-white px-4 py-3 rounded-md shadow-lg z-50 max-w-sm`;
-      notice.style.whiteSpace = 'pre-line';  // 支持换行
-      notice.textContent = message;
-      document.body.appendChild(notice);
-      
-      if (duration > 0) {
-        setTimeout(() => notice.remove(), duration);
-      }
-      
-      return notice;  // 返回元素以便手动移除
-    }
-    
-    // 辅助函数：题型中文名映射
-    function getTypeNameZh(type) {
-      const names = {
-        'uniform': '匀变速直线运动',
-        'projectile': '平抛/抛体运动',
-        'circular': '圆周运动',
-        'collision': '碰撞与动量守恒',
-        'magnetic': '带电粒子在磁场中的运动',
-        'astrodynamics': '天体运动'
-      };
-      return names[type] || type;
-    }
-
-    // 图片背景功能已移除（简化界面）
-
-    // DOCX 上传并使用 Mammoth.js 提取纯文本到题目描述
-    // 绑定到仓库中所有接受 .docx 的 file input，避免有多个上传控件时部分未绑定的问题
-    const docxInputs = document.querySelectorAll('input[type="file"][accept*=".docx"]');
-    async function handleDocxInputChange(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({arrayBuffer: arrayBuffer});
-        const text = result.value || '';
-        const desc = document.getElementById('problem-description');
-        if (desc) desc.value = text.trim();
-        const notice = document.createElement('div');
-        notice.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
-        notice.textContent = '已从 Word 文档提取文本到题目描述';
-        document.body.appendChild(notice);
-        setTimeout(()=> notice.remove(), 2200);
-      } catch (err) {
-        const notice = document.createElement('div');
-        notice.className = 'fixed top-20 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
-        notice.textContent = '解析 Word 文档失败（仅支持 .docx）';
-        document.body.appendChild(notice);
-        setTimeout(()=> notice.remove(), 2200);
-      }
-    }
-    docxInputs.forEach(inp => inp.addEventListener('change', handleDocxInputChange));
-
-    // 将可见的导入按钮与隐藏的 file input 绑定（只保留一个可见按钮）
-    const importDocxButton = document.getElementById('import-docx-button');
-    const hiddenDocxInput = document.getElementById('upload-docx');
-    if (importDocxButton && hiddenDocxInput) {
-      importDocxButton.addEventListener('click', () => hiddenDocxInput.click());
-    }
+    // ========== 旧的DOM动画代码已移除，使用Canvas系统 ==========
 
     // 图片背景功能已移除（简化界面）
 
@@ -1501,70 +2491,6 @@
       }
     }
 
-    // ensure generate button resets state and uses new updateAnimation
-    generateButton.removeEventListener && generateButton.removeEventListener('click', () => {});
-    generateButton.addEventListener('click', () => {
-      // cleanup any second object if exists
-      const obj2 = document.getElementById('animated-object-2'); if (obj2) obj2.remove();
-      resetAnimation();
-      // set initial position depending on type so the correct motion is visible
-      const params = getParams();
-      if (params.type === 'projectile') {
-        // center horizontally and set top according to initial height
-        const left = animationContainer.clientWidth/2;
-        animatedObject.style.left = `${Math.round(left - 12)}px`;
-        animatedObject.style.top = `${20 + (params.height||0) * computePixelsPerMeter()}px`;
-        animatedObject.style.transform = '';
-      } else if (params.type === 'circular' || params.type === 'magnetic') {
-        // center
-        animatedObject.style.left = `${Math.round(animationContainer.clientWidth/2 - 12)}px`;
-        animatedObject.style.top = `${Math.round(animationContainer.clientHeight/2 - 12)}px`;
-        animatedObject.style.transform = '';
-      } else if (params.type === 'collision') {
-        // position first object at left quarter
-        animatedObject.style.left = `${Math.round(animationContainer.clientWidth/4)}px`;
-        animatedObject.style.top = `${Math.round(animationContainer.clientHeight/2)}px`;
-        animatedObject.style.transform = '';
-      } else {
-        // default: top center
-        const left = animationContainer.clientWidth/2;
-        animatedObject.style.left = `${Math.round(left - 12)}px`;
-        animatedObject.style.top = '20px';
-        animatedObject.style.transform = '';
-      }
-  // clear charts and export data before starting new run
-  try { clearUniformCharts(); } catch(e){}
-  exportData = [];
-  startAnimation();
-      const notification = document.createElement('div');
-      notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
-      notification.textContent = '已根据题目生成可视化';
-      document.body.appendChild(notification);
-      setTimeout(() => { notification.remove(); }, 1600);
-    });
-
-    // Export animation data as CSV
-    const exportButton = document.getElementById('export-animation');
-    function downloadCSV(filename, rows) {
-      const header = Object.keys(rows[0]);
-      const csv = [header.join(',')].concat(rows.map(r => header.map(h => r[h] === undefined ? '' : r[h]).join(','))).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    }
-    if (exportButton) exportButton.addEventListener('click', () => {
-      if (!exportData || exportData.length === 0) {
-        const notice = document.createElement('div');
-        notice.className = 'fixed top-20 right-4 bg-yellow-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
-        notice.textContent = '当前没有可导出的动画数据（先生成并播放动画）';
-        document.body.appendChild(notice); setTimeout(()=>notice.remove(),2200); return;
-      }
-      try { downloadCSV('animation-export.csv', exportData); } catch(e) { console.error(e); }
-    });
-
-    
-
     // --------------- Chart.js for uniform motion ----------------
     function initializeUniformCharts() {
       const ctxS = document.getElementById('chart-position').getContext('2d');
@@ -1603,6 +2529,561 @@
       if (window.chartPosition) { window.chartPosition.data.labels = []; window.chartPosition.data.datasets[0].data = []; window.chartPosition.update(); }
       if (window.chartVelocity) { window.chartVelocity.data.labels = []; window.chartVelocity.data.datasets[0].data = []; window.chartVelocity.update(); }
     }
+
+    // ========== 初始化所有功能 ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('📌 DOM加载完成，开始初始化...');
+      
+      // 获取关键元素引用
+      questionTypeSelect = document.getElementById('question-type-select');
+      generateButton = document.getElementById('generate-animation');
+      playBtn = document.getElementById('play-animation');
+      pauseBtn = document.getElementById('pause-animation');
+      animationContainer = document.getElementById('animation-container');
+      
+      const dynamicParams = document.getElementById('dynamic-params');
+      const descriptionEl = document.getElementById('problem-description');
+      const parseButton = document.getElementById('parse-description');
+      
+      console.log('🔍 元素检查:', {
+        questionTypeSelect: !!questionTypeSelect,
+        generateButton: !!generateButton,
+        playBtn: !!playBtn,
+        pauseBtn: !!pauseBtn,
+        animationContainer: !!animationContainer,
+        dynamicParams: !!dynamicParams
+      });
+      
+      if (!dynamicParams) {
+        console.error('❌ 找不到 dynamic-params 元素！');
+        return;
+      }
+      
+      // ========== AI 智能解析配置 ==========
+      // 使用已部署的 Cloudflare Workers 后端 URL
+      const BACKEND_PATH = 'https://physics-visual-worker.yywf08125.workers.dev/api/parse-problem';
+      
+      // ========== 动态参数功能 ==========
+      function clearDynamicParams() {
+        dynamicParams.innerHTML = '';
+      }
+
+      function createParamField(id, label, value, type='number') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mb-2';
+        wrapper.innerHTML = `
+          <label class="text-xs text-gray-500">${label}</label>
+          <input id="${id}" type="${type}" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" value="${value}">
+        `;
+        return wrapper;
+      }
+
+      function populateParamsForType(type) {
+        clearDynamicParams();
+        if (type === 'uniform') {
+          dynamicParams.appendChild(createParamField('input-initial-velocity', '初始速度 (m/s)', '0'));
+          dynamicParams.appendChild(createParamField('input-acceleration', '加速度 (m/s^2)', '10'));
+          dynamicParams.appendChild(createParamField('input-time', '时间 (s)', '5'));
+        } else if (type === 'projectile') {
+          dynamicParams.appendChild(createParamField('input-speed', '初速度 (m/s)', '10'));
+          dynamicParams.appendChild(createParamField('input-angle', '角度 (度)', '45'));
+          dynamicParams.appendChild(createParamField('input-height', '初始高度 (m)', '0'));
+        } else if (type === 'circular') {
+          dynamicParams.appendChild(createParamField('input-radius', '半径 (m)', '2'));
+          dynamicParams.appendChild(createParamField('input-angular', '角速度 (rad/s)', '1'));
+        } else if (type === 'collision') {
+          dynamicParams.appendChild(createParamField('input-m1', '质量 m1 (kg)', '1'));
+          dynamicParams.appendChild(createParamField('input-v1', '速度 v1 (m/s)', '2'));
+          dynamicParams.appendChild(createParamField('input-m2', '质量 m2 (kg)', '1'));
+          dynamicParams.appendChild(createParamField('input-v2', '速度 v2 (m/s)', '-1'));
+        } else if (type === 'magnetic') {
+          dynamicParams.appendChild(createParamField('input-charge', '电荷 q (C)', '1e-6', 'text'));
+          dynamicParams.appendChild(createParamField('input-vel', '速度 v (m/s)', '100'));
+          dynamicParams.appendChild(createParamField('input-field', '磁场 B (T)', '0.1'));
+        } else if (type === 'astrodynamics') {
+          dynamicParams.appendChild(createParamField('input-mass-central', '中心天体质量 (kg)', '5.97e24', 'text'));
+          dynamicParams.appendChild(createParamField('input-radius-orbit', '轨道半径 (m)', '7e6', 'text'));
+        }
+      }
+
+      // 初始填充参数
+      if (questionTypeSelect && dynamicParams) {
+        console.log('📝 开始填充动态参数，当前类型:', questionTypeSelect.value);
+        populateParamsForType(questionTypeSelect.value || 'uniform');
+        console.log('✅ 参数填充完成');
+        
+        // 监听题型变化
+        questionTypeSelect.addEventListener('change', () => {
+          console.log('🔄 题型变化为:', questionTypeSelect.value);
+          populateParamsForType(questionTypeSelect.value);
+        });
+      } else {
+        console.error('❌ questionTypeSelect 或 dynamicParams 未找到!', {
+          questionTypeSelect: !!questionTypeSelect,
+          dynamicParams: !!dynamicParams
+        });
+      }
+      
+      // ========== AI 智能解析功能 ==========
+      
+      /**
+       * 本地简单解析（不依赖后端）
+       * @param {string} text - 题目描述文本
+       * @returns {Object} 解析结果
+       */
+      function parseLocalFallback(text) {
+        const t = text.toLowerCase();
+        
+        // 检测抛体运动
+        if (t.includes('抛') || t.includes('角度') || t.includes('°') || t.includes('度')) {
+          return {
+            success: true,
+            type: 'projectile',
+            params: { speed: 10, angle: 45, height: 0 },
+            reasoning: '检测到抛体运动关键词（本地解析模式）'
+          };
+        }
+        
+        // 检测圆周运动
+        if (t.includes('圆周') || t.includes('角速度') || t.includes('转动')) {
+          return {
+            success: true,
+            type: 'circular',
+            params: { radius: 2, angular: 1 },
+            reasoning: '检测到圆周运动关键词（本地解析模式）'
+          };
+        }
+        
+        // 检测碰撞
+        if (t.includes('碰撞') || t.includes('相撞')) {
+          return {
+            success: true,
+            type: 'collision',
+            params: { m1: 1, v1: 2, m2: 1, v2: -1 },
+            reasoning: '检测到碰撞关键词（本地解析模式）'
+          };
+        }
+        
+        // 默认：自由落体/匀变速
+        return {
+          success: true,
+          type: 'uniform',
+          params: { v0: 0, a: 10, time: 5 },
+          reasoning: '默认为自由落体运动（本地解析模式）'
+        };
+      }
+      
+      /**
+       * 调用 AI 后端解析物理题目
+       * @param {string} text - 题目描述文本
+       * @returns {Promise<Object>} 解析结果 {success, type, params, reasoning}
+       */
+      async function parseDescriptionWithAI(text) {
+        try {
+          // 创建一个带超时的 fetch (30秒超时)
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000);
+          
+          const response = await fetch(BACKEND_PATH, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ description: text }),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error(`后端返回错误: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          return result;
+        } catch (error) {
+          console.error('AI 解析失败，尝试本地解析:', error);
+          
+          // 网络失败时自动使用本地解析
+          console.log('使用本地 fallback 解析模式');
+          return parseLocalFallback(text);
+        }
+      }
+      
+      /**
+       * 根据 AI 返回的参数填充表单
+       * @param {string} type - 题型
+       * @param {Object} params - 参数对象
+       */
+      function fillFormFromAI(type, params) {
+        // 1. 切换题型下拉框
+        if (questionTypeSelect.value !== type) {
+          questionTypeSelect.value = type;
+          populateParamsForType(type);  // 重新生成动态参数字段
+        }
+        
+        // 2. 填充通用参数
+        const setInput = (id, value) => {
+          const el = document.getElementById(id);
+          if (el && value !== undefined && value !== null) {
+            el.value = value;
+          }
+        };
+        
+        // 匀变速相关
+        setInput('input-initial-velocity', params.v0);
+        setInput('input-acceleration', params.a);
+        setInput('input-time', params.time);
+        setInput('input-mass', params.mass);
+        
+        // 抛体运动
+        setInput('input-speed', params.speed);
+        setInput('input-angle', params.angle);
+        setInput('input-height', params.height);
+        
+        // 圆周运动
+        setInput('input-radius', params.radius);
+        setInput('input-angular', params.angular || params.omega);
+        
+        // 碰撞
+        setInput('input-m1', params.m1);
+        setInput('input-v1', params.v1);
+        setInput('input-m2', params.m2);
+        setInput('input-v2', params.v2);
+        
+        // 磁场
+        setInput('input-charge', params.q || params.charge);
+        setInput('input-vel', params.v || params.velocity);
+        setInput('input-field', params.B || params.field);
+        
+        // 天体运动
+        setInput('input-mass-central', params.M || params.centralMass);
+        setInput('input-radius-orbit', params.r || params.orbitRadius);
+        
+        // 重力加速度特殊处理
+        if (params.g !== undefined) {
+          window.GRAVITY_OVERRIDE = params.g;
+        }
+      }
+      
+      // 辅助函数：显示通知（用于智能解析）
+      function showNotice(message, type = 'info', duration = 2000) {
+        const colors = {
+          success: 'bg-green-500',
+          error: 'bg-red-500',
+          warning: 'bg-yellow-500',
+          info: 'bg-blue-500'
+        };
+        
+        const notice = document.createElement('div');
+        notice.className = `fixed top-20 right-4 ${colors[type]} text-white px-4 py-3 rounded-md shadow-lg z-50 max-w-sm`;
+        notice.style.whiteSpace = 'pre-line';  // 支持换行
+        notice.textContent = message;
+        document.body.appendChild(notice);
+        
+        if (duration > 0) {
+          setTimeout(() => notice.remove(), duration);
+        }
+        
+        return notice;  // 返回元素以便手动移除
+      }
+      
+      // 辅助函数：题型中文名映射
+      function getTypeNameZh(type) {
+        const names = {
+          'uniform': '匀变速直线运动',
+          'projectile': '平抛/抛体运动',
+          'circular': '圆周运动',
+          'collision': '碰撞与动量守恒',
+          'magnetic': '带电粒子在磁场中的运动',
+          'astrodynamics': '天体运动'
+        };
+        return names[type] || type;
+      }
+      
+      // 智能解析按钮事件监听
+      parseButton?.addEventListener('click', async () => {
+        const text = descriptionEl.value || '';
+        
+        if (!text.trim()) {
+          showNotice('请先输入题目描述', 'warning');
+          return;
+        }
+        
+        // 显示加载提示
+        parseButton.disabled = true;
+        parseButton.textContent = '正在解析...';
+        let loadingNotice = showNotice('AI 正在理解题目，请稍候...', 'info', 0);
+        
+        try {
+          // 调用 AI 后端
+          const result = await parseDescriptionWithAI(text);
+          
+          if (result.success) {
+            // 填充表单
+            fillFormFromAI(result.type, result.params);
+            
+            // 显示成功提示（包含推理过程）
+            if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
+            const message = result.reasoning 
+              ? `✓ 已识别为【${getTypeNameZh(result.type)}】\n${result.reasoning}`
+              : `✓ 已识别为【${getTypeNameZh(result.type)}】并填充参数`;
+            showNotice(message, 'success', 3000);
+          } else {
+            throw new Error(result.error || '解析失败');
+          }
+          
+        } catch (error) {
+          // 确保移除加载提示
+          if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
+          console.error('解析错误:', error);
+          
+          // 如果后端不可用，根据后端配置给出更精确的提示
+          const isLocal = (typeof BACKEND_PATH === 'string') && /localhost|127\.0\.0\.1/.test(BACKEND_PATH);
+          let errorMsg;
+          if (isLocal && error.message && error.message.toLowerCase().includes('fetch')) {
+            // 前端指向本地后端但无法连接，提示启动本地后端
+            errorMsg = '⚠️ 无法连接到本地后端。\n请在项目目录启动本地服务器：\ncd backend ; python server.py\n或在界面中手动填写参数（若您没有本地后端）。';
+          } else if (!isLocal && error.message && error.message.toLowerCase().includes('fetch')) {
+            // 指向已部署的后端但 fetch 仍然失败，可能是网络或浏览器扩展拦截
+            errorMsg = `⚠️ 无法连接到解析后端（网络或浏览器扩展可能阻止请求）。\n请检查网络、浏览器扩展（尝试无痕/禁用扩展）或确保后端可达：\n${BACKEND_PATH}`;
+          } else {
+            errorMsg = `解析失败: ${error.message}`;
+          }
+          showNotice(errorMsg, 'error', 7000);
+          
+        } finally {
+          // 确保无论如何都恢复按钮状态并移除加载提示
+          parseButton.disabled = false;
+          parseButton.textContent = '智能解析';
+          if (loadingNotice && loadingNotice.remove) {
+            try { loadingNotice.remove(); } catch(e) {}
+          }
+        }
+      });
+      
+      // ========== 导入菜单功能 ==========
+      const importMenuBtn = document.getElementById('import-menu-btn');
+      const importMenu = document.getElementById('import-menu');
+      const uploadImageBtn = document.getElementById('upload-image-btn');
+      const uploadDocxBtn = document.getElementById('upload-docx-btn');
+      const uploadImageInput = document.getElementById('upload-image');
+      const uploadDocxInput = document.getElementById('upload-docx');
+      const imageUploadArea = document.getElementById('image-upload-area');
+      const ocrResult = document.getElementById('ocr-result');
+      const removeImageBtn = document.getElementById('remove-image');
+      const applyOcrBtn = document.getElementById('apply-ocr');
+      
+      let currentOcrText = '';
+      
+      // 切换导入菜单
+      importMenuBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        importMenu.classList.toggle('hidden');
+      });
+      
+      // 点击其他地方关闭菜单
+      document.addEventListener('click', () => {
+        importMenu?.classList.add('hidden');
+      });
+      
+      importMenu?.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      
+      // 触发图片上传
+      uploadImageBtn?.addEventListener('click', () => {
+        uploadImageInput?.click();
+        importMenu?.classList.add('hidden');
+      });
+      
+      // 触发Word上传
+      uploadDocxBtn?.addEventListener('click', () => {
+        uploadDocxInput?.click();
+        importMenu?.classList.add('hidden');
+      });
+      
+      // 处理图片上传（使用Tesseract.js OCR）
+      uploadImageInput?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // 显示上传区域
+        imageUploadArea.classList.remove('hidden');
+        ocrResult.innerHTML = '<div class="text-blue-600"><i class="fa fa-spinner fa-spin mr-2"></i>正在识别图片中的文字...</div><div class="text-sm text-gray-500 mt-2">⏱️ 图片识别用时约2分钟，请耐心等待</div>';
+        
+        // 显示提示通知
+        showNotification('📸 开始识别图片，预计需要2分钟...', 'info', 3000);
+        
+        // 检查是否已加载Tesseract
+        if (typeof Tesseract === 'undefined') {
+          // 动态加载Tesseract.js
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+          script.onload = () => performOCR(file);
+          script.onerror = () => {
+            ocrResult.innerHTML = '<div class="text-red-600">OCR库加载失败，请检查网络连接</div>';
+          };
+          document.head.appendChild(script);
+        } else {
+          performOCR(file);
+        }
+      });
+      
+      // 执行OCR识别
+      async function performOCR(file) {
+        try {
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            const imageData = event.target.result;
+            
+            ocrResult.innerHTML = '<div class="text-blue-600"><i class="fa fa-spinner fa-spin mr-2"></i>正在识别... (0%)</div><div class="text-sm text-gray-500 mt-2">⏱️ 预计还需约2分钟</div>';
+            
+            const worker = await Tesseract.createWorker('chi_sim+eng', 1, {
+              logger: (m) => {
+                if (m.status === 'recognizing text') {
+                  const progress = Math.round(m.progress * 100);
+                  const remainingTime = progress < 50 ? '约1-2分钟' : '不到1分钟';
+                  ocrResult.innerHTML = `<div class="text-blue-600"><i class="fa fa-spinner fa-spin mr-2"></i>正在识别... (${progress}%)</div><div class="text-sm text-gray-500 mt-2">⏱️ 预计还需${remainingTime}</div>`;
+                }
+              }
+            });
+            
+            const { data: { text } } = await worker.recognize(imageData);
+            await worker.terminate();
+            
+            currentOcrText = text;
+            ocrResult.innerHTML = `<div class="text-gray-800">${text || '未识别到文字内容'}</div>`;
+            
+            showNotification('✓ 图片识别完成', 'success', 2000);
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error('OCR识别失败:', error);
+          ocrResult.innerHTML = `<div class="text-red-600">OCR识别失败: ${error.message}</div>`;
+          showNotification('图片识别失败', 'error', 2000);
+        }
+      }
+      
+      // 删除图片
+      removeImageBtn?.addEventListener('click', () => {
+        imageUploadArea.classList.add('hidden');
+        uploadImageInput.value = '';
+        currentOcrText = '';
+        ocrResult.textContent = '';
+      });
+      
+      // 应用OCR结果
+      applyOcrBtn?.addEventListener('click', () => {
+        if (currentOcrText) {
+          const descriptionEl = document.getElementById('problem-description');
+          if (descriptionEl) {
+            descriptionEl.value = currentOcrText;
+            showNotification('✓ 已填充识别内容', 'success', 2000);
+          }
+        }
+      });
+      
+      // ========== Word 文档上传功能 ==========
+      // 使用 Mammoth.js 提取 .docx 文档中的纯文本
+      uploadDocxInput?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        try {
+          showNotification('📄 正在读取 Word 文档...', 'info', 2000);
+          
+          // 检查是否已加载 Mammoth.js
+          if (typeof mammoth === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js';
+            script.onload = async () => {
+              await processDocxFile(file);
+            };
+            script.onerror = () => {
+              showNotification('Word 文档解析库加载失败', 'error', 2000);
+            };
+            document.head.appendChild(script);
+          } else {
+            await processDocxFile(file);
+          }
+        } catch (error) {
+          console.error('Word 文档处理失败:', error);
+          showNotification('Word 文档处理失败', 'error', 2000);
+        }
+      });
+      
+      // 处理 Word 文档
+      async function processDocxFile(file) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+          const text = result.value || '';
+          
+          const descriptionEl = document.getElementById('problem-description');
+          if (descriptionEl) {
+            descriptionEl.value = text.trim();
+            showNotification('✓ 已从 Word 文档提取文本', 'success', 2000);
+          }
+        } catch (error) {
+          console.error('Word 文档解析失败:', error);
+          showNotification('解析 Word 文档失败（仅支持 .docx）', 'error', 2000);
+        }
+      }
+      
+      // ========== 生成按钮事件 ==========
+      if (generateButton) {
+        generateButton.addEventListener('click', () => {
+          // Get form parameters
+          const params = getParams();
+          console.log('🎬 生成Canvas场景:', params);
+          
+          // Set global scene parameters for rendering
+          sceneParams = params;
+          
+          // 清除之前的反弹状态
+          delete sceneParams.bounceCount;
+          delete sceneParams.lastBounceTime;
+          delete sceneParams.bounceVy;
+          delete sceneParams.bounceTime;
+          delete sceneParams.bounces;
+          delete sceneParams.projectileBounces;
+          delete sceneParams.currentBounceIndex;
+          
+          // Initialize canvas if needed
+          if (!canvas) initCanvas();
+          
+          // Reset time and redraw scene
+          currentTime = 0;
+          isPlaying = false;
+          drawScene();
+          
+          // Update UI
+          playBtn?.classList.remove('hidden');
+          pauseBtn?.classList.add('hidden');
+          
+          // Show notification
+          const notification = document.createElement('div');
+          notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+          notification.textContent = '✓ 场景已生成,点击"播放"开始演示';
+          document.body.appendChild(notification);
+          setTimeout(() => { notification.remove(); }, 2000);
+          
+          // Highlight play button briefly
+          playBtn?.classList.add('animate-pulse');
+          setTimeout(() => playBtn?.classList.remove('animate-pulse'), 2000);
+        });
+      }
+      
+      // 延迟100ms确保所有元素都已渲染
+      setTimeout(() => {
+        initCanvas();
+        initControlButtons();
+        initFullscreenButton();
+        initExportButtons();
+        console.log('✅ 所有功能初始化完成');
+      }, 100);
+    });
   </script>
 </body>
 </html>
