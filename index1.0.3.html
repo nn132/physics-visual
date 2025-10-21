@@ -10,8 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <!-- Mammoth.js for client-side .docx parsing -->
   <script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
-  <!-- gif.js for GIF export -->
-  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <!-- gifshot.js for GIF export (更适合浏览器环境) -->
+  <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
   
   
   <!-- 配置Tailwind -->
@@ -1199,6 +1199,9 @@
         delete sceneParams.currentBounceIndex;
       }
       
+      // 清空图表
+      clearUniformCharts();
+      
       if (sceneParams) {
         drawScene();
       } else {
@@ -1218,6 +1221,11 @@
       console.log('   时间更新到:', currentTime.toFixed(2), 's');
       
       drawScene();
+      
+      // 更新图表数据（如果图表存在）
+      if (sceneParams) {
+        updateCharts();
+      }
       
       animationFrameId = requestAnimationFrame(animate);
       console.log('   已请求下一帧');
@@ -1529,43 +1537,101 @@
     // ========== 导出功能 ==========
     let mediaRecorder;
     let recordedChunks = [];
+    let exportButtonsInitialized = false;
     
     function initExportButtons() {
+      if (exportButtonsInitialized) {
+        console.log('导出按钮已经初始化过了，跳过');
+        return;
+      }
+      
+      console.log('=== 开始初始化导出按钮 ===');
+      
       const exportMenuBtn = document.getElementById('export-menu-btn');
       const exportMenu = document.getElementById('export-menu');
       const exportMP4Btn = document.getElementById('export-mp4');
       const exportGIFBtn = document.getElementById('export-gif');
       
-      console.log('💾 初始化导出按钮:', {
-        exportMenuBtn: !!exportMenuBtn,
-        exportMenu: !!exportMenu,
-        exportMP4Btn: !!exportMP4Btn,
-        exportGIFBtn: !!exportGIFBtn
+      console.log('导出按钮元素查找结果:', {
+        exportMenuBtn: exportMenuBtn,
+        exportMenu: exportMenu,
+        exportMP4Btn: exportMP4Btn,
+        exportGIFBtn: exportGIFBtn
       });
       
       if (!exportMenuBtn || !exportMenu) {
-        console.error('❌ 导出按钮未找到！');
+        console.error('!!! 导出按钮未找到，将在500ms后重试 !!!');
+        setTimeout(initExportButtons, 500);
         return;
       }
       
-      // 切换导出菜单
-      exportMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        exportMenu.classList.toggle('hidden');
+      console.log('✓✓✓ 导出按钮找到了，开始绑定事件 ✓✓✓');
+      
+      // 初始化菜单为隐藏
+      exportMenu.style.display = 'none';
+      
+      // 先注册document点击事件（必须在按钮事件之前）
+      document.addEventListener('click', (e) => {
+        // 检查点击是否在按钮或菜单外部
+        if (!exportMenuBtn.contains(e.target) && !exportMenu.contains(e.target)) {
+          exportMenu.style.display = 'none';
+          console.log('点击外部，关闭菜单');
+        }
       });
       
-      // 点击其他地方关闭菜单
-      document.addEventListener('click', () => {
-        exportMenu.classList.add('hidden');
-      });
-      
+      // 阻止菜单内部点击冒泡
       exportMenu.addEventListener('click', (e) => {
         e.stopPropagation();
+        console.log('点击菜单内部');
       });
+      
+      // 切换导出菜单
+      let isToggling = false;
+      exportMenuBtn.addEventListener('click', (e) => {
+        console.log('!!!!!!!! 导出按钮被点击了 !!!!!!!!');
+        console.log('Event target:', e.target);
+        console.log('Event currentTarget:', e.currentTarget);
+        console.log('当前菜单display:', exportMenu.style.display);
+        console.log('isToggling:', isToggling);
+        
+        // 防止重复触发
+        if (isToggling) {
+          console.log('正在切换中，忽略此次点击');
+          e.stopPropagation();
+          e.preventDefault();
+          return false;
+        }
+        
+        isToggling = true;
+        e.stopPropagation();
+        e.preventDefault();
+        
+        // 切换显示状态
+        const currentDisplay = exportMenu.style.display;
+        if (currentDisplay === 'none' || currentDisplay === '') {
+          exportMenu.style.display = 'block';
+          console.log('>>>>>> 菜单已设置为 block <<<<<<');
+        } else {
+          exportMenu.style.display = 'none';
+          console.log('>>>>>> 菜单已设置为 none <<<<<<');
+        }
+        
+        // 50ms后解除锁定
+        setTimeout(() => {
+          isToggling = false;
+          console.log('切换锁定已解除');
+        }, 50);
+        
+        return false;
+      }, true);
+      
+      // 标记已初始化
+      exportButtonsInitialized = true;
+      console.log('✓✓✓ 导出按钮初始化完成 ✓✓✓');
       
       // 导出为 MP4
       exportMP4Btn?.addEventListener('click', async () => {
-        exportMenu.classList.add('hidden');
+        exportMenu.style.display = 'none';
         
         if (!sceneParams) {
           showNotification('请先生成动画场景', 'warning', 2000);
@@ -1629,59 +1695,136 @@
       
       // 导出为 GIF
       exportGIFBtn?.addEventListener('click', async () => {
-        const exportMenu = document.getElementById('export-menu');
-        exportMenu?.classList.add('hidden');
-        
+        console.log('=== GIF导出按钮被点击 ===');
+        exportMenu.style.display = 'none';
+
         if (!sceneParams) {
+          console.warn('sceneParams不存在');
           showNotification('请先生成动画场景', 'warning', 2000);
           return;
         }
-        
-        showNotification('🎨 正在生成GIF...', 'info', 5000);
-        
+
+        // 检查 gifshot 库是否加载
+        console.log('检查 gifshot 库:', typeof gifshot);
+        if (typeof gifshot === 'undefined') {
+          console.error('gifshot库未加载！');
+          showNotification('GIF库未加载，请刷新页面重试', 'error', 3000);
+          return;
+        }
+
+        showNotification('🎨 正在生成GIF...', 'info', 3000);
+
         try {
-          // 使用 gif.js 库
-          const gif = new GIF({
-            workers: 2,
-            quality: 10,
-            width: canvas.width,
-            height: canvas.height,
-            workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
-          });
-          
+          const durationMs = estimateAnimationDuration();
+          const targetFps = 10; // gifshot 推荐较低帧率
+          const maxFrames = 100; // 限制帧数
+          const estimatedFrames = Math.ceil((durationMs / 1000) * targetFps);
+          const frameCount = Math.min(Math.max(10, estimatedFrames), maxFrames);
+          const interval = 1.0 / targetFps; // 每帧间隔秒数
+
+          console.log('GIF 参数:', { durationMs, targetFps, frameCount, interval });
+
+          // 创建进度覆盖层
+          let progressOverlay = document.getElementById('gif-progress-overlay');
+          if (!progressOverlay) {
+            progressOverlay = document.createElement('div');
+            progressOverlay.id = 'gif-progress-overlay';
+            progressOverlay.style.cssText = `
+              position: fixed;
+              left: 50%;
+              top: 40%;
+              transform: translate(-50%, -50%);
+              z-index: 100000;
+              background: rgba(0,0,0,0.85);
+              color: white;
+              padding: 20px 30px;
+              border-radius: 12px;
+              font-family: Arial, sans-serif;
+              font-size: 16px;
+            `;
+            document.body.appendChild(progressOverlay);
+          }
+
           const wasPlaying = isPlaying;
           pauseAnimation();
-          currentTime = 0;
-          
-          // 捕获帧
-          const frameCount = 60; // 60帧
-          const frameDelay = 50; // 50ms per frame
-          
+          const originalTime = currentTime;
+
+          // 捕获所有帧为 base64 图片
+          const images = [];
+          progressOverlay.textContent = `捕获帧 0/${frameCount}...`;
+
           for (let i = 0; i < frameCount; i++) {
-            drawScene();
-            gif.addFrame(canvas, { copy: true, delay: frameDelay });
-            currentTime += 0.1;
-          }
-          
-          gif.on('finished', (blob) => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `physics-animation-${Date.now()}.gif`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showNotification('✓ GIF已导出', 'success', 3000);
+            // 设置当前时间
+            currentTime = (i / Math.max(1, frameCount - 1)) * (durationMs / 1000);
             
-            // 恢复原状态
-            currentTime = 0;
+            // 绘制当前帧
+            drawScene();
+            
+            // 捕获为 base64
+            const dataUrl = canvas.toDataURL('image/png');
+            images.push(dataUrl);
+            
+            // 更新进度
+            progressOverlay.textContent = `捕获帧 ${i + 1}/${frameCount}...`;
+            
+            // 让浏览器有机会更新 UI
+            if (i % 5 === 0) {
+              await new Promise(resolve => setTimeout(resolve, 0));
+            }
+          }
+
+          console.log(`已捕获 ${images.length} 帧，开始生成 GIF...`);
+          progressOverlay.textContent = '正在生成GIF...';
+
+          // 使用 gifshot 生成 GIF
+          gifshot.createGIF({
+            images: images,
+            gifWidth: canvas.width,
+            gifHeight: canvas.height,
+            interval: interval,
+            numFrames: frameCount,
+            frameDuration: 1,
+            sampleInterval: 10,
+            progressCallback: (captureProgress) => {
+              const percent = Math.round(captureProgress * 100);
+              console.log(`GIF 生成进度: ${percent}%`);
+              if (progressOverlay) {
+                progressOverlay.textContent = `生成中 ${percent}%`;
+              }
+            }
+          }, (obj) => {
+            if (progressOverlay) progressOverlay.remove();
+            
+            if (!obj.error) {
+              console.log('GIF 生成成功！');
+              // 下载 GIF
+              const a = document.createElement('a');
+              a.href = obj.image;
+              a.download = `physics-animation-${Date.now()}.gif`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              showNotification('✓ GIF已导出', 'success', 3000);
+            } else {
+              console.error('GIF 生成失败:', obj.error);
+              showNotification('GIF生成失败: ' + obj.error, 'error', 3000);
+            }
+            
+            // 恢复状态
+            currentTime = originalTime || 0;
             drawScene();
             if (wasPlaying) startAnimation();
           });
-          
-          gif.render();
+
         } catch (error) {
-          console.error('GIF生成失败:', error);
-          showNotification('GIF生成失败: ' + error.message, 'error', 3000);
+          console.error('!!! GIF生成失败 !!!', error);
+          showNotification('GIF生成失败: ' + (error && error.message ? error.message : error), 'error', 3000);
+          
+          // 清理并恢复
+          const progressOverlay = document.getElementById('gif-progress-overlay');
+          if (progressOverlay) progressOverlay.remove();
+          currentTime = 0;
+          drawScene();
         }
       });
       
@@ -2528,6 +2671,59 @@
     function clearUniformCharts() {
       if (window.chartPosition) { window.chartPosition.data.labels = []; window.chartPosition.data.datasets[0].data = []; window.chartPosition.update(); }
       if (window.chartVelocity) { window.chartVelocity.data.labels = []; window.chartVelocity.data.datasets[0].data = []; window.chartVelocity.update(); }
+    }
+    
+    // 新增：统一的图表更新函数（适配 Canvas 动画系统）
+    function updateCharts() {
+      if (!sceneParams) return;
+      
+      // 初始化图表（如果尚未初始化）
+      if (!window.chartPosition || !window.chartVelocity) {
+        initializeUniformCharts();
+      }
+      
+      const t = currentTime;
+      const type = sceneParams.type;
+      
+      // 根据运动类型计算位移和速度
+      let s = 0; // 位移
+      let v = 0; // 速度
+      
+      if (type === 'uniform') {
+        const g = 10;
+        const v0 = sceneParams.v0 || 0;
+        const h0 = sceneParams.height || 8;
+        s = h0 + v0 * t - 0.5 * g * t * t;
+        v = v0 - g * t;
+      } else if (type === 'projectile') {
+        const g = 10;
+        const v0 = sceneParams.speed || 10;
+        const angle = sceneParams.angle || 0;
+        const vx = v0 * Math.cos(angle);
+        const vy0 = v0 * Math.sin(angle);
+        const h0 = sceneParams.height || 0;
+        
+        const x = vx * t;
+        const y = h0 + vy0 * t - 0.5 * g * t * t;
+        s = Math.sqrt(x * x + (y - h0) * (y - h0)); // 合位移
+        
+        const vy = vy0 - g * t;
+        v = Math.sqrt(vx * vx + vy * vy); // 合速度
+      } else if (type === 'circular') {
+        const r = sceneParams.radius || 2;
+        const omega = sceneParams.omega || 1;
+        s = omega * r * t; // 弧长
+        v = omega * r; // 线速度恒定
+      } else if (type === 'collision') {
+        // 碰撞后速度可能变化，这里简化处理
+        s = 0;
+        v = 0;
+      }
+      
+      // 更新图表（每隔几帧更新一次以提高性能）
+      if (Math.round(t * 20) % 2 === 0) { // 约每0.1秒更新一次
+        appendUniformData(t, s, v);
+      }
     }
 
     // ========== 初始化所有功能 ==========
