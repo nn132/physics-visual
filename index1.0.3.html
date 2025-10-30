@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>物理可视化学习平台</title>
+  <title>物理教学一体化平台</title>
   <!-- 引入外部资源 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -207,7 +207,7 @@
         <div class="flex items-center">
           <div class="flex-shrink-0 text-primary">
             <i class="fa fa-cubes text-2xl mr-2"></i>
-            <span class="font-bold text-xl">物理可视化</span>
+            <span class="font-bold text-xl">物理教学一体化平台</span>
           </div>
         </div>
         
@@ -246,6 +246,23 @@
     </div>
   </header>
 
+  <style>
+    /* 高亮目标区域的过渡效果（用于点击功能卡后的视觉提示） */
+    .feature-target-highlight {
+      background-color: rgba(187, 227, 255, 0.45); /* 浅蓝色高亮 */
+      box-shadow: 0 8px 30px rgba(59, 130, 246, 0.08);
+      transition: background-color 0.45s ease, box-shadow 0.45s ease;
+      border-radius: 12px;
+    }
+
+    /* 功能卡键盘焦点样式（提升可访问性） */
+    .feature-card:focus {
+      outline: none;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
+      transform: translateY(-2px);
+    }
+  </style>
+
   <main class="flex-grow">
     <!-- 英雄区域 -->
     <section class="bg-gradient-to-r from-primary/90 to-primary text-white py-16 md:py-24">
@@ -275,7 +292,7 @@
         
         <div class="grid md:grid-cols-3 gap-8">
           <!-- 功能1 -->
-          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow feature-card cursor-pointer" role="button" tabindex="0" aria-label="前往运动过程可视化" data-target="#visualization">
             <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
               <i class="fa fa-line-chart text-primary text-xl"></i>
             </div>
@@ -284,7 +301,7 @@
           </div>
           
           <!-- 功能2 -->
-          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow feature-card cursor-pointer" role="button" tabindex="0" aria-label="前往知识点集成" data-target="#knowledge">
             <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
               <i class="fa fa-book text-primary text-xl"></i>
             </div>
@@ -293,7 +310,7 @@
           </div>
           
           <!-- 功能3 -->
-          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow feature-card cursor-pointer" role="button" tabindex="0" aria-label="前往题型分类整理" data-target="#question-types">
             <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
               <i class="fa fa-tags text-primary text-xl"></i>
             </div>
@@ -336,38 +353,51 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">题目描述</label>
                 <textarea id="problem-description" class="w-full p-3 border-2 border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" rows="6" placeholder="输入题目或点击下方导入..."></textarea>
                 
-                <!-- 导入按钮组 - 等宽并排 -->
-                <div class="mt-3 grid grid-cols-2 gap-3">
-                  <!-- 导入题目下拉菜单 -->
-                  <div class="relative">
-                    <button id="import-menu-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                      <i class="fa fa-upload"></i>
-                      <span>导入题目</span>
-                      <i class="fa fa-caret-down"></i>
-                    </button>
-                    <div id="import-menu" class="hidden absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10 overflow-hidden">
-                      <button id="upload-image-btn" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100">
-                        <i class="fa fa-image text-blue-600"></i>
-                        <span>上传图片</span>
-                      </button>
-                      <button id="upload-docx-btn" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3">
-                        <i class="fa fa-file-word-o text-blue-600"></i>
-                        <span>导入Word文档</span>
-                      </button>
-                    </div>
+                <!-- 可视化提示词模块：替代旧的上传/解析流程 -->
+                <div class="mt-3 grid gap-3">
+                  <label class="text-sm font-medium text-gray-700">可视化提示词 (更细化的视觉控制)</label>
+                  <textarea id="visual-prompt" rows="4" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：抛体运动，初速度10m/s，角度45°；风格：卡通；高亮顶点与速度向量；轨迹显示为点线"></textarea>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <select id="visual-theme" class="w-full p-2 border border-gray-300 rounded-md">
+                      <option value="realistic">真实风格</option>
+                      <option value="cartoon" selected>卡通风格</option>
+                      <option value="minimal">极简风格</option>
+                    </select>
+                    <select id="visual-detail" class="w-full p-2 border border-gray-300 rounded-md">
+                      <option value="low">低细节</option>
+                      <option value="medium" selected>中等细节</option>
+                      <option value="high">高细节</option>
+                    </select>
                   </div>
-                  
-                  <!-- 智能解析按钮 -->
-                  <button id="parse-description" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <span>智能解析</span>
-                  </button>
+
+                  <div class="flex items-center gap-3">
+                    <label class="inline-flex items-center"><input id="visual-highlight-apex" type="checkbox" class="mr-2"> 高亮顶点/极值</label>
+                    <label class="inline-flex items-center"><input id="visual-show-velocity" type="checkbox" class="mr-2" checked> 显示速度向量</label>
+                    <label class="inline-flex items-center"><input id="visual-use-trail" type="checkbox" class="mr-2" checked> 使用轨迹</label>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <button id="parse-description" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">应用提示</button>
+                    <button id="reset-visual-prompt" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg">清除提示</button>
+                  </div>
                 </div>
-                
-                <!-- 隐藏的文件输入 -->
-                <input id="upload-image" type="file" accept="image/*" class="hidden">
-                <input id="upload-docx" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden">
               </div>
               
+              <!-- 高级导入（折叠）: 保留原有图片/Word导入但默认折叠，减少界面干扰 -->
+              <details class="mb-4" id="advanced-import">
+                <summary class="cursor-pointer text-sm text-gray-600">高级导入：图片 / Word 文档（折叠）</summary>
+                <div class="mt-3">
+                  <div class="grid grid-cols-2 gap-2 mb-2">
+                    <button id="upload-image-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">上传图片</button>
+                    <button id="upload-docx-btn" type="button" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">导入 Word (.docx)</button>
+                  </div>
+                  <!-- 隐藏的文件输入（保留原有处理逻辑） -->
+                  <input id="upload-image" type="file" accept="image/*" class="hidden">
+                  <input id="upload-docx" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden">
+                </div>
+              </details>
+
               <!-- 图片上传显示区域 -->
               <div id="image-upload-area" class="mb-4 hidden">
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -880,7 +910,7 @@
         <div>
           <div class="flex items-center mb-4">
             <i class="fa fa-cubes text-2xl mr-2"></i>
-            <span class="font-bold text-xl">物理可视化</span>
+            <span class="font-bold text-xl">物理教学一体化平台</span>
           </div>
           <p class="text-gray-400 text-sm">让高中物理学习变得直观简单，助力学生理解抽象概念，提高学习效率。</p>
         </div>
@@ -924,21 +954,76 @@
       </div>
       
       <div class="border-t border-gray-700 pt-6 text-center text-gray-500 text-sm">
-        <p>© 2023 物理可视化学习平台 版权所有</p>
+        <p>© 2023 物理教学一体化平台 版权所有</p>
       </div>
     </div>
   </footer>
 
   <!-- JavaScript -->
   <script>
-    // ========== Canvas场景绘制系统 ==========
-    let canvas, ctx;
-    let animationFrameId = null;
-    let currentTime = 0;
-    let isPlaying = false;
-    let playSpeed = 1;
-    let sceneParams = null;
-    let animationContainer; // 全局声明，避免重复声明
+    /*
+    ╔═══════════════════════════════════════════════════════════════════════════╗
+    ║                           JavaScript 主代码模块                             ║
+    ╠═══════════════════════════════════════════════════════════════════════════╣
+    ║  本文件包含所有前端逻辑，按照以下顺序组织：                                   ║
+    ║                                                                            ║
+    ║  1️⃣  全局变量与常量定义                                                     ║
+    ║  2️⃣  辅助工具函数 (roundRect, drawWheel, shadeColor等)                      ║
+    ║  3️⃣  Canvas初始化与渲染引擎                                                 ║
+    ║  4️⃣  物理运动绘制函数 (drawHorizontalMotion, drawCircularMotion等)          ║
+    ║  5️⃣  动画控制系统 (startAnimation, stopAnimation等)                         ║
+    ║  6️⃣  参数管理 (getParams, fillFormFromAI等)                                 ║
+    ║  7️⃣  AI解析模块 (parseDescriptionWithAI, 本地fallback)                      ║
+    ║  8️⃣  题目导入功能 (图片上传, Word文档解析)                                   ║
+    ║  9️⃣  导出功能 (GIF, MP4, CSV, JSON)                                         ║
+    ║  🔟  UI事件监听器初始化                                                      ║
+    ╚═══════════════════════════════════════════════════════════════════════════╝
+    */
+
+    // ============================================================================
+    // 📦 1. 全局变量与常量定义
+    // ============================================================================
+    
+    // Canvas 相关全局变量
+    let canvas, ctx;                    // Canvas元素和2D绘图上下文
+    let animationFrameId = null;        // requestAnimationFrame 的ID，用于取消动画
+    let currentTime = 0;                // 当前动画时间（秒）
+    let isPlaying = false;              // 动画是否正在播放
+    let playSpeed = 1;                  // 播放速度倍率
+  let sceneParams = null;             // 当前场景的物理参数对象
+  let sceneVisualSettings = {};       // 可视化提示词设置（风格/细节/高亮选项）
+
+    // 根据 sceneParams.visual 或 sceneVisualSettings 生成绘图样式配置
+    function getVisualConfig() {
+      const v = (sceneParams && sceneParams.visual) ? sceneParams.visual : (sceneVisualSettings || {});
+      const theme = v.theme || 'cartoon';
+      const detail = v.detail || 'medium';
+      const highlightApex = !!v.highlightApex;
+      const showVelocity = v.showVelocity === undefined ? true : !!v.showVelocity;
+      const useTrail = v.useTrail === undefined ? true : !!v.useTrail;
+
+      // 基于主题选择配色
+      const palettes = {
+        cartoon: { ball: '#ff6b00', accent: '#0066ff', trail: '#ffd8b5' },
+        realistic: { ball: '#2b6cb0', accent: '#0ea5a6', trail: '#cbd5e1' },
+        minimal: { ball: '#111827', accent: '#6b7280', trail: '#e5e7eb' }
+      };
+
+      const p = palettes[theme] || palettes.cartoon;
+
+      // 细节影响线宽与字体大小
+      const detailCfg = { low: { lw: 1, rMult: 0.9 }, medium: { lw: 1.5, rMult: 1 }, high: { lw: 2.5, rMult: 1.3 } };
+      const dc = detailCfg[detail] || detailCfg.medium;
+
+      return {
+        theme, detail, highlightApex, showVelocity, useTrail,
+        ballColor: p.ball, arrowColor: p.accent, trailColor: p.trail,
+        lineWidth: dc.lw, radiusMultiplier: dc.rMult
+      };
+    }
+    
+    // DOM 元素引用（避免重复查询）
+    let animationContainer;             // Canvas容器元素
     let questionTypeSelect, generateButton, playBtn, pauseBtn; // 控制元素引用
     
     // 初始化Canvas
@@ -1008,58 +1093,80 @@
       }
     });
     
-    // 绘制场景（根据参数类型）
+    // ============================================================================
+    // 🎨 3. Canvas渲染引擎 - 主调度函数
+    // ============================================================================
+    
+    /**
+     * 绘制物理场景的主函数
+     * 
+     * 功能说明：
+     * - 根据 sceneParams.type 分发到不同的绘制函数
+     * - 支持的题型：uniform(匀变速)、projectile(抛体)、circular(圆周)、collision(碰撞)
+     * - 如果场景来自AI，会在画布顶部显示"✨ AI 精确场景"标记
+     * 
+     * @requires sceneParams - 全局场景参数对象，必须包含 type 字段
+     * @requires ctx - Canvas 2D上下文，必须已初始化
+     */
     function drawScene() {
       console.log('🎨 drawScene() 被调用');
       console.log('   ctx:', !!ctx);
       console.log('   sceneParams:', !!sceneParams);
       console.log('   canvas.width:', canvas?.width);
       console.log('   canvas.height:', canvas?.height);
-      
+
+      // 前置检查：确保Canvas和参数已准备好
       if (!ctx || !sceneParams) {
         console.warn('⚠️ drawScene() 提前返回：ctx 或 sceneParams 不存在');
         return;
       }
-      
+
       const w = canvas.width;
       const h = canvas.height;
       console.log('   准备绘制，尺寸:', w, 'x', h);
-      
-      // 清空画布
+
+      // 步骤1：清空画布（白色背景）
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, w, h);
       console.log('   已清空画布（白色背景）');
-      
-      // 设置默认样式
+
+      // 步骤2：设置默认绘图样式
       ctx.strokeStyle = '#000000';
       ctx.fillStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.font = '14px Arial';
-      
-      // 根据类型绘制
+
+      // 步骤3：根据题型分发到对应的绘制函数
       switch(sceneParams.type) {
         case 'uniform':
-          if (sceneParams.direction === 'horizontal') {
-            drawHorizontalMotion();
+          // 匀变速直线运动：根据方向选择水平或垂直渲染
+          const direction = sceneParams.direction || window.MOTION_DIRECTION || 'vertical';
+          console.log('🎨 匀变速运动方向:', direction);
+          
+          if (direction === 'horizontal') {
+            drawHorizontalMotion();    // 绘制水平运动（汽车、滑块等）
           } else {
-            drawVerticalMotion();
+            drawVerticalMotion();      // 绘制垂直运动（自由落体等）
           }
           break;
+          
         case 'projectile':
-          drawProjectileMotion();
+          drawProjectileMotion();      // 绘制抛体运动
           break;
+          
         case 'circular':
-          drawCircularMotion();
+          drawCircularMotion();        // 绘制圆周运动
           break;
+          
         case 'collision':
-          drawCollision();
+          drawCollision();             // 绘制碰撞运动
           break;
+          
         default:
+          // 默认使用垂直运动
           drawVerticalMotion();
       }
-    }
-    
-    // 通知提示函数（需要在控制函数之前定义）
+    }    // 通知提示函数（需要在控制函数之前定义）
     function showNotification(message, type = 'info', duration = 2000) {
       const colors = {
         success: 'bg-green-500',
@@ -1128,7 +1235,25 @@
       console.log('✅ 控制按钮已绑定');
     }
     
-    // 播放/暂停/重置控制函数
+    // ============================================================================
+    // ▶️ 6. 动画控制模块 - 播放/暂停/重置/速度控制
+    // ============================================================================
+    
+    /**
+     * 开始播放动画
+     * 
+     * 功能说明：
+     * - 检查场景是否已生成（sceneParams 不为空）
+     * - 防止重复播放（如果已在播放则跳过）
+     * - 切换播放/暂停按钮状态（普通模式+全屏模式）
+     * - 启动 animate() 函数（requestAnimationFrame 循环）
+     * 
+     * 按钮更新：
+     * - 普通模式：#play-animation 隐藏，#pause-animation 显示
+     * - 全屏模式：#fs-play 隐藏，#fs-pause 显示
+     * 
+     * @requires sceneParams - 场景参数必须已设置
+     */
     function startAnimation() {
       if (!sceneParams) {
         console.warn('⚠️ 请先生成可视化场景');
@@ -1162,6 +1287,18 @@
       console.log('   animate() 已调用');
     }
     
+    /**
+     * 暂停动画播放
+     * 
+     * 功能说明：
+     * - 设置 isPlaying = false，停止动画循环
+     * - 取消 requestAnimationFrame 请求
+     * - 恢复播放/暂停按钮状态（普通+全屏）
+     * 
+     * 注意：
+     * - 暂停不会重置时间，可以继续播放
+     * - 使用 cancelAnimationFrame 确保性能
+     */
     function pauseAnimation() {
       console.log('⏸️ 暂停动画');
       isPlaying = false;
@@ -1183,6 +1320,20 @@
       if (fsPauseBtn) fsPauseBtn.style.display = 'none';
     }
     
+    /**
+     * 重置动画到初始状态
+     * 
+     * 功能说明：
+     * - 停止播放并重置时间为 0
+     * - 清除反弹状态（抛体运动的弹跳计数等）
+     * - 清空 s-t 和 v-t 图表数据
+     * - 重绘初始帧（或显示欢迎屏幕）
+     * 
+     * 清除的状态：
+     * - bounceCount, lastBounceTime, bounceVy - 反弹相关
+     * - projectileBounces, currentBounceIndex - 抛体弹跳
+     * - Chart.js 图表数据
+     */
     function resetAnimation() {
       console.log('🔄 重置动画');
       pauseAnimation();
@@ -1941,11 +2092,13 @@
       
       const ballY = groundY - y * scale;
       
-      // 绘制物体
-      ctx.fillStyle = '#ff6b00';
-      ctx.beginPath();
-      ctx.arc(w / 2, ballY, 12, 0, 2 * Math.PI);
-      ctx.fill();
+  // 绘制物体（使用视觉配置）
+  const vcfg = getVisualConfig();
+  const ballR = Math.round(12 * vcfg.radiusMultiplier);
+  ctx.fillStyle = vcfg.ballColor;
+  ctx.beginPath();
+  ctx.arc(w / 2, ballY, ballR, 0, 2 * Math.PI);
+  ctx.fill();
       
       // 高度标注线
       ctx.strokeStyle = '#666666';
@@ -1959,11 +2112,11 @@
       ctx.fillStyle = '#000000';
       ctx.fillText('h = ' + y.toFixed(2) + ' m', w / 2 - 100, ballY + 5);
       
-      // 速度箭头
-      if (Math.abs(v) > 0.5) {
-        const arrowLen = Math.min(Math.abs(v) * 5, 100);
-        ctx.strokeStyle = '#0066ff';
-        ctx.fillStyle = '#0066ff';
+      // 速度箭头（根据视觉设置决定是否显示）
+      if (vcfg.showVelocity && Math.abs(v) > 0.5) {
+        const arrowLen = Math.min(Math.abs(v) * 5, 100) * (vcfg.detail === 'high' ? 1.1 : 1);
+        ctx.strokeStyle = vcfg.arrowColor;
+        ctx.fillStyle = vcfg.arrowColor;
         
         const startY = ballY;
         const endY = ballY + (v < 0 ? -arrowLen : arrowLen);
@@ -1971,6 +2124,7 @@
         ctx.beginPath();
         ctx.moveTo(w / 2 + 30, startY);
         ctx.lineTo(w / 2 + 30, endY);
+        ctx.lineWidth = vcfg.lineWidth;
         ctx.stroke();
         
         // 箭头头部
@@ -1988,7 +2142,32 @@
       ctx.fillStyle = '#000000';
     }
     
-    // 2. 水平运动（汽车/滑块）
+    // ============================================================================
+    // 🎨 4. 物理运动绘制函数 - 水平运动（汽车/滑块）
+    // ============================================================================
+    
+    /**
+     * 绘制水平匀变速直线运动
+     * 
+     * 应用场景：
+     * - 汽车在公路上加速/减速/匀速行驶
+     * - 滑块在水平面上的运动
+     * - 火车、自行车等水平运动物体
+     * 
+     * 物理公式：
+     * - 位移: x = v0*t + (1/2)*a*t²
+     * - 速度: v = v0 + a*t
+     * 
+     * 渲染特性：
+     * - 使用SVG汽车图像（getCarImage）
+     * - 绘制公路（实线+虚线）
+     * - 实时显示时间、速度、位置
+     * - 支持全屏模式自适应
+     * 
+     * @requires sceneParams.v0 - 初速度(m/s)
+     * @requires sceneParams.a  - 加速度(m/s²)
+     * @requires currentTime    - 当前动画时间(s)
+     */
     function drawHorizontalMotion() {
       const w = canvas.width;
       const h = canvas.height;
@@ -2034,13 +2213,14 @@
         pauseAnimation();
       }
       
-      // 绘制汽车
-      const carW = 60, carH = 30;
-      ctx.fillStyle = '#ff6b00';
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.fillRect(carX - carW/2, roadY - carH - 20, carW, carH);
-      ctx.strokeRect(carX - carW/2, roadY - carH - 20, carW, carH);
+  // 绘制汽车（使用视觉配置）
+  const vcfg = getVisualConfig();
+  const carW = 60, carH = 30;
+  ctx.fillStyle = vcfg.ballColor;
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = Math.max(1, vcfg.lineWidth);
+  ctx.fillRect(carX - carW/2, roadY - carH - 20, carW, carH);
+  ctx.strokeRect(carX - carW/2, roadY - carH - 20, carW, carH);
       
       // 轮子
       ctx.fillStyle = '#000000';
@@ -2196,34 +2376,37 @@
       ctx.strokeStyle = '#000000';
       ctx.fillRect(platformX, groundY - h0 * scale, platformWidth, 20);
       ctx.strokeRect(platformX, groundY - h0 * scale, platformWidth, 20);
-      
-      // 物体
-      const ballRadius = isFullscreen ? 18 : 12;
-      ctx.fillStyle = '#ff6b00';
+
+      // 物体（视觉配置）
+      const vcfg = getVisualConfig();
+      const ballRadius = Math.round((isFullscreen ? 18 : 12) * vcfg.radiusMultiplier);
+      ctx.fillStyle = vcfg.ballColor;
       ctx.beginPath();
       ctx.arc(ballX, ballY, ballRadius, 0, 2 * Math.PI);
       ctx.fill();
-      
-      // 轨迹
-      ctx.strokeStyle = '#cccccc';
-      ctx.setLineDash([3, 3]);
-      ctx.lineWidth = isFullscreen ? 2 : 1;
-      ctx.beginPath();
-      for (let dt = 0; dt <= t; dt += 0.05) {
-        const tx = startX + vx * dt * scale;
-        const ty = groundY - (h0 + initialVy * dt - 0.5 * g * dt * dt) * scale;
-        if (dt === 0) ctx.moveTo(tx, ty);
-        else ctx.lineTo(tx, ty);
+
+      // 轨迹（仅在 useTrail 为 true 时绘制）
+      if (vcfg.useTrail) {
+        ctx.strokeStyle = vcfg.trailColor;
+        ctx.setLineDash(vcfg.detail === 'low' ? [4,4] : [3,3]);
+        ctx.lineWidth = vcfg.lineWidth;
+        ctx.beginPath();
+        for (let dt = 0; dt <= t; dt += 0.05) {
+          const tx = startX + vx * dt * scale;
+          const ty = groundY - (h0 + initialVy * dt - 0.5 * g * dt * dt) * scale;
+          if (dt === 0) ctx.moveTo(tx, ty);
+          else ctx.lineTo(tx, ty);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
       }
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.lineWidth = 1;
       
-      // 速度箭头
-      const vAngle = Math.atan2(-vy, vx);
-      const arrowLen = Math.min(vTotal * 5, 80);
-      ctx.strokeStyle = '#0066ff';
-      ctx.fillStyle = '#0066ff';
+  // 速度箭头（视觉设置）
+  const vAngle = Math.atan2(-vy, vx);
+  const arrowLen = Math.min(vTotal * 5, 80) * (vcfg.detail === 'high' ? 1.1 : 1);
+  ctx.strokeStyle = vcfg.arrowColor;
+  ctx.fillStyle = vcfg.arrowColor;
       
       const endX = ballX + arrowLen * Math.cos(vAngle);
       const endY = ballY - arrowLen * Math.sin(vAngle);
@@ -2240,8 +2423,25 @@
       ctx.lineTo(endX - 8 * Math.cos(vAngle + Math.PI/6), endY + 8 * Math.sin(vAngle + Math.PI/6));
       ctx.closePath();
       ctx.fill();
-      
+
       ctx.fillText('v = ' + vTotal.toFixed(2) + ' m/s', ballX + 20, ballY - 20);
+
+      // 高亮顶点（如果启用）
+      if (vcfg.highlightApex) {
+        const tApex = initialVy / g;
+        if (tApex >= 0 && Math.abs(t - tApex) < 0.5) {
+          const apexX = startX + vx * tApex * scale;
+          const apexY = groundY - (h0 + initialVy * tApex - 0.5 * g * tApex * tApex) * scale;
+          ctx.save();
+          ctx.fillStyle = '#ffd166';
+          ctx.beginPath();
+          ctx.arc(apexX, apexY - 8, 6, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.fillStyle = '#333333';
+          ctx.fillText('顶点', apexX + 10, apexY - 8);
+          ctx.restore();
+        }
+      }
       
       console.log('✅ drawProjectileMotion() 绘制完成');
       
@@ -2261,37 +2461,40 @@
       const t = currentTime;
       const theta = omega * t;
       
-      // 圆形轨道
-      ctx.strokeStyle = '#666666';
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, R, 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      
-      // 中心点
-      ctx.fillStyle = '#000000';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.fillText('O', centerX + 10, centerY - 10);
-      
-      const ballX = centerX + R * Math.cos(theta);
-      const ballY = centerY + R * Math.sin(theta);
-      
-      // 绳子
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(ballX, ballY);
-      ctx.stroke();
-      
-      // 物体
-      ctx.fillStyle = '#ff6b00';
-      ctx.beginPath();
-      ctx.arc(ballX, ballY, 12, 0, 2 * Math.PI);
-      ctx.fill();
+  // 使用视觉配置
+  const vcfg = getVisualConfig();
+  // 圆形轨道
+  ctx.strokeStyle = vcfg.trailColor || '#666666';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, R, 0, 2 * Math.PI);
+  ctx.lineWidth = Math.max(1, vcfg.lineWidth);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 中心点
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.fillText('O', centerX + 10, centerY - 10);
+
+  const ballX = centerX + R * Math.cos(theta);
+  const ballY = centerY + R * Math.sin(theta);
+
+  // 绳子
+  ctx.strokeStyle = vcfg.arrowColor || '#000000';
+  ctx.lineWidth = Math.max(1, vcfg.lineWidth);
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(ballX, ballY);
+  ctx.stroke();
+
+  // 物体
+  ctx.fillStyle = vcfg.ballColor;
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, Math.round(12 * vcfg.radiusMultiplier), 0, 2 * Math.PI);
+  ctx.fill();
       
       const v = omega * R / 40;
       document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
@@ -2469,6 +2672,7 @@
 
     // 图片背景功能已移除（简化界面）
 
+<<<<<<< HEAD
     // ========== 物理计算和自适应缩放配置 ==========
     const gravity = 10; // 重力加速度 m/s²
     let containerHeight = 400; // 默认容器高度 px
@@ -2501,6 +2705,31 @@
     }
 
     // Motion type dispatch: wrap physics functions to support multiple motions
+=======
+    // ============================================================================
+    // 📝 4. 参数管理模块 - 从表单获取参数
+    // ============================================================================
+    
+    /**
+     * 获取当前场景的物理参数
+     * 
+     * 功能说明：
+     * - 从表单输入框读取用户输入的值
+     * - 根据不同题型收集对应的参数字段
+     * - 返回标准化的参数对象供 Canvas 渲染使用
+     * 
+     * 返回格式：
+     * {
+     *   type: "uniform",      // 题型
+     *   v0: 0,                // 初速度
+     *   a: 2,                 // 加速度
+     *   time: 3,              // 时间
+     *   // 其他题型特定参数...
+     * }
+     * 
+     * @returns {Object} 参数对象
+     */
+>>>>>>> e447c80 (feat: login link + root redirect; simplify login redirect)
     function getParams() {
       // collect generic params
       const type = questionTypeSelect.value;
@@ -2984,10 +3213,42 @@
         };
       }
       
+      // ============================================================================
+      // 🧠 7. AI题目解析模块 - 调用后端DeepSeek API
+      // ============================================================================
+      
       /**
-       * 调用 AI 后端解析物理题目
-       * @param {string} text - 题目描述文本
-       * @returns {Promise<Object>} 解析结果 {success, type, params, reasoning}
+       * 使用AI解析自然语言物理题目
+       * 
+       * 工作流程：
+       * 1. 将题目文本发送到 Cloudflare Worker 后端
+       * 2. 后端调用 DeepSeek API 进行语义理解
+       * 3. 返回结构化的物理参数 {type, params, reasoning, sceneDescription}
+       * 4. 如果AI失败，自动降级到本地正则表达式解析
+       * 
+       * 后端地址：
+       * - 生产环境: https://physics-visual-worker.yywf08125.workers.dev/api/parse-problem
+       * - 本地测试: http://localhost:8787/api/parse-problem
+       * 
+       * 返回格式示例：
+       * {
+       *   success: true,
+       *   type: "uniform",           // 题型：uniform/projectile/circular/collision
+       *   params: {                  // 物理参数
+       *     v0: 0,                   // 初速度
+       *     a: 2,                    // 加速度
+       *     time: 3                  // 时间
+       *   },
+       *   reasoning: "匀加速直线运动，由静止开始(v0=0)，加速度2m/s²，时间3s",
+       *   sceneDescription: {        // AI生成的场景描述（可选）
+       *     objects: ["汽车"],
+       *     initialConditions: "静止并开始运动",
+       *     environment: "笔直公路"
+       *   }
+       * }
+       * 
+       * @param {string} text - 题目文本（自然语言）
+       * @returns {Promise<Object>} 解析结果对象
        */
       async function parseDescriptionWithAI(text) {
         try {
@@ -3021,10 +3282,28 @@
         }
       }
       
+      // ============================================================================
+      // 📝 参数填充模块 - 将AI解析结果填入表单
+      // ============================================================================
+      
       /**
-       * 根据 AI 返回的参数填充表单
-       * @param {string} type - 题型
-       * @param {Object} params - 参数对象
+       * 将AI解析的参数填充到表单输入框
+       * 
+       * 功能说明：
+       * 1. 自动切换题型下拉框（如果AI识别的题型与当前不同）
+       * 2. 调用 populateParamsForType() 重新生成对应题型的输入框
+       * 3. 将AI返回的参数值填入各个输入框
+       * 4. 处理参数名称的多种变体（如 v0/initialVelocity/speed 都映射到初速度）
+       * 
+       * 参数映射规则：
+       * - 匀变速运动: v0(初速度), a(加速度), time(时间), direction(方向)
+       * - 抛体运动: speed(初速度), angle(角度), height(高度)
+       * - 圆周运动: radius(半径), angular(角速度)
+       * - 碰撞运动: m1/v1/m2/v2(质量和速度)
+       * - 磁场运动: q(电荷), v(速度), B(磁场强度)
+       * 
+       * @param {string} type - 题型类型（uniform/projectile/circular/collision/magnetic/astrodynamics）
+       * @param {Object} params - AI返回的参数对象
        */
       function fillFormFromAI(type, params) {
         // 1. 切换题型下拉框
@@ -3112,61 +3391,97 @@
         return names[type] || type;
       }
       
-      // 智能解析按钮事件监听
+      // 可视化提示/智能解析按钮事件监听（优先使用左侧可视化提示词模块）
+      function applyVisualPrompt() {
+        const vp = document.getElementById('visual-prompt');
+        const theme = document.getElementById('visual-theme')?.value || 'cartoon';
+        const detail = document.getElementById('visual-detail')?.value || 'medium';
+        const highlightApex = !!document.getElementById('visual-highlight-apex')?.checked;
+        const showVelocity = !!document.getElementById('visual-show-velocity')?.checked;
+        const useTrail = !!document.getElementById('visual-use-trail')?.checked;
+
+        const text = (vp && vp.value) ? vp.value.trim() : '';
+        if (!text) return null;
+
+        // 简单启发式：根据提示词决定题型并填充默认参数（最小可用实现）
+        const t = text.toLowerCase();
+        let guessed = { success: true, type: 'uniform', params: {} };
+        if (t.includes('抛') || t.includes('角度') || t.includes('°') || t.includes('度')) {
+          guessed.type = 'projectile';
+          guessed.params = { speed: 10, angle: 45, height: 0 };
+        } else if (t.includes('圆周') || t.includes('角速度') || t.includes('转动')) {
+          guessed.type = 'circular';
+          guessed.params = { radius: 2, angular: 1 };
+        } else if (t.includes('碰撞') || t.includes('相撞')) {
+          guessed.type = 'collision';
+          guessed.params = { m1: 1, v1: 2, m2: 1, v2: -1 };
+        } else if (t.includes('磁') || t.includes('洛伦兹')) {
+          guessed.type = 'magnetic';
+          guessed.params = { q: 1e-6, v: 100, B: 0.1 };
+        } else {
+          guessed.type = 'uniform';
+          guessed.params = { v0: 0, a: 10, time: 5 };
+        }
+
+        // 将猜测填入表单
+        fillFormFromAI(guessed.type, guessed.params);
+
+        // 应用可视化设置到 sceneParams（生成场景时会合并这些设置）
+        sceneVisualSettings = { theme, detail, highlightApex, showVelocity, useTrail, prompt: text };
+
+        return { type: guessed.type, params: guessed.params, visual: sceneVisualSettings };
+      }
+
       parseButton?.addEventListener('click', async () => {
-        const text = descriptionEl.value || '';
-        
-        if (!text.trim()) {
-          showNotice('请先输入题目描述', 'warning');
+        // 优先读取左侧可视化提示词
+        const vpEl = document.getElementById('visual-prompt');
+        const vpText = vpEl ? vpEl.value.trim() : '';
+
+        if (vpText) {
+          // 使用本地启发式解析并应用视觉设置
+          const applied = applyVisualPrompt();
+          showNotice(`✓ 已根据提示词应用可视化设置（风格: ${applied.visual.theme}, 细节: ${applied.visual.detail}）`, 'success', 2500);
           return;
         }
-        
+
+        // 否则回退到原先的AI解析（对 problem-description 字段）
+        const text = descriptionEl.value || '';
+        if (!text.trim()) {
+          showNotice('请先输入题目描述或在左侧填写可视化提示词', 'warning');
+          return;
+        }
+
         // 显示加载提示
         parseButton.disabled = true;
         parseButton.textContent = '正在解析...';
         let loadingNotice = showNotice('AI 正在理解题目，请稍候...', 'info', 0);
-        
+
         try {
-          // 调用 AI 后端
           const result = await parseDescriptionWithAI(text);
-          
           if (result.success) {
-            // 填充表单
             fillFormFromAI(result.type, result.params);
-            
-            // 显示成功提示（包含推理过程）
             if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
-            const message = result.reasoning 
-              ? `✓ 已识别为【${getTypeNameZh(result.type)}】\n${result.reasoning}`
-              : `✓ 已识别为【${getTypeNameZh(result.type)}】并填充参数`;
+            const message = result.reasoning ? `✓ 已识别为【${getTypeNameZh(result.type)}】\n${result.reasoning}` : `✓ 已识别为【${getTypeNameZh(result.type)}】并填充参数`;
             showNotice(message, 'success', 3000);
           } else {
             throw new Error(result.error || '解析失败');
           }
-          
         } catch (error) {
-          // 确保移除加载提示
           if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
           console.error('解析错误:', error);
-          
-          // 如果后端不可用，根据后端配置给出更精确的提示
           const isLocal = (typeof BACKEND_PATH === 'string') && /localhost|127\.0\.0\.1/.test(BACKEND_PATH);
           let errorMsg;
           if (isLocal && error.message && error.message.toLowerCase().includes('fetch')) {
-            // 前端指向本地后端但无法连接，提示启动本地后端
             errorMsg = '⚠️ 无法连接到本地后端。\n请在项目目录启动本地服务器：\ncd backend ; python server.py\n或在界面中手动填写参数（若您没有本地后端）。';
           } else if (!isLocal && error.message && error.message.toLowerCase().includes('fetch')) {
-            // 指向已部署的后端但 fetch 仍然失败，可能是网络或浏览器扩展拦截
             errorMsg = `⚠️ 无法连接到解析后端（网络或浏览器扩展可能阻止请求）。\n请检查网络、浏览器扩展（尝试无痕/禁用扩展）或确保后端可达：\n${BACKEND_PATH}`;
           } else {
             errorMsg = `解析失败: ${error.message}`;
           }
           showNotice(errorMsg, 'error', 7000);
-          
         } finally {
-          // 确保无论如何都恢复按钮状态并移除加载提示
           parseButton.disabled = false;
-          parseButton.textContent = '智能解析';
+          parseButton.textContent = '应用提示';
           if (loadingNotice && loadingNotice.remove) {
             try { loadingNotice.remove(); } catch(e) {}
           }
@@ -3342,7 +3657,53 @@
         }
       }
       
-      // ========== 生成按钮事件 ==========
+        // 重置左侧可视化提示词按钮
+        const resetVisualBtn = document.getElementById('reset-visual-prompt');
+        resetVisualBtn?.addEventListener('click', () => {
+          const vp = document.getElementById('visual-prompt'); if (vp) vp.value = '';
+          const theme = document.getElementById('visual-theme'); if (theme) theme.value = 'cartoon';
+          const detail = document.getElementById('visual-detail'); if (detail) detail.value = 'medium';
+          const ha = document.getElementById('visual-highlight-apex'); if (ha) ha.checked = false;
+          const sv = document.getElementById('visual-show-velocity'); if (sv) sv.checked = true;
+          const ut = document.getElementById('visual-use-trail'); if (ut) ut.checked = true;
+          sceneVisualSettings = {};
+          showNotification('✓ 已清除可视化提示词设置', 'success', 1600);
+        });
+
+        // 功能卡片点击：平滑滚动到对应板块（并避开顶部 sticky header），同时高亮目标区域
+        const featureCards = document.querySelectorAll('.feature-card');
+        featureCards.forEach(card => {
+          const target = card.dataset.target;
+          if (!target) return;
+          card.addEventListener('click', () => {
+            const dest = document.querySelector(target);
+            if (!dest) return;
+
+            // 计算顶部偏移（考虑 sticky header）
+            const headerEl = document.getElementById('navbar');
+            const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
+            const rect = dest.getBoundingClientRect();
+            const top = rect.top + window.scrollY - headerHeight - 12; // 12px 额外间隔
+
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+
+            // 可访问性：设焦点以便使用键盘的用户获取上下文
+            try { dest.setAttribute('tabindex', '-1'); dest.focus(); } catch(e){}
+
+            // 高亮目标区域一段时间以增强视觉反馈
+            dest.classList.add('feature-target-highlight');
+            setTimeout(() => {
+              dest.classList.remove('feature-target-highlight');
+            }, 1600);
+          });
+
+          // 支持回车/空格触发
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+          });
+        });
+
+        // ========== 生成按钮事件 ==========
       if (generateButton) {
         generateButton.addEventListener('click', () => {
           // Get form parameters
@@ -3351,6 +3712,8 @@
           
           // Set global scene parameters for rendering
           sceneParams = params;
+          // 合并可视化提示词设置（如果存在）
+          sceneParams.visual = Object.assign({}, sceneVisualSettings || {});
           
           // 清除之前的反弹状态
           delete sceneParams.bounceCount;
