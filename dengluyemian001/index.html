@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 / 登录</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="description" content="示例注册/登录页面，包含客户端校验、密码强度、验证码倒计时等功能。">
+    <script defer src="index.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>欢迎</h1>
+            <p class="subtitle">请使用手机号或邮箱注册 / 登录</p>
+        </div>
+
+        <div class="main">
+            <form id="authForm" novalidate>
+                <!-- 账号输入 -->
+                <div class="form-group">
+                    <label for="account">账号（手机或邮箱）</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-user"></i>
+                        <input id="account" name="account" type="text" inputmode="email" placeholder="请输入手机号或邮箱" aria-describedby="accountHelp" required>
+                    </div>
+                    <div id="accountHelp" class="help-text">请输入 11 位手机号或包含 @ 的邮箱</div>
+                    <div class="error" id="accountError" aria-live="polite"></div>
+                </div>
+
+                <!-- 密码 -->
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-lock"></i>
+                        <input id="password" name="password" type="password" placeholder="8-20 位，含大小写和数字" aria-describedby="pwdHelp" required>
+                        <button type="button" class="icon-btn" id="togglePwd" aria-label="显示/隐藏密码"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <div id="pwdHelp" class="help-text">实时显示密码强度</div>
+                    <div class="strength">
+                        <div class="strength-bar" id="strengthBar"></div>
+                        <div class="strength-text" id="strengthText">-</div>
+                    </div>
+                    <div class="error" id="pwdError" aria-live="polite"></div>
+                </div>
+
+                <!-- 验证码 -->
+                <div class="form-group inline-group">
+                    <div style="flex:1">
+                        <label for="code">验证码</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-key"></i>
+                            <input id="code" name="code" type="text" placeholder="请输入短信/邮箱验证码" aria-describedby="codeHelp">
+                        </div>
+                        <div id="codeHelp" class="help-text">验证码有效期 10 分钟</div>
+                        <div class="error" id="codeError" aria-live="polite"></div>
+                    </div>
+                    <div class="code-actions">
+                        <button type="button" id="sendCode" class="send-btn">发送验证码</button>
+                        <div class="img-captcha">
+                            <img id="captchaImg" src="https://via.placeholder.com/100x40?text=CAPTCHA" alt="图形验证码">
+                            <button type="button" id="refreshCaptcha" class="link-btn">换一张</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <!-- 改为纯链接，保证在无 JS 或 JS 失败时也能跳转 -->
+                    <a id="submitBtn" class="primary" href="../index1.0.3.html">注册 / 登录</a>
+                </div>
+
+                <p class="note">提示：此示例为前端模拟，真实业务请接入后端接口并使用 HTTPS 以及服务端不可逆密码存储方案。</p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
