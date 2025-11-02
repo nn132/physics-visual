@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>物理可视化学习平台</title>
+  <title>物理教学一体化平台</title>
   <!-- 引入外部资源 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -164,6 +164,12 @@
   </style>
   <!-- 手机端额外样式：只新增，不修改现有桌面样式 -->
   <style>
+    /* 题型分类卡片样式 - 确保所有卡片在折叠状态下保持相同高度 */
+    #question-types .grid > div {
+      display: flex;
+      flex-direction: column;
+    }
+    
     /* 保持桌面端完全不变；以下规则只在窄屏（手机）生效 */
     @media (max-width: 768px) {
       /* 导航：确保品牌、按钮在一行且菜单更紧凑 */
@@ -207,7 +213,7 @@
         <div class="flex items-center">
           <div class="flex-shrink-0 text-primary">
             <i class="fa fa-cubes text-2xl mr-2"></i>
-            <span class="font-bold text-xl">物理可视化</span>
+            <span class="font-bold text-xl">物理教学一体化平台</span>
           </div>
         </div>
         
@@ -220,15 +226,16 @@
         </nav>
         
         <!-- 用户区域 -->
-        <div class="flex items-center">
-          <button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mr-2">
+        <div class="flex items-center gap-3">
+          <a href="dengluyemian001/index.html" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors inline-block">
             登录
-          </button>
-          <button class="hidden md:block text-gray-700 hover:text-primary">
-            <i class="fa fa-question-circle text-xl"></i>
+          </a>
+          <!-- 圆形头像按钮 -->
+          <button class="hidden md:block w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 flex items-center justify-center transition-all hover:scale-110 shadow-md">
+            <i class="fa fa-user text-blue-600 text-lg"></i>
           </button>
           <!-- 移动端菜单按钮 -->
-          <button type="button" class="md:hidden ml-4 text-gray-700 hover:text-primary" id="mobile-menu-button">
+          <button type="button" class="md:hidden text-gray-700 hover:text-primary" id="mobile-menu-button">
             <i class="fa fa-bars text-xl"></i>
           </button>
         </div>
@@ -246,19 +253,40 @@
     </div>
   </header>
 
+  <style>
+    /* 高亮目标区域的过渡效果（用于点击功能卡后的视觉提示） */
+    .feature-target-highlight {
+      background-color: rgba(187, 227, 255, 0.45); /* 浅蓝色高亮 */
+      box-shadow: 0 8px 30px rgba(59, 130, 246, 0.08);
+      transition: background-color 0.45s ease, box-shadow 0.45s ease;
+      border-radius: 12px;
+    }
+
+    /* 功能卡键盘焦点样式（提升可访问性） */
+    .feature-card:focus {
+      outline: none;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
+      transform: translateY(-2px);
+    }
+  </style>
+
   <main class="flex-grow">
     <!-- 英雄区域 -->
-    <section class="bg-gradient-to-r from-primary/90 to-primary text-white py-16 md:py-24">
-      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-3xl">
-          <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">让物理学习变得直观简单</h1>
-          <p class="text-xl md:text-2xl mb-8 text-white/90">导入物理题目，自动生成运动过程可视化，轻松理解物理概念与解题思路</p>
-          <div class="flex flex-col sm:flex-row gap-4">
-            <a href="#visualization" class="bg-white text-primary hover:bg-gray-100 px-6 py-3 rounded-md font-medium text-center transition-colors">
-              开始使用 <i class="fa fa-arrow-right ml-2"></i>
+    <section class="bg-gradient-to-br from-blue-600 via-blue-500 to-purple-600 text-white py-16 md:py-24 relative overflow-hidden">
+      <!-- 背景装饰 -->
+      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE2djhjMCAxLjEtLjkgMi0yIDJoLThjLTEuMSAwLTItLjktMi0ydi04YzAtMS4xLjktMiAyLTJoOGMxLjEgMCAyIC45IDIgMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30"></div>
+      
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+          <h1 class="text-5xl md:text-7xl font-black mb-10 leading-[1.1] tracking-tight">
+            让物理学习变得<br/>直观简单
+          </h1>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="#visualization" class="group bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-xl font-bold text-lg text-center transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-1 shadow-lg">
+              <i class="fa fa-rocket mr-2 group-hover:translate-x-1 transition-transform duration-300"></i>开始使用
             </a>
-            <a href="#demo" class="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 rounded-md font-medium text-center transition-colors">
-              查看演示 <i class="fa fa-play-circle ml-2"></i>
+            <a href="#features" class="group bg-white/10 backdrop-blur-md border-2 border-white/40 text-white hover:bg-white/20 hover:border-white/60 px-8 py-4 rounded-xl font-bold text-lg text-center transition-all duration-300 hover:shadow-xl hover:scale-105">
+              <i class="fa fa-play-circle mr-2 group-hover:scale-110 inline-block transition-transform duration-300"></i>查看演示
             </a>
           </div>
         </div>
@@ -266,53 +294,51 @@
     </section>
 
     <!-- 功能特点 -->
-    <section class="py-16 bg-white">
+    <section id="features" class="py-20 bg-white relative">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <h2 class="text-3xl font-bold mb-4">强大功能，助力物理学习</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">专为高中生设计的物理学习工具，让抽象概念变得直观易懂</p>
+          <h2 class="text-4xl md:text-5xl font-bold text-gray-900">强大功能，助力物理学习</h2>
         </div>
         
-        <div class="grid md:grid-cols-3 gap-8">
+        <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <!-- 功能1 -->
-          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <i class="fa fa-line-chart text-primary text-xl"></i>
+          <div class="group bg-gradient-to-br from-blue-50 to-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-blue-100 feature-card cursor-pointer" role="button" tabindex="0" aria-label="前往运动过程可视化" data-target="#visualization">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg">
+              <i class="fa fa-line-chart text-white text-2xl"></i>
             </div>
-            <h3 class="text-xl font-semibold mb-3">运动过程可视化</h3>
-            <p class="text-gray-600">导入物理题目，自动生成3D或2D运动轨迹，直观展示物体运动过程，标注关键位置和状态。</p>
+            <h3 class="text-2xl font-bold mb-4 text-gray-900">运动过程可视化</h3>
+            <p class="text-gray-600 leading-relaxed">导入物理题目，自动生成3D或2D运动轨迹，直观展示物体运动过程，标注关键位置和状态。</p>
           </div>
           
           <!-- 功能2 -->
-          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <i class="fa fa-book text-primary text-xl"></i>
+          <div class="group bg-gradient-to-br from-purple-50 to-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-purple-100 feature-card cursor-pointer" role="button" tabindex="0" aria-label="前往知识点集成" data-target="#knowledge">
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg">
+              <i class="fa fa-book text-white text-2xl"></i>
             </div>
-            <h3 class="text-xl font-semibold mb-3">知识点集成</h3>
-            <p class="text-gray-600">整合高中物理全部知识点，配有详细解析和例题，方便随时查阅，巩固基础。</p>
+            <h3 class="text-2xl font-bold mb-4 text-gray-900">知识点集成</h3>
+            <p class="text-gray-600 leading-relaxed">整合高中物理全部知识点，配有详细解析和例题，方便随时查阅，巩固基础。</p>
           </div>
           
           <!-- 功能3 -->
-          <div class="bg-light rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <i class="fa fa-tags text-primary text-xl"></i>
+          <div class="group bg-gradient-to-br from-pink-50 to-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-pink-100 feature-card cursor-pointer" role="button" tabindex="0" aria-label="前往题型分类整理" data-target="#question-types">
+            <div class="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg">
+              <i class="fa fa-tags text-white text-2xl"></i>
             </div>
-            <h3 class="text-xl font-semibold mb-3">题型分类整理</h3>
-            <p class="text-gray-600">按知识点和难度分类整理典型题型，帮助学生掌握各类问题的解题思路和方法。</p>
+            <h3 class="text-2xl font-bold mb-4 text-gray-900">题型分类整理</h3>
+            <p class="text-gray-600 leading-relaxed">按知识点和难度分类整理典型题型，帮助学生掌握各类问题的解题思路和方法。</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- 运动可视化区域 -->
-    <section id="visualization" class="py-16 bg-gray-50">
+    <section id="visualization" class="py-20 bg-gradient-to-b from-gray-50 to-white">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold mb-4">物理运动可视化</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">导入题目，生成动态演示，直观理解物理过程</p>
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold text-gray-900">物理运动可视化</h2>
         </div>
         
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 max-w-7xl mx-auto">
     <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
             <!-- 左侧：题目输入区 -->
             <div class="p-6 flex flex-col">
@@ -336,38 +362,51 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">题目描述</label>
                 <textarea id="problem-description" class="w-full p-3 border-2 border-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" rows="6" placeholder="输入题目或点击下方导入..."></textarea>
                 
-                <!-- 导入按钮组 - 等宽并排 -->
-                <div class="mt-3 grid grid-cols-2 gap-3">
-                  <!-- 导入题目下拉菜单 -->
-                  <div class="relative">
-                    <button id="import-menu-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                      <i class="fa fa-upload"></i>
-                      <span>导入题目</span>
-                      <i class="fa fa-caret-down"></i>
-                    </button>
-                    <div id="import-menu" class="hidden absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10 overflow-hidden">
-                      <button id="upload-image-btn" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100">
-                        <i class="fa fa-image text-blue-600"></i>
-                        <span>上传图片</span>
-                      </button>
-                      <button id="upload-docx-btn" class="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3">
-                        <i class="fa fa-file-word-o text-blue-600"></i>
-                        <span>导入Word文档</span>
-                      </button>
-                    </div>
+                <!-- 可视化提示词模块：替代旧的上传/解析流程 -->
+                <div class="mt-3 grid gap-3">
+                  <label class="text-sm font-medium text-gray-700">可视化提示词 (更细化的视觉控制)</label>
+                  <textarea id="visual-prompt" rows="4" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：抛体运动，初速度10m/s，角度45°；风格：卡通；高亮顶点与速度向量；轨迹显示为点线"></textarea>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <select id="visual-theme" class="w-full p-2 border border-gray-300 rounded-md">
+                      <option value="realistic">真实风格</option>
+                      <option value="cartoon" selected>卡通风格</option>
+                      <option value="minimal">极简风格</option>
+                    </select>
+                    <select id="visual-detail" class="w-full p-2 border border-gray-300 rounded-md">
+                      <option value="low">低细节</option>
+                      <option value="medium" selected>中等细节</option>
+                      <option value="high">高细节</option>
+                    </select>
                   </div>
-                  
-                  <!-- 智能解析按钮 -->
-                  <button id="parse-description" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <span>智能解析</span>
-                  </button>
+
+                  <div class="flex items-center gap-3">
+                    <label class="inline-flex items-center"><input id="visual-highlight-apex" type="checkbox" class="mr-2"> 高亮顶点/极值</label>
+                    <label class="inline-flex items-center"><input id="visual-show-velocity" type="checkbox" class="mr-2" checked> 显示速度向量</label>
+                    <label class="inline-flex items-center"><input id="visual-use-trail" type="checkbox" class="mr-2" checked> 使用轨迹</label>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <button id="parse-description" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">应用提示</button>
+                    <button id="reset-visual-prompt" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg">清除提示</button>
+                  </div>
                 </div>
-                
-                <!-- 隐藏的文件输入 -->
-                <input id="upload-image" type="file" accept="image/*" class="hidden">
-                <input id="upload-docx" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden">
               </div>
               
+              <!-- 高级导入（折叠）: 保留原有图片/Word导入但默认折叠，减少界面干扰 -->
+              <details class="mb-4" id="advanced-import">
+                <summary class="cursor-pointer text-sm text-gray-600">高级导入：图片 / Word 文档（折叠）</summary>
+                <div class="mt-3">
+                  <div class="grid grid-cols-2 gap-2 mb-2">
+                    <button id="upload-image-btn" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">上传图片</button>
+                    <button id="upload-docx-btn" type="button" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">导入 Word (.docx)</button>
+                  </div>
+                  <!-- 隐藏的文件输入（保留原有处理逻辑） -->
+                  <input id="upload-image" type="file" accept="image/*" class="hidden">
+                  <input id="upload-docx" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden">
+                </div>
+              </details>
+
               <!-- 图片上传显示区域 -->
               <div id="image-upload-area" class="mb-4 hidden">
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -488,118 +527,30 @@
     </section>
 
     <!-- 知识点库 -->
-    <section id="knowledge" class="py-16 bg-white">
+    <section id="knowledge" class="py-20 bg-gradient-to-b from-gray-50 to-white">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold mb-4">物理知识点库</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">系统整理高中物理知识点，随时查阅学习</p>
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold text-gray-900">物理知识点库</h2>
         </div>
         
-        <div class="grid md:grid-cols-4 gap-6">
+        <div class="grid lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
           <!-- 知识点分类导航 -->
-          <div class="md:col-span-1">
-            <div class="bg-light rounded-xl p-4 sticky top-24">
-              <h3 class="font-semibold mb-4 pb-2 border-b border-gray-200">知识点分类</h3>
-              <ul class="space-y-1">
-                <li>
-                  <button class="w-full text-left px-3 py-2 rounded-md bg-primary/10 text-primary text-sm font-medium">
-                    运动学
-                  </button>
-                </li>
-                <li>
-                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
-                    力学
-                  </button>
-                </li>
-                <li>
-                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
-                    能量与动量
-                  </button>
-                </li>
-                <li>
-                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
-                    电磁学
-                  </button>
-                </li>
-                <li>
-                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
-                    光学
-                  </button>
-                </li>
-                <li>
-                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
-                    热学
-                  </button>
-                </li>
-                <li>
-                  <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
-                    近代物理
-                  </button>
-                </li>
+          <div class="lg:col-span-3">
+            <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-gray-100 min-h-[400px]">
+              <h3 class="text-lg font-bold mb-4 pb-3 border-b-2 border-purple-500 flex items-center gap-2">
+                <i class="fa fa-book text-purple-500"></i>
+                知识点分类
+              </h3>
+              <ul id="knowledge-nav" class="space-y-2">
+                <!-- 动态渲染 -->
               </ul>
             </div>
           </div>
           
           <!-- 知识点内容 -->
-          <div class="md:col-span-3">
-            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <div class="flex justify-between items-start mb-4">
-                <div>
-                  <h3 class="text-xl font-semibold">匀变速直线运动</h3>
-                  <p class="text-gray-500 text-sm">运动学 > 直线运动</p>
-                </div>
-                <button class="text-gray-400 hover:text-primary">
-                  <i class="fa fa-star-o"></i>
-                </button>
-              </div>
-              
-              <div class="prose max-w-none">
-                <p>物体在一条直线上运动，如果在相等的时间内速度的变化相等，这种运动就叫做匀变速直线运动。</p>
-                
-                <h4 class="text-lg font-medium mt-4 mb-2">基本公式</h4>
-                <div class="bg-gray-50 p-4 rounded-md mb-4">
-                  <p class="mb-2">1. 速度公式：v = v₀ + at</p>
-                  <p class="mb-2">2. 位移公式：s = v₀t + ½at²</p>
-                  <p class="mb-2">3. 速度-位移公式：v² - v₀² = 2as</p>
-                  <p>4. 平均速度公式：v̄ = (v₀ + v)/2 = s/t</p>
-                </div>
-                
-                <h4 class="text-lg font-medium mt-4 mb-2">重要推论</h4>
-                <ul class="list-disc pl-5 mb-4">
-                  <li>在连续相等的时间间隔内的位移之差为一恒量：Δs = aT²</li>
-                  <li>某段时间内的平均速度等于这段时间中间时刻的瞬时速度</li>
-                  <li>某段位移中点的瞬时速度等于初速度和末速度平方和一半的平方根</li>
-                </ul>
-                
-                <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-100">
-                  <div class="flex items-center text-sm text-gray-500">
-                    <span class="mr-4"><i class="fa fa-eye mr-1"></i> 1245</span>
-                    <span><i class="fa fa-bookmark mr-1"></i> 328</span>
-                  </div>
-                  <button class="text-primary hover:text-primary/80 text-sm font-medium">
-                    查看例题 <i class="fa fa-angle-right ml-1"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 相关知识点 -->
-            <div>
-              <h3 class="font-semibold mb-4">相关知识点</h3>
-              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
-                  <h4 class="font-medium mb-1">自由落体运动</h4>
-                  <p class="text-sm text-gray-600">初速度为零，加速度为重力加速度的匀加速直线运动</p>
-                </div>
-                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
-                  <h4 class="font-medium mb-1">竖直上抛运动</h4>
-                  <p class="text-sm text-gray-600">加速度为重力加速度的匀变速直线运动</p>
-                </div>
-                <div class="bg-light rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
-                  <h4 class="font-medium mb-1">运动的合成与分解</h4>
-                  <p class="text-sm text-gray-600">遵循平行四边形定则的矢量合成法则</p>
-                </div>
-              </div>
+          <div class="lg:col-span-9">
+            <div id="knowledge-content">
+              <!-- 动态渲染 -->
             </div>
           </div>
         </div>
@@ -607,339 +558,1485 @@
     </section>
 
     <!-- 题型分类 -->
-    <section id="question-types" class="py-16 bg-gray-50">
+    <section id="question-types" class="py-20 bg-white">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold mb-4">物理题型分类</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">按知识点和难度整理，掌握各类题型的解题方法</p>
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold text-gray-900">物理题型分类</h2>
         </div>
         
-        <!-- 题型筛选 -->
-        <div class="bg-white rounded-xl shadow-sm p-4 mb-8">
-          <div class="flex flex-wrap gap-3">
-            <button class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium">
-              全部题型
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
-              基础题
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
-              中档题
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
-              难题
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
-              运动学
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
-              力学
-            </button>
-            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors">
-              电磁学
-            </button>
-          </div>
-        </div>
-        
-        <!-- 题型列表 -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- 题型1 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-5">
-              <div class="flex justify-between items-start mb-3">
-                <h3 class="font-semibold">自由落体运动问题</h3>
-                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">基础题</span>
-              </div>
-              
-              <p class="text-gray-600 text-sm mb-4">考查自由落体运动的速度、位移与时间的关系，重力加速度的应用。</p>
-              
-              <div class="flex flex-wrap gap-2 mb-4">
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动学</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">匀加速</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">公式应用</span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500">例题数量: 12</span>
-                <button class="text-primary hover:text-primary/80 text-sm font-medium">
-                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
-                </button>
-              </div>
+        <div class="grid lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
+          <!-- 题型分类导航 -->
+          <div class="lg:col-span-3">
+            <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-gray-100 min-h-[400px]">
+              <h3 class="text-lg font-bold mb-4 pb-3 border-b-2 border-pink-500 flex items-center gap-2">
+                <i class="fa fa-list-alt text-pink-500"></i>
+                题型分类
+              </h3>
+              <ul id="question-types-nav" class="space-y-2">
+                <!-- 动态渲染 -->
+              </ul>
             </div>
           </div>
           
-          <!-- 题型2 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-5">
-              <div class="flex justify-between items-start mb-3">
-                <h3 class="font-semibold">平抛运动综合问题</h3>
-                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">中档题</span>
-              </div>
-              
-              <p class="text-gray-600 text-sm mb-4">考查平抛运动在水平和竖直方向的分解，运动时间与高度的关系。</p>
-              
-              <div class="flex flex-wrap gap-2 mb-4">
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动学</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">曲线运动</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">运动分解</span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500">例题数量: 18</span>
-                <button class="text-primary hover:text-primary/80 text-sm font-medium">
-                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
-                </button>
-              </div>
+          <!-- 题型内容 -->
+          <div class="lg:col-span-9">
+            <div id="question-types-content">
+              <!-- 动态渲染 -->
             </div>
           </div>
-          
-          <!-- 题型3 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-5">
-              <div class="flex justify-between items-start mb-3">
-                <h3 class="font-semibold">传送带问题</h3>
-                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
-              </div>
-              
-              <p class="text-gray-600 text-sm mb-4">考查摩擦力分析、运动状态判断及多过程运动的综合计算。</p>
-              
-              <div class="flex flex-wrap gap-2 mb-4">
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">力学</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">摩擦力</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">多过程</span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500">例题数量: 15</span>
-                <button class="text-primary hover:text-primary/80 text-sm font-medium">
-                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 题型4 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-5">
-              <div class="flex justify-between items-start mb-3">
-                <h3 class="font-semibold">天体运动问题</h3>
-                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">中档题</span>
-              </div>
-              
-              <p class="text-gray-600 text-sm mb-4">考查万有引力定律应用，卫星运动参数计算，宇宙速度等知识点。</p>
-              
-              <div class="flex flex-wrap gap-2 mb-4">
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">万有引力</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">圆周运动</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">卫星运动</span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500">例题数量: 14</span>
-                <button class="text-primary hover:text-primary/80 text-sm font-medium">
-                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 题型5 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-5">
-              <div class="flex justify-between items-start mb-3">
-                <h3 class="font-semibold">碰撞与动量守恒</h3>
-                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
-              </div>
-              
-              <p class="text-gray-600 text-sm mb-4">考查动量守恒定律的应用，弹性碰撞与非弹性碰撞的区别与计算。</p>
-              
-              <div class="flex flex-wrap gap-2 mb-4">
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">动量</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">能量</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">碰撞</span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500">例题数量: 16</span>
-                <button class="text-primary hover:text-primary/80 text-sm font-medium">
-                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 题型6 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div class="p-5">
-              <div class="flex justify-between items-start mb-3">
-                <h3 class="font-semibold">带电粒子在磁场中的运动</h3>
-                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">难题</span>
-              </div>
-              
-              <p class="text-gray-600 text-sm mb-4">考查洛伦兹力、圆周运动半径与周期计算，磁场边界问题分析。</p>
-              
-              <div class="flex flex-wrap gap-2 mb-4">
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">电磁学</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">圆周运动</span>
-                <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">洛伦兹力</span>
-              </div>
-              
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500">例题数量: 20</span>
-                <button class="text-primary hover:text-primary/80 text-sm font-medium">
-                  查看详情 <i class="fa fa-arrow-right ml-1"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 加载更多 -->
-        <div class="text-center mt-10">
-          <button class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-md font-medium transition-colors">
-            加载更多题型 <i class="fa fa-angle-down ml-1"></i>
-          </button>
         </div>
       </div>
     </section>
 
     <!-- 使用帮助 -->
-    <section id="help" class="py-16 bg-white">
+    <section id="help" class="py-20 bg-gradient-to-b from-gray-50 to-white">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold mb-4">使用帮助</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">快速了解如何使用平台功能</p>
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold text-gray-900">使用帮助</h2>
         </div>
         
-        <div class="max-w-3xl mx-auto">
-          <div class="space-y-6">
+        <div class="max-w-4xl mx-auto">
+          <div class="space-y-3">
             <!-- 问题1 -->
-            <div class="bg-light rounded-xl p-6">
-              <button class="flex justify-between items-center w-full text-left focus:outline-none">
-                <h3 class="font-semibold text-lg">如何导入物理题目并生成可视化？</h3>
-                <i class="fa fa-minus text-primary"></i>
+            <div class="faq-item bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+              <button class="faq-question w-full flex justify-between items-center p-6 text-left focus:outline-none group">
+                <div class="flex items-center gap-4 flex-1">
+                  <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-question-circle text-blue-600"></i>
+                  </div>
+                  <h3 class="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">如何导入物理题目并生成可视化？</h3>
+                </div>
+                <i class="fa fa-chevron-down text-blue-500 text-sm transition-transform faq-icon"></i>
               </button>
-              <div class="mt-4 text-gray-600">
-                <p>您可以通过两种方式生成物理运动可视化：</p>
-                <ol class="list-decimal pl-5 mt-2 space-y-1">
-                  <li>在"运动可视化"页面的题目输入区，选择题目类型并填写题目描述和关键参数，点击"生成可视化"按钮</li>
-                  <li>直接上传包含物理题目的图片，系统会自动识别题目内容并提取关键参数生成可视化</li>
-                </ol>
-                <p class="mt-2">生成后，您可以通过播放、暂停、重置按钮控制动画，并可调整动画速度和显示选项。</p>
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300">
+                <div class="px-6 pb-6 text-gray-600 leading-relaxed">
+                  <p class="mb-4 font-medium text-gray-700">您可以通过两种方式生成物理运动可视化：</p>
+                  <ol class="list-decimal pl-5 space-y-3 mb-4">
+                    <li class="pl-2">在<span class="font-semibold text-gray-800">"运动可视化"</span>页面的题目输入区，选择题目类型并填写题目描述和关键参数，点击"生成可视化"按钮</li>
+                    <li class="pl-2">直接上传包含物理题目的<span class="font-semibold text-gray-800">图片</span>，系统会自动识别题目内容并提取关键参数生成可视化</li>
+                  </ol>
+                  <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <p class="text-sm"><i class="fa fa-lightbulb text-blue-600 mr-2"></i>生成后，您可以通过播放、暂停、重置按钮控制动画，并可调整动画速度和显示选项。</p>
+                  </div>
+                </div>
               </div>
             </div>
             
             <!-- 问题2 -->
-            <div class="bg-light rounded-xl p-6">
-              <button class="flex justify-between items-center w-full text-left focus:outline-none">
-                <h3 class="font-semibold text-lg">平台支持哪些类型的物理题目可视化？</h3>
-                <i class="fa fa-plus text-gray-400"></i>
+            <div class="faq-item bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+              <button class="faq-question w-full flex justify-between items-center p-6 text-left focus:outline-none group">
+                <div class="flex items-center gap-4 flex-1">
+                  <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-list-alt text-purple-600"></i>
+                  </div>
+                  <h3 class="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">平台支持哪些类型的物理题目可视化？</h3>
+                </div>
+                <i class="fa fa-chevron-down text-gray-400 text-sm transition-transform faq-icon"></i>
               </button>
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300">
+                <div class="px-6 pb-6 text-gray-600 leading-relaxed">
+                  <p class="mb-4 font-medium text-gray-700">平台目前支持以下6种类型的物理运动可视化：</p>
+                  <div class="grid md:grid-cols-2 gap-3 mb-4">
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <i class="fa fa-check-circle text-green-500 mt-1"></i>
+                      <div>
+                        <div class="font-semibold text-gray-800">匀变速直线运动</div>
+                        <div class="text-sm text-gray-500">刹车、自由落体等</div>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <i class="fa fa-check-circle text-green-500 mt-1"></i>
+                      <div>
+                        <div class="font-semibold text-gray-800">平抛/抛体运动</div>
+                        <div class="text-sm text-gray-500">斜抛、平抛等</div>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <i class="fa fa-check-circle text-green-500 mt-1"></i>
+                      <div>
+                        <div class="font-semibold text-gray-800">圆周运动</div>
+                        <div class="text-sm text-gray-500">匀速圆周、变速圆周</div>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <i class="fa fa-check-circle text-green-500 mt-1"></i>
+                      <div>
+                        <div class="font-semibold text-gray-800">天体运动</div>
+                        <div class="text-sm text-gray-500">卫星、行星轨道</div>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <i class="fa fa-check-circle text-green-500 mt-1"></i>
+                      <div>
+                        <div class="font-semibold text-gray-800">碰撞与动量守恒</div>
+                        <div class="text-sm text-gray-500">弹性碰撞、完全非弹性</div>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <i class="fa fa-check-circle text-green-500 mt-1"></i>
+                      <div>
+                        <div class="font-semibold text-gray-800">带电粒子/电磁学</div>
+                        <div class="text-sm text-gray-500">电场、磁场中运动</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <!-- 问题3 -->
-            <div class="bg-light rounded-xl p-6">
-              <button class="flex justify-between items-center w-full text-left focus:outline-none">
-                <h3 class="font-semibold text-lg">如何查找特定的知识点和题型？</h3>
-                <i class="fa fa-plus text-gray-400"></i>
+            <div class="faq-item bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+              <button class="faq-question w-full flex justify-between items-center p-6 text-left focus:outline-none group">
+                <div class="flex items-center gap-4 flex-1">
+                  <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-search text-green-600"></i>
+                  </div>
+                  <h3 class="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">如何查找特定的知识点和题型？</h3>
+                </div>
+                <i class="fa fa-chevron-down text-gray-400 text-sm transition-transform faq-icon"></i>
               </button>
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300">
+                <div class="px-6 pb-6 text-gray-600 leading-relaxed">
+                  <p class="mb-4 font-medium text-gray-700">平台提供了两种便捷的查找方式：</p>
+                  <div class="space-y-4">
+                    <div class="flex gap-4">
+                      <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold flex-shrink-0">1</div>
+                      <div>
+                        <div class="font-semibold text-gray-800 mb-2">知识点库查找</div>
+                        <p class="text-sm">访问<span class="font-semibold">"知识点库"</span>板块，选择物理分支（力学、电磁学等），点击左侧分类展开子菜单，即可查看详细的知识点内容、公式和例题。</p>
+                      </div>
+                    </div>
+                    <div class="flex gap-4">
+                      <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold flex-shrink-0">2</div>
+                      <div>
+                        <div class="font-semibold text-gray-800 mb-2">题型分类查找</div>
+                        <p class="text-sm">访问<span class="font-semibold">"题型分类"</span>板块，选择学科分支，点击展开后可以看到简单题、中档题、难题三个难度等级，点击查看该难度的示例题目和关键词。</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <!-- 问题4 -->
-            <div class="bg-light rounded-xl p-6">
-              <button class="flex justify-between items-center w-full text-left focus:outline-none">
-                <h3 class="font-semibold text-lg">能否保存和导出可视化动画？</h3>
-                <i class="fa fa-plus text-gray-400"></i>
+            <div class="faq-item bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+              <button class="faq-question w-full flex justify-between items-center p-6 text-left focus:outline-none group">
+                <div class="flex items-center gap-4 flex-1">
+                  <div class="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-download text-yellow-600"></i>
+                  </div>
+                  <h3 class="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">能否保存和导出可视化动画？</h3>
+                </div>
+                <i class="fa fa-chevron-down text-gray-400 text-sm transition-transform faq-icon"></i>
               </button>
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300">
+                <div class="px-6 pb-6 text-gray-600 leading-relaxed">
+                  <p class="mb-4">平台提供了多种保存和分享方式：</p>
+                  <ul class="space-y-3">
+                    <li class="flex items-start gap-3">
+                      <i class="fa fa-bookmark text-blue-500 mt-1"></i>
+                      <div>
+                        <span class="font-semibold text-gray-800">收藏功能：</span>登录后可以将喜欢的可视化动画收藏到个人中心，方便随时查看
+                      </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="fa fa-image text-blue-500 mt-1"></i>
+                      <div>
+                        <span class="font-semibold text-gray-800">截图保存：</span>点击截图按钮可以保存当前帧为PNG图片
+                      </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="fa fa-share-alt text-blue-500 mt-1"></i>
+                      <div>
+                        <span class="font-semibold text-gray-800">分享链接：</span>生成专属链接，可以分享给同学或老师
+                      </div>
+                    </li>
+                  </ul>
+                  <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg mt-4">
+                    <p class="text-sm"><i class="fa fa-info-circle text-yellow-600 mr-2"></i>注：视频导出功能即将上线，敬请期待！</p>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <!-- 问题5 -->
-            <div class="bg-light rounded-xl p-6">
-              <button class="flex justify-between items-center w-full text-left focus:outline-none">
-                <h3 class="font-semibold text-lg">平台是否支持自定义物理参数？</h3>
-                <i class="fa fa-plus text-gray-400"></i>
+            <div class="faq-item bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+              <button class="faq-question w-full flex justify-between items-center p-6 text-left focus:outline-none group">
+                <div class="flex items-center gap-4 flex-1">
+                  <div class="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-sliders text-pink-600"></i>
+                  </div>
+                  <h3 class="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">平台是否支持自定义物理参数？</h3>
+                </div>
+                <i class="fa fa-chevron-down text-gray-400 text-sm transition-transform faq-icon"></i>
               </button>
+              <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300">
+                <div class="px-6 pb-6 text-gray-600 leading-relaxed">
+                  <p class="mb-4">当然支持！平台提供了灵活的参数自定义功能：</p>
+                  <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                      <div class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <i class="fa fa-cog text-blue-600"></i>运动参数
+                      </div>
+                      <ul class="text-sm space-y-1 text-gray-600">
+                        <li>• 初速度、加速度</li>
+                        <li>• 角度、时间</li>
+                        <li>• 质量、重力加速度</li>
+                      </ul>
+                    </div>
+                    <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+                      <div class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <i class="fa fa-palette text-purple-600"></i>视觉参数
+                      </div>
+                      <ul class="text-sm space-y-1 text-gray-600">
+                        <li>• 物体颜色、形状</li>
+                        <li>• 轨迹显示样式</li>
+                        <li>• 背景和场景设置</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <p class="text-sm">只需在"运动可视化"页面的<span class="font-semibold text-gray-800">动态参数</span>区域填写或调整相应参数即可。</p>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div class="mt-10 text-center">
-            <p class="text-gray-600 mb-4">还有其他问题？</p>
-            <button class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-colors">
-              联系客服 <i class="fa fa-envelope ml-2"></i>
-            </button>
+          <!-- 联系客服卡片 -->
+          <div class="mt-12 text-center bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-10 border border-blue-100 shadow-sm">
+            <div class="text-5xl mb-4">💬</div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-3">还有其他问题？</h3>
+            <p class="text-gray-600 mb-6">我们的团队随时为您提供帮助</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+              <button class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-all hover:shadow-lg hover:scale-105">
+                <i class="fa fa-envelope mr-2"></i>联系客服
+              </button>
+              <button class="bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 px-8 py-3 rounded-xl font-semibold transition-all hover:shadow-md">
+                <i class="fa fa-comments mr-2"></i>在线反馈
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </section>
+    
+    <script>
+      // FAQ 折叠/展开功能
+      document.addEventListener('DOMContentLoaded', function() {
+        const faqItems = document.querySelectorAll('.faq-item');
+        
+        faqItems.forEach(item => {
+          const question = item.querySelector('.faq-question');
+          const answer = item.querySelector('.faq-answer');
+          const icon = item.querySelector('.faq-icon');
+          
+          question.addEventListener('click', () => {
+            const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
+            
+            // 关闭所有其他项
+            faqItems.forEach(otherItem => {
+              if (otherItem !== item) {
+                const otherAnswer = otherItem.querySelector('.faq-answer');
+                const otherIcon = otherItem.querySelector('.faq-icon');
+                otherAnswer.style.maxHeight = '0px';
+                otherIcon.style.transform = 'rotate(0deg)';
+              }
+            });
+            
+            // 切换当前项
+            if (isOpen) {
+              answer.style.maxHeight = '0px';
+              icon.style.transform = 'rotate(0deg)';
+            } else {
+              answer.style.maxHeight = answer.scrollHeight + 'px';
+              icon.style.transform = 'rotate(180deg)';
+            }
+          });
+        });
+        
+        // 默认全部关闭
+        // 用户点击后才展开
+      });
+    </script>
   </main>
 
   <!-- 页脚 -->
-  <footer class="bg-dark text-white pt-12 pb-6">
+  <footer class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-20 pb-12">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid md:grid-cols-4 gap-8 mb-8">
+      <div class="grid md:grid-cols-4 gap-12 mb-16">
+        <!-- 平台介绍 -->
         <div>
-          <div class="flex items-center mb-4">
-            <i class="fa fa-cubes text-2xl mr-2"></i>
-            <span class="font-bold text-xl">物理可视化</span>
+          <div class="flex items-center mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
+              <i class="fa fa-cubes text-2xl"></i>
+            </div>
+            <span class="font-bold text-xl">物理教学平台</span>
           </div>
-          <p class="text-gray-400 text-sm">让高中物理学习变得直观简单，助力学生理解抽象概念，提高学习效率。</p>
+          <p class="text-gray-400 leading-relaxed mb-6">让高中物理学习变得直观简单，助力学生理解抽象概念，提高学习效率。</p>
+          <div class="flex flex-col space-y-3 text-sm text-gray-400">
+            <div class="flex items-center">
+              <i class="fa fa-check-circle text-green-400 mr-2"></i>
+              <span>支持多种运动类型</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fa fa-check-circle text-green-400 mr-2"></i>
+              <span>AI智能题目解析</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fa fa-check-circle text-green-400 mr-2"></i>
+              <span>实时动画演示</span>
+            </div>
+          </div>
         </div>
         
+        <!-- 功能导航 -->
         <div>
-          <h3 class="font-semibold mb-4">功能导航</h3>
-          <ul class="space-y-2 text-gray-400 text-sm">
-            <li><a href="#visualization" class="hover:text-white transition-colors">运动可视化</a></li>
-            <li><a href="#knowledge" class="hover:text-white transition-colors">知识点库</a></li>
-            <li><a href="#question-types" class="hover:text-white transition-colors">题型分类</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">错题本</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">学习计划</a></li>
+          <h3 class="font-bold mb-6 text-lg flex items-center">
+            <i class="fa fa-compass text-blue-400 mr-2"></i>
+            功能导航
+          </h3>
+          <ul class="space-y-3 text-gray-400">
+            <li><a href="#visualization" class="hover:text-white hover:translate-x-1 inline-block transition-all group"><i class="fa fa-angle-right mr-2 group-hover:text-blue-400"></i>运动可视化</a></li>
+            <li><a href="#knowledge" class="hover:text-white hover:translate-x-1 inline-block transition-all group"><i class="fa fa-angle-right mr-2 group-hover:text-blue-400"></i>知识点库</a></li>
+            <li><a href="#question-types" class="hover:text-white hover:translate-x-1 inline-block transition-all group"><i class="fa fa-angle-right mr-2 group-hover:text-blue-400"></i>题型分类</a></li>
           </ul>
         </div>
         
+        <!-- 帮助支持 -->
         <div>
-          <h3 class="font-semibold mb-4">帮助支持</h3>
-          <ul class="space-y-2 text-gray-400 text-sm">
-            <li><a href="#help" class="hover:text-white transition-colors">使用帮助</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">常见问题</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">联系我们</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">意见反馈</a></li>
+          <h3 class="font-bold mb-6 text-lg flex items-center">
+            <i class="fa fa-life-ring text-purple-400 mr-2"></i>
+            帮助支持
+          </h3>
+          <ul class="space-y-3 text-gray-400">
+            <li><a href="#help" class="hover:text-white hover:translate-x-1 inline-block transition-all group"><i class="fa fa-angle-right mr-2 group-hover:text-purple-400"></i>使用帮助</a></li>
+            <li><a href="#help" class="hover:text-white hover:translate-x-1 inline-block transition-all group"><i class="fa fa-angle-right mr-2 group-hover:text-purple-400"></i>常见问题</a></li>
           </ul>
         </div>
         
+        <!-- 关注我们 -->
         <div>
-          <h3 class="font-semibold mb-4">关注我们</h3>
-          <div class="flex space-x-4 mb-4">
-            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
-              <i class="fa fa-weixin"></i>
+          <h3 class="font-bold mb-6 text-lg flex items-center">
+            <i class="fa fa-heart text-pink-400 mr-2"></i>
+            关注我们
+          </h3>
+          <div class="flex space-x-3 mb-6">
+            <a href="#" class="w-12 h-12 rounded-xl bg-gray-700/50 backdrop-blur-sm flex items-center justify-center hover:bg-gradient-to-br hover:from-green-500 hover:to-green-600 transition-all hover:scale-110 hover:shadow-lg group" title="微信公众号">
+              <i class="fa fa-weixin text-xl group-hover:animate-bounce"></i>
             </a>
-            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
-              <i class="fa fa-weibo"></i>
+            <a href="#" class="w-12 h-12 rounded-xl bg-gray-700/50 backdrop-blur-sm flex items-center justify-center hover:bg-gradient-to-br hover:from-red-500 hover:to-orange-500 transition-all hover:scale-110 hover:shadow-lg group" title="新浪微博">
+              <i class="fa fa-weibo text-xl group-hover:animate-bounce"></i>
             </a>
-            <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
-              <i class="fa fa-qq"></i>
+            <a href="#" class="w-12 h-12 rounded-xl bg-gray-700/50 backdrop-blur-sm flex items-center justify-center hover:bg-gradient-to-br hover:from-blue-500 hover:to-blue-600 transition-all hover:scale-110 hover:shadow-lg group" title="QQ交流群">
+              <i class="fa fa-qq text-xl group-hover:animate-bounce"></i>
+            </a>
+            <a href="#" class="w-12 h-12 rounded-xl bg-gray-700/50 backdrop-blur-sm flex items-center justify-center hover:bg-gradient-to-br hover:from-gray-600 hover:to-gray-700 transition-all hover:scale-110 hover:shadow-lg group" title="GitHub">
+              <i class="fa fa-github text-xl group-hover:animate-bounce"></i>
             </a>
           </div>
-          <p class="text-gray-400 text-sm">扫码关注公众号，获取更多学习资源</p>
+          <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
+            <p class="text-gray-400 text-sm leading-relaxed mb-2">
+              <i class="fa fa-qrcode text-blue-400 mr-2"></i>扫码关注公众号
+            </p>
+            <p class="text-gray-500 text-xs">获取更多学习资源和考试技巧</p>
+          </div>
         </div>
       </div>
       
-      <div class="border-t border-gray-700 pt-6 text-center text-gray-500 text-sm">
-        <p>© 2023 物理可视化学习平台 版权所有</p>
+      <!-- 底部链接栏 -->
+      <div class="border-t border-gray-700/50 pt-8">
+        <div class="flex flex-wrap justify-center items-center gap-6 text-sm text-gray-500 mb-6">
+          <a href="#" class="hover:text-white transition-colors">隐私政策</a>
+          <span class="text-gray-700">|</span>
+          <a href="#" class="hover:text-white transition-colors">用户协议</a>
+          <span class="text-gray-700">|</span>
+          <a href="#" class="hover:text-white transition-colors">开发文档</a>
+          <span class="text-gray-700">|</span>
+          <a href="#" class="hover:text-white transition-colors">API接口</a>
+          <span class="text-gray-700">|</span>
+          <a href="#" class="hover:text-white transition-colors">合作伙伴</a>
+        </div>
+        <p class="text-center text-gray-600 text-sm">让物理学习变得简单有趣 · Made with <i class="fa fa-heart text-red-500 mx-1 animate-pulse"></i> for students</p>
       </div>
     </div>
   </footer>
 
   <!-- JavaScript -->
   <script>
-    // ========== Canvas场景绘制系统 ==========
-    let canvas, ctx;
-    let animationFrameId = null;
-    let currentTime = 0;
-    let isPlaying = false;
-    let playSpeed = 1;
-    let sceneParams = null;
-    let animationContainer; // 全局声明，避免重复声明
+    /*
+    ╔═══════════════════════════════════════════════════════════════════════════╗
+    ║                           JavaScript 主代码模块                             ║
+    ╠═══════════════════════════════════════════════════════════════════════════╣
+    ║  本文件包含所有前端逻辑，按照以下顺序组织：                                   ║
+    ║                                                                            ║
+    ║  1️⃣  全局变量与常量定义                                                     ║
+    ║  2️⃣  辅助工具函数 (roundRect, drawWheel, shadeColor等)                      ║
+    ║  3️⃣  Canvas初始化与渲染引擎                                                 ║
+    ║  4️⃣  物理运动绘制函数 (drawHorizontalMotion, drawCircularMotion等)          ║
+    ║  5️⃣  动画控制系统 (startAnimation, stopAnimation等)                         ║
+    ║  6️⃣  参数管理 (getParams, fillFormFromAI等)                                 ║
+    ║  7️⃣  AI解析模块 (parseDescriptionWithAI, 本地fallback)                      ║
+    ║  8️⃣  题目导入功能 (图片上传, Word文档解析)                                   ║
+    ║  9️⃣  导出功能 (GIF, MP4, CSV, JSON)                                         ║
+    ║  🔟  UI事件监听器初始化                                                      ║
+    ╚═══════════════════════════════════════════════════════════════════════════╝
+    */
+
+    // ============================================================================
+    // 📦 1. 全局变量与常量定义
+    // ============================================================================
+    
+    // Canvas 相关全局变量
+    let canvas, ctx;                    // Canvas元素和2D绘图上下文
+    let animationFrameId = null;        // requestAnimationFrame 的ID，用于取消动画
+    let currentTime = 0;                // 当前动画时间（秒）
+    let isPlaying = false;              // 动画是否正在播放
+    let playSpeed = 1;                  // 播放速度倍率
+  let sceneParams = null;             // 当前场景的物理参数对象
+  let sceneVisualSettings = {};       // 可视化提示词设置（风格/细节/高亮选项）
+
+    // 根据 sceneParams.visual 或 sceneVisualSettings 生成绘图样式配置
+    function getVisualConfig() {
+      const v = (sceneParams && sceneParams.visual) ? sceneParams.visual : (sceneVisualSettings || {});
+      const theme = v.theme || 'cartoon';
+      const detail = v.detail || 'medium';
+      const highlightApex = !!v.highlightApex;
+      const showVelocity = v.showVelocity === undefined ? true : !!v.showVelocity;
+      const useTrail = v.useTrail === undefined ? true : !!v.useTrail;
+
+      // 基于主题选择配色
+      const palettes = {
+        cartoon: { ball: '#ff6b00', accent: '#0066ff', trail: '#ffd8b5' },
+        realistic: { ball: '#2b6cb0', accent: '#0ea5a6', trail: '#cbd5e1' },
+        minimal: { ball: '#111827', accent: '#6b7280', trail: '#e5e7eb' }
+      };
+
+      const p = palettes[theme] || palettes.cartoon;
+
+      // 细节影响线宽与字体大小
+      const detailCfg = { low: { lw: 1, rMult: 0.9 }, medium: { lw: 1.5, rMult: 1 }, high: { lw: 2.5, rMult: 1.3 } };
+      const dc = detailCfg[detail] || detailCfg.medium;
+
+      return {
+        theme, detail, highlightApex, showVelocity, useTrail,
+        ballColor: p.ball, arrowColor: p.accent, trailColor: p.trail,
+        lineWidth: dc.lw, radiusMultiplier: dc.rMult
+      };
+    }
+    
+    // DOM 元素引用（避免重复查询）
+    let animationContainer;             // Canvas容器元素
     let questionTypeSelect, generateButton, playBtn, pauseBtn; // 控制元素引用
+    
+    // ============================================================================
+    // 📚 物理知识点库与题型分类系统
+    // ============================================================================
+    
+    /**
+     * 物理知识点库结构
+     * 
+     * 层级结构：
+     * - 一级分类：力学、电磁学、热学、光学、近代物理
+     * - 二级知识点：具体的物理概念
+     * - 每个知识点包含：
+     *   - id: 唯一标识符
+     *   - name: 知识点名称
+     *   - category: 所属分类
+     *   - difficulty: 难度等级 (1-5)
+     *   - formulas: 相关公式
+     *   - description: 简要说明
+     *   - relatedTypes: 关联的题型类型
+     *   - examples: 典型例题
+     */
+    const KNOWLEDGE_BASE = {
+      // 📐 力学
+      mechanics: {
+        name: '力学',
+        icon: '📐',
+        color: '#3b82f6',
+        topics: {
+          kinematics: {
+            id: 'kinematics',
+            name: '运动学',
+            difficulty: 2,
+            formulas: [
+              'v = v₀ + at',
+              's = v₀t + ½at²',
+              'v² - v₀² = 2as',
+              'v̄ = (v₀ + v)/2'
+            ],
+            description: '研究物体运动的描述，包括位移、速度、加速度等运动学量',
+            relatedTypes: ['uniform', 'projectile'],
+            keywords: ['位移', '速度', '加速度', '匀变速', '自由落体'],
+            examples: [
+              {
+                title: '汽车刹车问题',
+                description: '一辆汽车以20m/s的速度行驶，突然刹车，加速度大小为5m/s²，求刹车距离。',
+                params: { v0: 20, a: -5, time: 4 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'car',
+                  objectColor: '#ef4444',
+                  backgroundColor: '#f3f4f6',
+                  groundColor: '#374151',
+                  showTrajectory: true,
+                  showBrakeMarks: true,
+                  theme: 'realistic'
+                }
+              }
+            ]
+          },
+          interaction: {
+            id: 'interaction',
+            name: '相互作用',
+            difficulty: 2,
+            formulas: [
+              'F = ma',
+              'f = μN',
+              'F = kx（胡克定律）',
+              'F合 = √(F₁² + F₂²)（正交分解）'
+            ],
+            description: '研究力的性质、力的合成与分解、重力、弹力、摩擦力等',
+            relatedTypes: ['uniform'],
+            keywords: ['重力', '弹力', '摩擦力', '合力', '分解'],
+            examples: [
+              {
+                title: '斜面上的物体',
+                description: '质量5kg的物体在30°斜面上静止，求摩擦力和支持力。',
+                params: { m: 5, angle: 30, mu: 0.3 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'box',
+                  objectColor: '#f59e0b',
+                  backgroundColor: '#fef3c7',
+                  groundColor: '#92400e',
+                  showTrajectory: false,
+                  showForces: true,
+                  theme: 'physics'
+                }
+              }
+            ]
+          },
+          newtonLaws: {
+            id: 'newtonLaws',
+            name: '牛顿运动定律',
+            difficulty: 3,
+            formulas: [
+              'F = ma',
+              'F₁₂ = -F₂₁',
+              'a = F/m'
+            ],
+            description: '牛顿三大运动定律及其应用，包括惯性、加速度、作用力与反作用力',
+            relatedTypes: ['uniform'],
+            keywords: ['惯性', '加速度', '作用力', '反作用力', '牛顿第二定律'],
+            examples: [
+              {
+                title: '火车加速启动',
+                description: '火车从静止开始匀加速启动，加速度为2m/s²，求5秒后的速度和位移。',
+                params: { v0: 0, a: 2, time: 5 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'train',
+                  objectColor: '#3b82f6',
+                  backgroundColor: '#dbeafe',
+                  groundColor: '#1e3a8a',
+                  showTrajectory: true,
+                  showSpeedLines: true,
+                  theme: 'realistic'
+                }
+              }
+            ]
+          },
+          gravityAndSpace: {
+            id: 'gravityAndSpace',
+            name: '万有引力与航天',
+            difficulty: 4,
+            formulas: [
+              'F = GMm/r²',
+              'v = √(GM/r)',
+              'T = 2π√(r³/GM)',
+              'g = GM/R²'
+            ],
+            description: '万有引力定律、天体运动、人造卫星、宇宙速度',
+            relatedTypes: ['astrodynamics', 'circular'],
+            keywords: ['万有引力', '卫星', '轨道', '宇宙速度', '开普勒'],
+            examples: [
+              {
+                title: '地球卫星轨道',
+                description: '计算距地面400km高度的卫星运行周期和速度。',
+                params: { M: 5.97e24, r: 6.77e6 },
+                type: 'circular',
+                visual: {
+                  objectType: 'satellite',
+                  objectColor: '#cbd5e1',
+                  backgroundColor: '#0f172a',
+                  planetColor: '#3b82f6',
+                  orbitColor: '#94a3b8',
+                  showTrajectory: true,
+                  showOrbitPath: true,
+                  showStars: true,
+                  theme: 'space'
+                }
+              }
+            ]
+          },
+          workAndEnergy: {
+            id: 'workAndEnergy',
+            name: '功和能',
+            difficulty: 3,
+            formulas: [
+              'W = Fs·cosθ',
+              'Ek = ½mv²',
+              'Ep = mgh',
+              'W合 = ΔEk（动能定理）'
+            ],
+            description: '功、功率、动能、势能、机械能守恒定律',
+            relatedTypes: ['uniform', 'projectile'],
+            keywords: ['功', '功率', '动能', '势能', '机械能守恒'],
+            examples: [
+              {
+                title: '平抛运动能量',
+                description: '小球从10m高的平台水平抛出，初速度8m/s，求落地时的速度。',
+                params: { speed: 8, angle: 0, height: 10 },
+                type: 'projectile',
+                visual: {
+                  objectType: 'ball',
+                  objectColor: '#8b5cf6',
+                  backgroundColor: '#ede9fe',
+                  groundColor: '#6d28d9',
+                  showTrajectory: true,
+                  trajectoryStyle: 'solid',
+                  showPlatform: true,
+                  platformHeight: 10,
+                  theme: 'minimalist'
+                }
+              }
+            ]
+          },
+          momentum: {
+            id: 'momentum',
+            name: '动量',
+            difficulty: 4,
+            formulas: [
+              'p = mv',
+              'm₁v₁ + m₂v₂ = m₁v₁\' + m₂v₂\'',
+              'I = Ft = Δp（动量定理）',
+              'F₁₂ = -F₂₁（动量守恒）'
+            ],
+            description: '动量、动量定理、动量守恒定律、碰撞问题',
+            relatedTypes: ['collision'],
+            keywords: ['动量', '冲量', '碰撞', '动量守恒', '完全弹性'],
+            examples: [
+              {
+                title: '弹性碰撞',
+                description: '质量为2kg的小球以5m/s撞击质量为1kg的静止小球，发生弹性碰撞。',
+                params: { m1: 2, v1: 5, m2: 1, v2: 0 },
+                type: 'collision',
+                visual: {
+                  objectType: 'billiard',
+                  object1Color: '#dc2626',
+                  object2Color: '#fbbf24',
+                  backgroundColor: '#065f46',
+                  groundColor: '#047857',
+                  showTrajectory: true,
+                  showCollisionEffect: true,
+                  theme: 'billiards'
+                }
+              }
+            ]
+          },
+          vibrationAndWave: {
+            id: 'vibrationAndWave',
+            name: '机械振动与波',
+            difficulty: 4,
+            formulas: [
+              'x = Asin(ωt + φ)',
+              'T = 2π/ω',
+              'v = λf',
+              'f = 1/T'
+            ],
+            description: '简谐运动、单摆、弹簧振子、机械波的传播',
+            relatedTypes: ['circular'],
+            keywords: ['简谐运动', '振幅', '周期', '频率', '波长'],
+            examples: [
+              {
+                title: '单摆运动',
+                description: '摆长为1m的单摆做简谐运动，求其周期。',
+                params: { length: 1, g: 10 },
+                type: 'circular',
+                visual: {
+                  objectType: 'pendulum',
+                  objectColor: '#06b6d4',
+                  backgroundColor: '#e0f2fe',
+                  centerColor: '#0284c7',
+                  showTrajectory: true,
+                  showRadius: true,
+                  theme: 'physics'
+                }
+              }
+            ]
+          }
+        }
+      },
+      
+      // ⚡ 电磁学
+      electromagnetism: {
+        name: '电磁学',
+        icon: '⚡',
+        color: '#8b5cf6',
+        topics: {
+          electrostaticField: {
+            id: 'electrostaticField',
+            name: '静电场',
+            difficulty: 3,
+            formulas: [
+              'F = kq₁q₂/r²（库仑定律）',
+              'E = F/q（电场强度）',
+              'U = W/q（电势差）',
+              'C = Q/U（电容）'
+            ],
+            description: '电荷、电场强度、电势、电势差、电容等静电场基本概念',
+            relatedTypes: ['electrostatic'],
+            keywords: ['电荷', '电场', '电势', '电容', '库仑定律'],
+            examples: [
+              {
+                title: '点电荷电场',
+                description: '两个点电荷q₁=+2×10⁻⁶C和q₂=-3×10⁻⁶C相距0.1m，求它们之间的作用力。',
+                params: { q1: 2e-6, q2: -3e-6, r: 0.1 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'charge',
+                  objectColor: '#ef4444',
+                  backgroundColor: '#fef2f2',
+                  groundColor: '#7f1d1d',
+                  showTrajectory: false,
+                  showFieldLines: true,
+                  theme: 'electric'
+                }
+              }
+            ]
+          },
+          constantCurrent: {
+            id: 'constantCurrent',
+            name: '恒定电流',
+            difficulty: 2,
+            formulas: [
+              'I = Q/t',
+              'U = IR（欧姆定律）',
+              'P = UI = I²R = U²/R',
+              'Q = I²Rt（焦耳定律）'
+            ],
+            description: '电流、电阻、欧姆定律、电功率、焦耳定律',
+            relatedTypes: ['circuit'],
+            keywords: ['电流', '电阻', '欧姆定律', '电功率', '串并联'],
+            examples: [
+              {
+                title: '电路计算',
+                description: '一个20Ω的电阻接在12V电源上，求通过的电流和消耗的功率。',
+                params: { R: 20, U: 12 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'circuit',
+                  objectColor: '#3b82f6',
+                  backgroundColor: '#eff6ff',
+                  groundColor: '#1e3a8a',
+                  showTrajectory: false,
+                  showCurrent: true,
+                  theme: 'circuit'
+                }
+              }
+            ]
+          },
+          magneticField: {
+            id: 'magneticField',
+            name: '磁场',
+            difficulty: 4,
+            formulas: [
+              'F = BIL（安培力）',
+              'F = qvB（洛伦兹力）',
+              'r = mv/(qB)',
+              'T = 2πm/(qB)'
+            ],
+            description: '磁感应强度、安培力、洛伦兹力、带电粒子在磁场中的运动',
+            relatedTypes: ['magnetic'],
+            keywords: ['磁场', '安培力', '洛伦兹力', '偏转', '回旋'],
+            examples: [
+              {
+                title: '电子在磁场中运动',
+                description: '电子以1×10⁶m/s速度垂直进入0.5T的匀强磁场，求运动半径。',
+                params: { q: 1.6e-19, v: 1e6, B: 0.5 },
+                type: 'magnetic',
+                visual: {
+                  objectType: 'electron',
+                  objectColor: '#3b82f6',
+                  backgroundColor: '#1e1b4b',
+                  magneticFieldColor: '#a78bfa',
+                  showTrajectory: true,
+                  showMagneticLines: true,
+                  showForceVector: true,
+                  theme: 'electromagnetic'
+                }
+              }
+            ]
+          },
+          electromagneticInduction: {
+            id: 'electromagneticInduction',
+            name: '电磁感应',
+            difficulty: 4,
+            formulas: [
+              'E = BLv（导体棒切割磁感线）',
+              'E = nΔΦ/Δt（法拉第电磁感应定律）',
+              'Φ = BS（磁通量）'
+            ],
+            description: '电磁感应现象、法拉第电磁感应定律、楞次定律',
+            relatedTypes: ['induction'],
+            keywords: ['电磁感应', '磁通量', '感应电动势', '楞次定律'],
+            examples: [
+              {
+                title: '导体棒切割磁感线',
+                description: '长0.5m的导体棒在B=0.8T的磁场中以v=10m/s速度垂直切割磁感线，求感应电动势。',
+                params: { B: 0.8, L: 0.5, v: 10 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'rod',
+                  objectColor: '#06b6d4',
+                  backgroundColor: '#ecfeff',
+                  groundColor: '#164e63',
+                  showTrajectory: true,
+                  showMagneticField: true,
+                  theme: 'induction'
+                }
+              }
+            ]
+          },
+          alternatingCurrent: {
+            id: 'alternatingCurrent',
+            name: '交变电流',
+            difficulty: 3,
+            formulas: [
+              'u = U_m·sinωt',
+              'i = I_m·sin(ωt±φ)',
+              'U = U_m/√2（有效值）',
+              'P = UIcosφ（交流功率）'
+            ],
+            description: '交变电流的产生、描述、有效值、变压器、远距离输电',
+            relatedTypes: ['ac'],
+            keywords: ['交流电', '有效值', '变压器', '频率', '相位'],
+            examples: [
+              {
+                title: '交流电有效值',
+                description: '正弦交流电的峰值电压为311V，求其有效值和周期（f=50Hz）。',
+                params: { Um: 311, f: 50 },
+                type: 'circular',
+                visual: {
+                  objectType: 'wave',
+                  objectColor: '#8b5cf6',
+                  backgroundColor: '#faf5ff',
+                  groundColor: '#581c87',
+                  showTrajectory: true,
+                  showWaveform: true,
+                  theme: 'ac'
+                }
+              }
+            ]
+          },
+          electromagneticWave: {
+            id: 'electromagneticWave',
+            name: '电磁场与电磁波',
+            difficulty: 4,
+            formulas: [
+              'c = λf',
+              'E = hν（光子能量）',
+              'c = 3×10⁸ m/s'
+            ],
+            description: '电磁场理论、电磁波的产生和传播、电磁波谱',
+            relatedTypes: ['wave'],
+            keywords: ['电磁波', '麦克斯韦', '波速', '频率', '波长'],
+            examples: [
+              {
+                title: '电磁波波长计算',
+                description: '频率为100MHz的电磁波，求其波长。',
+                params: { f: 100e6, c: 3e8 },
+                type: 'projectile',
+                visual: {
+                  objectType: 'wave',
+                  objectColor: '#ec4899',
+                  backgroundColor: '#fdf2f8',
+                  groundColor: '#831843',
+                  showTrajectory: true,
+                  showWavePattern: true,
+                  theme: 'electromagnetic'
+                }
+              }
+            ]
+          }
+        }
+      },
+      
+      // 🔥 热力学
+      thermodynamics: {
+        name: '热力学',
+        icon: '🔥',
+        color: '#f59e0b',
+        topics: {
+          molecularKineticTheory: {
+            id: 'molecularKineticTheory',
+            name: '分子动理论',
+            difficulty: 3,
+            formulas: [
+              'Ek = (3/2)kT（分子平均动能）',
+              'PV = nRT（理想气体状态方程）',
+              'P = (1/3)ρv̄²（气体压强微观解释）'
+            ],
+            description: '物质的微观结构、分子热运动、分子力、分子动能与温度的关系',
+            relatedTypes: ['thermal'],
+            keywords: ['分子运动', '布朗运动', '扩散', '内能', '温度'],
+            examples: [
+              {
+                title: '理想气体状态变化',
+                description: '一定质量的理想气体，压强为1atm，体积为2L，温度为300K，若等温膨胀到4L，求压强变化。',
+                params: { P1: 1, V1: 2, T1: 300, V2: 4 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'gas',
+                  objectColor: '#06b6d4',
+                  backgroundColor: '#ecfeff',
+                  groundColor: '#155e75',
+                  showTrajectory: false,
+                  showMolecules: true,
+                  theme: 'thermal'
+                }
+              }
+            ]
+          },
+          thermodynamicLaws: {
+            id: 'thermodynamicLaws',
+            name: '热力学第一、二定律',
+            difficulty: 4,
+            formulas: [
+              'ΔU = Q + W（热力学第一定律）',
+              'Q = cmΔT（比热容）',
+              'W = PΔV（等压过程功）',
+              'η = 1 - T₂/T₁（卡诺循环效率）'
+            ],
+            description: '能量守恒与转化、热力学过程、热机效率、热力学第二定律',
+            relatedTypes: ['thermal'],
+            keywords: ['内能', '热量', '做功', '能量守恒', '熵'],
+            examples: [
+              {
+                title: '气体等容过程',
+                description: '一定质量的理想气体做等容变化，吸收热量500J，求内能变化。',
+                params: { Q: 500, W: 0 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'container',
+                  objectColor: '#f59e0b',
+                  backgroundColor: '#fff7ed',
+                  groundColor: '#92400e',
+                  showTrajectory: false,
+                  showHeat: true,
+                  theme: 'thermal'
+                }
+              }
+            ]
+          },
+          statesOfMatter: {
+            id: 'statesOfMatter',
+            name: '固体、液体与物态变化',
+            difficulty: 3,
+            formulas: [
+              'ΔL = αL₀ΔT（热膨胀）',
+              'Q = mL（熔化或凝固）',
+              'Q = mL（汽化或液化）',
+              'F = σL（表面张力）'
+            ],
+            description: '晶体与非晶体、固体的微观结构、液体的表面张力、物态变化与潜热',
+            relatedTypes: ['thermal'],
+            keywords: ['晶体', '熔化', '凝固', '汽化', '表面张力'],
+            examples: [
+              {
+                title: '金属棒热膨胀',
+                description: '长度为1m的铁棒，温度从20°C升高到120°C，求伸长量（α=1.2×10⁻⁵/°C）。',
+                params: { L0: 1, alpha: 1.2e-5, deltaT: 100 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'bar',
+                  objectColor: '#94a3b8',
+                  backgroundColor: '#fef3c7',
+                  groundColor: '#9a3412',
+                  showTrajectory: false,
+                  showExpansion: true,
+                  theme: 'thermal'
+                }
+              }
+            ]
+          }
+        }
+      },
+      
+      // 💡 光学
+      optics: {
+        name: '光学',
+        icon: '💡',
+        color: '#eab308',
+        topics: {
+          geometricOptics: {
+            id: 'geometricOptics',
+            name: '几何光学',
+            difficulty: 2,
+            formulas: [
+              'i = r（反射定律）',
+              'n₁sinθ₁ = n₂sinθ₂（折射定律）',
+              '1/f = 1/u + 1/v（透镜公式）',
+              'sinC = 1/n（全反射临界角）'
+            ],
+            description: '光的直线传播、反射、折射、全反射、透镜成像',
+            relatedTypes: ['optics'],
+            keywords: ['反射', '折射', '透镜', '折射率', '全反射', '成像'],
+            examples: [
+              {
+                title: '光的折射',
+                description: '光从空气（n=1.0）射入水中（n=1.33），入射角30°，求折射角。',
+                params: { n1: 1.0, n2: 1.33, theta1: 30 },
+                type: 'projectile',
+                visual: {
+                  objectType: 'light',
+                  objectColor: '#fef08a',
+                  backgroundColor: '#eff6ff',
+                  groundColor: '#1e40af',
+                  showTrajectory: true,
+                  trajectoryStyle: 'solid',
+                  theme: 'optics'
+                }
+              }
+            ]
+          },
+          physicalOptics: {
+            id: 'physicalOptics',
+            name: '物理光学',
+            difficulty: 4,
+            formulas: [
+              'Δx = λL/d（双缝干涉）',
+              'dsinθ = kλ（光栅衍射）',
+              '2nd = kλ（薄膜干涉）',
+              'I = I₀cos²(Δφ/2)（干涉强度）'
+            ],
+            description: '光的干涉、衍射、偏振现象，证明光的波动性',
+            relatedTypes: ['wave'],
+            keywords: ['干涉', '衍射', '偏振', '双缝实验', '薄膜'],
+            examples: [
+              {
+                title: '双缝干涉',
+                description: '波长600nm的单色光通过间距0.2mm的双缝，屏幕距离1m，求相邻明纹间距。',
+                params: { lambda: 600e-9, d: 0.2e-3, L: 1 },
+                type: 'projectile',
+                visual: {
+                  objectType: 'wave',
+                  objectColor: '#fbbf24',
+                  backgroundColor: '#fffbeb',
+                  groundColor: '#78350f',
+                  showTrajectory: true,
+                  showInterference: true,
+                  theme: 'wave'
+                }
+              }
+            ]
+          },
+          waveparticleDuality: {
+            id: 'waveparticleDuality',
+            name: '波粒二象性',
+            difficulty: 5,
+            formulas: [
+              'E = hν（光子能量）',
+              'p = h/λ（光子动量）',
+              'λ = h/p（德布罗意波长）',
+              'Ek = hν - W₀（光电效应）'
+            ],
+            description: '光电效应、康普顿效应、德布罗意波，光和物质的波粒二象性',
+            relatedTypes: ['quantum'],
+            keywords: ['光电效应', '光子', '德布罗意波', '波粒二象性', '量子'],
+            examples: [
+              {
+                title: '光电效应',
+                description: '波长为400nm的光照射金属表面，金属的逸出功为2.5eV，求光电子的最大动能。',
+                params: { wavelength: 400e-9, workFunction: 2.5 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'photon',
+                  objectColor: '#a855f7',
+                  backgroundColor: '#faf5ff',
+                  groundColor: '#581c87',
+                  showTrajectory: true,
+                  showPhotons: true,
+                  theme: 'quantum'
+                }
+              }
+            ]
+          }
+        }
+      },
+      
+      // ⚛️ 原子物理学
+      atomicPhysics: {
+        name: '原子物理学',
+        icon: '⚛️',
+        color: '#10b981',
+        topics: {
+          atomicStructure: {
+            id: 'atomicStructure',
+            name: '原子结构',
+            difficulty: 4,
+            formulas: [
+              'E = hν（光子能量）',
+              'En = -13.6/n² eV（氢原子能级）',
+              'hν = Em - En（跃迁辐射）',
+              'λ = h/p（德布罗意波长）'
+            ],
+            description: '原子的核式结构、玻尔理论、氢原子光谱、能级跃迁',
+            relatedTypes: ['atomic'],
+            keywords: ['原子模型', '能级', '光谱', '跃迁', '玻尔理论'],
+            examples: [
+              {
+                title: '氢原子能级跃迁',
+                description: '氢原子从n=3能级跃迁到n=2能级，求辐射光子的能量和波长。',
+                params: { n1: 3, n2: 2 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'atom',
+                  objectColor: '#10b981',
+                  backgroundColor: '#f0fdf4',
+                  groundColor: '#065f46',
+                  showTrajectory: false,
+                  showEnergyLevels: true,
+                  theme: 'quantum'
+                }
+              }
+            ]
+          },
+          nucleus: {
+            id: 'nucleus',
+            name: '原子核',
+            difficulty: 4,
+            formulas: [
+              'A = N + Z（质量数）',
+              'ΔN = N₀(1/2)^(t/T)（半衰期）',
+              '²³⁸U → ²³⁴Th + ⁴He（α衰变）',
+              '¹⁴C → ¹⁴N + e⁻（β衰变）'
+            ],
+            description: '原子核的组成、放射性、衰变规律、半衰期',
+            relatedTypes: ['nuclear'],
+            keywords: ['原子核', '同位素', '放射性', '衰变', '半衰期'],
+            examples: [
+              {
+                title: '放射性衰变',
+                description: '某放射性元素的半衰期为10天，初始质量为100g，求20天后剩余质量。',
+                params: { N0: 100, T: 10, t: 20 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'nucleus',
+                  objectColor: '#ef4444',
+                  backgroundColor: '#fef2f2',
+                  groundColor: '#7f1d1d',
+                  showTrajectory: false,
+                  showDecay: true,
+                  theme: 'nuclear'
+                }
+              }
+            ]
+          },
+          nuclearEnergy: {
+            id: 'nuclearEnergy',
+            name: '核能',
+            difficulty: 5,
+            formulas: [
+              'E = mc²（质能方程）',
+              'ΔE = Δm·c²（核反应能量）',
+              '²H + ³H → ⁴He + n（核聚变）',
+              '²³⁵U + n → 裂变产物（核裂变）'
+            ],
+            description: '质能方程、核裂变、核聚变、结合能',
+            relatedTypes: ['nuclear'],
+            keywords: ['核能', '裂变', '聚变', '质能方程', '结合能'],
+            examples: [
+              {
+                title: '核聚变能量计算',
+                description: '氘氚聚变反应中，质量亏损为0.019u，求释放的能量（1u = 931.5MeV/c²）。',
+                params: { dm: 0.019, c2: 931.5 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'fusion',
+                  objectColor: '#f59e0b',
+                  backgroundColor: '#fffbeb',
+                  groundColor: '#78350f',
+                  showTrajectory: false,
+                  showEnergy: true,
+                  theme: 'nuclear'
+                }
+              }
+            ]
+          },
+          modernPhysics: {
+            id: 'modernPhysics',
+            name: '近代物理基础',
+            difficulty: 5,
+            formulas: [
+              'Ek = hν - W₀（光电效应）',
+              'λ = h/mv（德布罗意波）',
+              'ΔE·Δt ≥ ℏ/2（不确定性原理）',
+              'E² = (pc)² + (mc²)²（相对论能量）'
+            ],
+            description: '光电效应、康普顿效应、波粒二象性、相对论初步、量子理论',
+            relatedTypes: ['quantum', 'relativity'],
+            keywords: ['光电效应', '波粒二象性', '量子论', '相对论', '不确定性'],
+            examples: [
+              {
+                title: '光电效应',
+                description: '波长为400nm的光照射金属表面，金属的逸出功为2.5eV，求光电子的最大动能。',
+                params: { wavelength: 400e-9, workFunction: 2.5 },
+                type: 'uniform',
+                visual: {
+                  objectType: 'electron',
+                  objectColor: '#3b82f6',
+                  backgroundColor: '#1e1b4b',
+                  groundColor: '#c7d2fe',
+                  showTrajectory: true,
+                  showPhotons: true,
+                  theme: 'quantum'
+                }
+              }
+            ]
+          }
+        }
+      }
+    };
+    
+    /**
+     * 题型分类系统
+     * 
+     * 按照5大物理分支,每个分支包含3个难度等级
+     */
+    const QUESTION_TAXONOMY = {
+      mechanics: {
+        name: '力学',
+        icon: '📐',
+        color: 'from-blue-500 to-cyan-500',
+        difficulties: {
+          easy: {
+            name: '简单题',
+            level: 1,
+            description: '基础力学问题,涉及匀速、匀变速直线运动',
+            examples: ['汽车刹车距离', '自由落体', '滑块运动'],
+            keywords: ['匀速', '匀变速', '加速度', '位移', '速度']
+          },
+          medium: {
+            name: '中档题',
+            level: 2,
+            description: '抛体运动、圆周运动、动力学综合问题',
+            examples: ['平抛运动', '圆周运动', '传送带', '弹簧振子'],
+            keywords: ['抛体', '圆周', '向心力', '功能关系']
+          },
+          hard: {
+            name: '难题',
+            level: 3,
+            description: '碰撞、天体运动、动量守恒综合应用',
+            examples: ['完全弹性碰撞', '双星系统', '火箭变质量', '万有引力'],
+            keywords: ['碰撞', '动量守恒', '卫星变轨', '开普勒']
+          }
+        }
+      },
+      electromagnetism: {
+        name: '电磁学',
+        icon: '⚡',
+        color: 'from-yellow-500 to-orange-500',
+        difficulties: {
+          easy: {
+            name: '简单题',
+            level: 1,
+            description: '基本电场、磁场问题',
+            examples: ['点电荷电场强度', '匀强磁场中的带电粒子', '欧姆定律'],
+            keywords: ['电场强度', '磁感应强度', '电阻', '电流']
+          },
+          medium: {
+            name: '中档题',
+            level: 2,
+            description: '电磁感应、交变电流问题',
+            examples: ['法拉第电磁感应', '变压器', 'LC振荡电路'],
+            keywords: ['电磁感应', '感应电动势', '变压器', '交流电']
+          },
+          hard: {
+            name: '难题',
+            level: 3,
+            description: '复合场、电磁感应综合问题',
+            examples: ['速度选择器', '质谱仪', '电磁炮', '霍尔效应'],
+            keywords: ['复合场', '洛伦兹力', '电磁波', '麦克斯韦方程']
+          }
+        }
+      },
+      thermodynamics: {
+        name: '热力学',
+        icon: '🔥',
+        color: 'from-red-500 to-pink-500',
+        difficulties: {
+          easy: {
+            name: '简单题',
+            level: 1,
+            description: '理想气体状态方程、内能基础问题',
+            examples: ['等温过程', '等容过程', '等压过程', '理想气体'],
+            keywords: ['状态方程', '内能', '温度', '压强', '体积']
+          },
+          medium: {
+            name: '中档题',
+            level: 2,
+            description: '热力学第一定律、循环过程',
+            examples: ['绝热过程', '卡诺循环', '热机效率'],
+            keywords: ['热力学第一定律', '做功', '吸热', '放热', '循环']
+          },
+          hard: {
+            name: '难题',
+            level: 3,
+            description: '熵、热力学第二定律、统计物理',
+            examples: ['熵增原理', '可逆过程', '玻尔兹曼分布'],
+            keywords: ['熵', '热力学第二定律', '可逆', '不可逆', '统计']
+          }
+        }
+      },
+      optics: {
+        name: '光学',
+        icon: '💡',
+        color: 'from-purple-500 to-indigo-500',
+        difficulties: {
+          easy: {
+            name: '简单题',
+            level: 1,
+            description: '几何光学基础,反射与折射',
+            examples: ['平面镜成像', '凸透镜成像', '折射定律'],
+            keywords: ['反射', '折射', '全反射', '透镜', '折射率']
+          },
+          medium: {
+            name: '中档题',
+            level: 2,
+            description: '光的干涉、衍射、偏振',
+            examples: ['双缝干涉', '薄膜干涉', '单缝衍射', '偏振光'],
+            keywords: ['干涉', '衍射', '偏振', '相干', '光程差']
+          },
+          hard: {
+            name: '难题',
+            level: 3,
+            description: '波粒二象性、光电效应综合',
+            examples: ['光电效应', '康普顿散射', '德布罗意波'],
+            keywords: ['光子', '光电效应', '康普顿', '波粒二象性']
+          }
+        }
+      },
+      atomicPhysics: {
+        name: '原子物理学',
+        icon: '⚛️',
+        color: 'from-green-500 to-teal-500',
+        difficulties: {
+          easy: {
+            name: '简单题',
+            level: 1,
+            description: '原子结构、能级跃迁基础',
+            examples: ['氢原子光谱', '能级图', '电子跃迁'],
+            keywords: ['原子', '能级', '光谱', '量子数', '轨道']
+          },
+          medium: {
+            name: '中档题',
+            level: 2,
+            description: '原子核反应、放射性衰变',
+            examples: ['α衰变', 'β衰变', 'γ辐射', '半衰期'],
+            keywords: ['原子核', '衰变', '放射性', '半衰期', '核反应']
+          },
+          hard: {
+            name: '难题',
+            level: 3,
+            description: '核能计算、质能方程、粒子物理',
+            examples: ['核裂变', '核聚变', '质能转换', '粒子对撞'],
+            keywords: ['核能', '质能方程', '裂变', '聚变', '粒子']
+          }
+        }
+      }
+    };
+    
+    /**
+     * 根据题目描述自动识别相关知识点
+     * @param {string} description - 题目描述文本
+     * @returns {Array} 匹配的知识点ID列表
+     */
+    function detectKnowledgePoints(description) {
+      const matched = [];
+      const text = description.toLowerCase();
+      
+      for (const [categoryKey, category] of Object.entries(KNOWLEDGE_BASE)) {
+        for (const [topicKey, topic] of Object.entries(category.topics)) {
+          // 检查关键词是否出现在题目中
+          if (topic.keywords.some(keyword => text.includes(keyword.toLowerCase()))) {
+            matched.push(topic.id);
+          }
+        }
+      }
+      
+      return matched;
+    }
+    
+    /**
+     * 获取知识点详情
+     * @param {string} knowledgeId - 知识点ID
+     * @returns {Object|null} 知识点对象
+     */
+    function getKnowledgePoint(knowledgeId) {
+      for (const category of Object.values(KNOWLEDGE_BASE)) {
+        if (category.topics[knowledgeId]) {
+          return {
+            ...category.topics[knowledgeId],
+            categoryName: category.name,
+            categoryIcon: category.icon,
+            categoryColor: category.color
+          };
+        }
+      }
+      return null;
+    }
+    
+    /**
+     * 按分类、难度、场景筛选题型
+     * @param {Object} filters - 筛选条件 {category, difficulty, scenario}
+     * @returns {Array} 符合条件的题型列表
+     */
+    /**
+     * 筛选题型(已废弃,新结构使用下拉菜单直接选择)
+     * 保留此函数以防其他地方有引用
+     */
+    function filterQuestionTypes(filters = {}) {
+      const results = [];
+      
+      for (const [categoryKey, category] of Object.entries(QUESTION_TAXONOMY)) {
+        for (const [diffKey, difficulty] of Object.entries(category.difficulties)) {
+          let match = true;
+          
+          // 按分类筛选
+          if (filters.category && categoryKey !== filters.category) {
+            match = false;
+          }
+          
+          // 按难度等级筛选
+          if (filters.level && difficulty.level !== filters.level) {
+            match = false;
+          }
+          
+          if (match) {
+            results.push({
+              categoryKey,
+              diffKey,
+              categoryName: category.name,
+              categoryIcon: category.icon,
+              ...difficulty
+            });
+          }
+        }
+      }
+      
+      return results;
+    }
     
     // 初始化Canvas
     function initCanvas() {
@@ -1008,58 +2105,122 @@
       }
     });
     
-    // 绘制场景（根据参数类型）
+    // ============================================================================
+    // 🎨 3. Canvas渲染引擎 - 主调度函数
+    // ============================================================================
+    
+    /**
+     * 绘制物理场景的主函数
+     * 
+     * 功能说明：
+     * - 根据 sceneParams.type 分发到不同的绘制函数
+     * - 支持的题型：uniform(匀变速)、projectile(抛体)、circular(圆周)、collision(碰撞)
+     * - 如果场景来自AI，会在画布顶部显示"✨ AI 精确场景"标记
+     * 
+     * @requires sceneParams - 全局场景参数对象，必须包含 type 字段
+     * @requires ctx - Canvas 2D上下文，必须已初始化
+     */
+    /**
+     * 应用视觉主题到Canvas
+     * 根据 sceneParams.visual 设置背景颜色、物体颜色等
+     */
+    function applyVisualTheme() {
+      if (!ctx || !canvas || !sceneParams) return;
+      
+      const visual = sceneParams.visual || {};
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      // 设置背景颜色（默认白色）
+      ctx.fillStyle = visual.backgroundColor || '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      
+      // 如果有地面颜色，绘制地面（下方1/4区域）
+      if (visual.groundColor) {
+        ctx.fillStyle = visual.groundColor;
+        ctx.fillRect(0, h * 0.75, w, h * 0.25);
+      }
+      
+      // 如果是太空主题，绘制星星
+      if (visual.showStars && visual.theme === 'space') {
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 50; i++) {
+          const x = Math.random() * w;
+          const y = Math.random() * h;
+          const size = Math.random() * 2;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      // 返回主要物体颜色供绘制函数使用
+      return {
+        objectColor: visual.objectColor || '#3b82f6',
+        trajectoryColor: visual.trajectoryColor || 'rgba(59, 130, 246, 0.3)',
+        showTrajectory: visual.showTrajectory !== false,
+        theme: visual.theme || 'default'
+      };
+    }
+    
     function drawScene() {
       console.log('🎨 drawScene() 被调用');
       console.log('   ctx:', !!ctx);
       console.log('   sceneParams:', !!sceneParams);
       console.log('   canvas.width:', canvas?.width);
       console.log('   canvas.height:', canvas?.height);
-      
+
+      // 前置检查：确保Canvas和参数已准备好
       if (!ctx || !sceneParams) {
         console.warn('⚠️ drawScene() 提前返回：ctx 或 sceneParams 不存在');
         return;
       }
-      
+
       const w = canvas.width;
       const h = canvas.height;
       console.log('   准备绘制，尺寸:', w, 'x', h);
-      
-      // 清空画布
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, w, h);
-      console.log('   已清空画布（白色背景）');
-      
-      // 设置默认样式
-      ctx.strokeStyle = '#000000';
-      ctx.fillStyle = '#000000';
+
+      // 步骤1：应用视觉主题（清空画布+背景+装饰元素）
+      const visualStyle = applyVisualTheme();
+      console.log('   已应用视觉主题:', visualStyle);
+
+      // 步骤2：设置默认绘图样式
+      ctx.strokeStyle = visualStyle?.objectColor || '#000000';
+      ctx.fillStyle = visualStyle?.objectColor || '#000000';
       ctx.lineWidth = 2;
       ctx.font = '14px Arial';
-      
-      // 根据类型绘制
+
+      // 步骤3：根据题型分发到对应的绘制函数
       switch(sceneParams.type) {
         case 'uniform':
-          if (sceneParams.direction === 'horizontal') {
-            drawHorizontalMotion();
+          // 匀变速直线运动：根据方向选择水平或垂直渲染
+          const direction = sceneParams.direction || window.MOTION_DIRECTION || 'vertical';
+          console.log('🎨 匀变速运动方向:', direction);
+          
+          if (direction === 'horizontal') {
+            drawHorizontalMotion(visualStyle);    // 传递视觉样式
           } else {
-            drawVerticalMotion();
+            drawVerticalMotion(visualStyle);
           }
           break;
+          
         case 'projectile':
-          drawProjectileMotion();
+          drawProjectileMotion(visualStyle);      // 传递视觉样式
           break;
+          
         case 'circular':
-          drawCircularMotion();
+          drawCircularMotion(visualStyle);        // 传递视觉样式
           break;
+          
         case 'collision':
-          drawCollision();
+          drawCollision(visualStyle);             // 传递视觉样式
           break;
+          
         default:
-          drawVerticalMotion();
+          // 默认使用垂直运动
+          drawVerticalMotion(visualStyle);
       }
-    }
-    
-    // 通知提示函数（需要在控制函数之前定义）
+    }    // 通知提示函数（需要在控制函数之前定义）
     function showNotification(message, type = 'info', duration = 2000) {
       const colors = {
         success: 'bg-green-500',
@@ -1128,7 +2289,25 @@
       console.log('✅ 控制按钮已绑定');
     }
     
-    // 播放/暂停/重置控制函数
+    // ============================================================================
+    // ▶️ 6. 动画控制模块 - 播放/暂停/重置/速度控制
+    // ============================================================================
+    
+    /**
+     * 开始播放动画
+     * 
+     * 功能说明：
+     * - 检查场景是否已生成（sceneParams 不为空）
+     * - 防止重复播放（如果已在播放则跳过）
+     * - 切换播放/暂停按钮状态（普通模式+全屏模式）
+     * - 启动 animate() 函数（requestAnimationFrame 循环）
+     * 
+     * 按钮更新：
+     * - 普通模式：#play-animation 隐藏，#pause-animation 显示
+     * - 全屏模式：#fs-play 隐藏，#fs-pause 显示
+     * 
+     * @requires sceneParams - 场景参数必须已设置
+     */
     function startAnimation() {
       if (!sceneParams) {
         console.warn('⚠️ 请先生成可视化场景');
@@ -1162,6 +2341,18 @@
       console.log('   animate() 已调用');
     }
     
+    /**
+     * 暂停动画播放
+     * 
+     * 功能说明：
+     * - 设置 isPlaying = false，停止动画循环
+     * - 取消 requestAnimationFrame 请求
+     * - 恢复播放/暂停按钮状态（普通+全屏）
+     * 
+     * 注意：
+     * - 暂停不会重置时间，可以继续播放
+     * - 使用 cancelAnimationFrame 确保性能
+     */
     function pauseAnimation() {
       console.log('⏸️ 暂停动画');
       isPlaying = false;
@@ -1183,6 +2374,20 @@
       if (fsPauseBtn) fsPauseBtn.style.display = 'none';
     }
     
+    /**
+     * 重置动画到初始状态
+     * 
+     * 功能说明：
+     * - 停止播放并重置时间为 0
+     * - 清除反弹状态（抛体运动的弹跳计数等）
+     * - 清空 s-t 和 v-t 图表数据
+     * - 重绘初始帧（或显示欢迎屏幕）
+     * 
+     * 清除的状态：
+     * - bounceCount, lastBounceTime, bounceVy - 反弹相关
+     * - projectileBounces, currentBounceIndex - 抛体弹跳
+     * - Chart.js 图表数据
+     */
     function resetAnimation() {
       console.log('🔄 重置动画');
       pauseAnimation();
@@ -1941,11 +3146,13 @@
       
       const ballY = groundY - y * scale;
       
-      // 绘制物体
-      ctx.fillStyle = '#ff6b00';
-      ctx.beginPath();
-      ctx.arc(w / 2, ballY, 12, 0, 2 * Math.PI);
-      ctx.fill();
+  // 绘制物体（使用视觉配置）
+  const vcfg = getVisualConfig();
+  const ballR = Math.round(12 * vcfg.radiusMultiplier);
+  ctx.fillStyle = vcfg.ballColor;
+  ctx.beginPath();
+  ctx.arc(w / 2, ballY, ballR, 0, 2 * Math.PI);
+  ctx.fill();
       
       // 高度标注线
       ctx.strokeStyle = '#666666';
@@ -1959,11 +3166,11 @@
       ctx.fillStyle = '#000000';
       ctx.fillText('h = ' + y.toFixed(2) + ' m', w / 2 - 100, ballY + 5);
       
-      // 速度箭头
-      if (Math.abs(v) > 0.5) {
-        const arrowLen = Math.min(Math.abs(v) * 5, 100);
-        ctx.strokeStyle = '#0066ff';
-        ctx.fillStyle = '#0066ff';
+      // 速度箭头（根据视觉设置决定是否显示）
+      if (vcfg.showVelocity && Math.abs(v) > 0.5) {
+        const arrowLen = Math.min(Math.abs(v) * 5, 100) * (vcfg.detail === 'high' ? 1.1 : 1);
+        ctx.strokeStyle = vcfg.arrowColor;
+        ctx.fillStyle = vcfg.arrowColor;
         
         const startY = ballY;
         const endY = ballY + (v < 0 ? -arrowLen : arrowLen);
@@ -1971,6 +3178,7 @@
         ctx.beginPath();
         ctx.moveTo(w / 2 + 30, startY);
         ctx.lineTo(w / 2 + 30, endY);
+        ctx.lineWidth = vcfg.lineWidth;
         ctx.stroke();
         
         // 箭头头部
@@ -1988,7 +3196,32 @@
       ctx.fillStyle = '#000000';
     }
     
-    // 2. 水平运动（汽车/滑块）
+    // ============================================================================
+    // 🎨 4. 物理运动绘制函数 - 水平运动（汽车/滑块）
+    // ============================================================================
+    
+    /**
+     * 绘制水平匀变速直线运动
+     * 
+     * 应用场景：
+     * - 汽车在公路上加速/减速/匀速行驶
+     * - 滑块在水平面上的运动
+     * - 火车、自行车等水平运动物体
+     * 
+     * 物理公式：
+     * - 位移: x = v0*t + (1/2)*a*t²
+     * - 速度: v = v0 + a*t
+     * 
+     * 渲染特性：
+     * - 使用SVG汽车图像（getCarImage）
+     * - 绘制公路（实线+虚线）
+     * - 实时显示时间、速度、位置
+     * - 支持全屏模式自适应
+     * 
+     * @requires sceneParams.v0 - 初速度(m/s)
+     * @requires sceneParams.a  - 加速度(m/s²)
+     * @requires currentTime    - 当前动画时间(s)
+     */
     function drawHorizontalMotion() {
       const w = canvas.width;
       const h = canvas.height;
@@ -2034,13 +3267,14 @@
         pauseAnimation();
       }
       
-      // 绘制汽车
-      const carW = 60, carH = 30;
-      ctx.fillStyle = '#ff6b00';
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.fillRect(carX - carW/2, roadY - carH - 20, carW, carH);
-      ctx.strokeRect(carX - carW/2, roadY - carH - 20, carW, carH);
+  // 绘制汽车（使用视觉配置）
+  const vcfg = getVisualConfig();
+  const carW = 60, carH = 30;
+  ctx.fillStyle = vcfg.ballColor;
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = Math.max(1, vcfg.lineWidth);
+  ctx.fillRect(carX - carW/2, roadY - carH - 20, carW, carH);
+  ctx.strokeRect(carX - carW/2, roadY - carH - 20, carW, carH);
       
       // 轮子
       ctx.fillStyle = '#000000';
@@ -2196,34 +3430,37 @@
       ctx.strokeStyle = '#000000';
       ctx.fillRect(platformX, groundY - h0 * scale, platformWidth, 20);
       ctx.strokeRect(platformX, groundY - h0 * scale, platformWidth, 20);
-      
-      // 物体
-      const ballRadius = isFullscreen ? 18 : 12;
-      ctx.fillStyle = '#ff6b00';
+
+      // 物体（视觉配置）
+      const vcfg = getVisualConfig();
+      const ballRadius = Math.round((isFullscreen ? 18 : 12) * vcfg.radiusMultiplier);
+      ctx.fillStyle = vcfg.ballColor;
       ctx.beginPath();
       ctx.arc(ballX, ballY, ballRadius, 0, 2 * Math.PI);
       ctx.fill();
-      
-      // 轨迹
-      ctx.strokeStyle = '#cccccc';
-      ctx.setLineDash([3, 3]);
-      ctx.lineWidth = isFullscreen ? 2 : 1;
-      ctx.beginPath();
-      for (let dt = 0; dt <= t; dt += 0.05) {
-        const tx = startX + vx * dt * scale;
-        const ty = groundY - (h0 + initialVy * dt - 0.5 * g * dt * dt) * scale;
-        if (dt === 0) ctx.moveTo(tx, ty);
-        else ctx.lineTo(tx, ty);
+
+      // 轨迹（仅在 useTrail 为 true 时绘制）
+      if (vcfg.useTrail) {
+        ctx.strokeStyle = vcfg.trailColor;
+        ctx.setLineDash(vcfg.detail === 'low' ? [4,4] : [3,3]);
+        ctx.lineWidth = vcfg.lineWidth;
+        ctx.beginPath();
+        for (let dt = 0; dt <= t; dt += 0.05) {
+          const tx = startX + vx * dt * scale;
+          const ty = groundY - (h0 + initialVy * dt - 0.5 * g * dt * dt) * scale;
+          if (dt === 0) ctx.moveTo(tx, ty);
+          else ctx.lineTo(tx, ty);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
       }
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.lineWidth = 1;
       
-      // 速度箭头
-      const vAngle = Math.atan2(-vy, vx);
-      const arrowLen = Math.min(vTotal * 5, 80);
-      ctx.strokeStyle = '#0066ff';
-      ctx.fillStyle = '#0066ff';
+  // 速度箭头（视觉设置）
+  const vAngle = Math.atan2(-vy, vx);
+  const arrowLen = Math.min(vTotal * 5, 80) * (vcfg.detail === 'high' ? 1.1 : 1);
+  ctx.strokeStyle = vcfg.arrowColor;
+  ctx.fillStyle = vcfg.arrowColor;
       
       const endX = ballX + arrowLen * Math.cos(vAngle);
       const endY = ballY - arrowLen * Math.sin(vAngle);
@@ -2240,8 +3477,25 @@
       ctx.lineTo(endX - 8 * Math.cos(vAngle + Math.PI/6), endY + 8 * Math.sin(vAngle + Math.PI/6));
       ctx.closePath();
       ctx.fill();
-      
+
       ctx.fillText('v = ' + vTotal.toFixed(2) + ' m/s', ballX + 20, ballY - 20);
+
+      // 高亮顶点（如果启用）
+      if (vcfg.highlightApex) {
+        const tApex = initialVy / g;
+        if (tApex >= 0 && Math.abs(t - tApex) < 0.5) {
+          const apexX = startX + vx * tApex * scale;
+          const apexY = groundY - (h0 + initialVy * tApex - 0.5 * g * tApex * tApex) * scale;
+          ctx.save();
+          ctx.fillStyle = '#ffd166';
+          ctx.beginPath();
+          ctx.arc(apexX, apexY - 8, 6, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.fillStyle = '#333333';
+          ctx.fillText('顶点', apexX + 10, apexY - 8);
+          ctx.restore();
+        }
+      }
       
       console.log('✅ drawProjectileMotion() 绘制完成');
       
@@ -2261,37 +3515,40 @@
       const t = currentTime;
       const theta = omega * t;
       
-      // 圆形轨道
-      ctx.strokeStyle = '#666666';
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, R, 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      
-      // 中心点
-      ctx.fillStyle = '#000000';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.fillText('O', centerX + 10, centerY - 10);
-      
-      const ballX = centerX + R * Math.cos(theta);
-      const ballY = centerY + R * Math.sin(theta);
-      
-      // 绳子
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(ballX, ballY);
-      ctx.stroke();
-      
-      // 物体
-      ctx.fillStyle = '#ff6b00';
-      ctx.beginPath();
-      ctx.arc(ballX, ballY, 12, 0, 2 * Math.PI);
-      ctx.fill();
+  // 使用视觉配置
+  const vcfg = getVisualConfig();
+  // 圆形轨道
+  ctx.strokeStyle = vcfg.trailColor || '#666666';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, R, 0, 2 * Math.PI);
+  ctx.lineWidth = Math.max(1, vcfg.lineWidth);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 中心点
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.fillText('O', centerX + 10, centerY - 10);
+
+  const ballX = centerX + R * Math.cos(theta);
+  const ballY = centerY + R * Math.sin(theta);
+
+  // 绳子
+  ctx.strokeStyle = vcfg.arrowColor || '#000000';
+  ctx.lineWidth = Math.max(1, vcfg.lineWidth);
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(ballX, ballY);
+  ctx.stroke();
+
+  // 物体
+  ctx.fillStyle = vcfg.ballColor;
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, Math.round(12 * vcfg.radiusMultiplier), 0, 2 * Math.PI);
+  ctx.fill();
       
       const v = omega * R / 40;
       document.getElementById('animation-time').textContent = t.toFixed(2) + ' s';
@@ -2469,38 +3726,29 @@
 
     // 图片背景功能已移除（简化界面）
 
-    // ========== 物理计算和自适应缩放配置 ==========
-    const gravity = 10; // 重力加速度 m/s²
-    let containerHeight = 400; // 默认容器高度 px
-    const maxFallDistance = 125; // 最大下落距离 m (5秒自由下落距离)
+    // ============================================================================
+    // 📝 4. 参数管理模块 - 从表单获取参数
+    // ============================================================================
     
-    // 根据当前视口在运行时计算 pixelsPerMeter，以便移动端自适配
-    function computePixelsPerMeter() {
-      // 在窄屏时使用动画容器真实高度（相对单位在 CSS 中已设置为 40vh）
-      const containerEl = document.getElementById('animation-container');
-      if (!containerEl) return containerHeight / maxFallDistance;
-      const rect = containerEl.getBoundingClientRect();
-      containerHeight = rect.height || containerHeight;
-      return containerHeight / maxFallDistance;
-    }
-    let pixelsPerMeter = computePixelsPerMeter();
-
-    // 监听窗口大小变化，重新计算缩放比例
-    window.addEventListener('resize', () => {
-      pixelsPerMeter = computePixelsPerMeter();
-    });
-
-    // 辅助函数：计算自由落体距离
-    function calculateDistance(time) {
-      return 0.5 * gravity * Math.pow(time, 2);
-    }
-    
-    // 辅助函数：计算自由落体速度
-    function calculateVelocity(time) {
-      return gravity * time;
-    }
-
-    // Motion type dispatch: wrap physics functions to support multiple motions
+    /**
+     * 获取当前场景的物理参数
+     * 
+     * 功能说明：
+     * - 从表单输入框读取用户输入的值
+     * - 根据不同题型收集对应的参数字段
+     * - 返回标准化的参数对象供 Canvas 渲染使用
+     * 
+     * 返回格式：
+     * {
+     *   type: "uniform",      // 题型
+     *   v0: 0,                // 初速度
+     *   a: 2,                 // 加速度
+     *   time: 3,              // 时间
+     *   // 其他题型特定参数...
+     * }
+     * 
+     * @returns {Object} 参数对象
+     */
     function getParams() {
       // collect generic params
       const type = questionTypeSelect.value;
@@ -2686,60 +3934,8 @@
     }
 
     // 开始动画
-    function startAnimation() {
-      if (!isPlaying) {
-        isPlaying = true;
-        animationId = requestAnimationFrame(updateAnimation);
-      }
-    }
-
-    // 停止动画
-    function stopAnimation() {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-        animationId = null;
-      }
-      isPlaying = false;
-    }
-
-    // 重置动画
-    function resetAnimation() {
-      stopAnimation();
-      currentTime = 0;
-      
-      // 清除轨迹点
-      if (animationContainer) {
-        const trails = animationContainer.querySelectorAll('.absolute.w-2.h-2');
-        trails.forEach(t => t.remove());
-        
-        // 移除第二个物体（碰撞用）
-        const obj2 = document.getElementById('animated-object-2');
-        if (obj2) obj2.remove();
-      }
-      
-      // 重置显示
-      const animatedObject = window.animatedObject || document.getElementById('animated-object');
-      if (animatedObject) {
-        animatedObject.style.top = '20px';
-        animatedObject.style.left = '50%';
-      }
-      
-      const animationTime = window.animationTime || document.getElementById('animation-time');
-      const animationVelocity = window.animationVelocity || document.getElementById('animation-velocity');
-      const animationPosition = window.animationPosition || document.getElementById('animation-position');
-      
-      if (animationTime) animationTime.textContent = '时间: 0.0s';
-      if (animationVelocity) animationVelocity.textContent = '速度: 0.0m/s';
-      if (animationPosition) animationPosition.textContent = '位置: 0.0m';
-      
-      // 清空图表
-      clearUniformCharts();
-      
-      // 清空导出数据
-      if (window.exportData) {
-        window.exportData = [];
-      }
-    }
+    // 注意：startAnimation()、stopAnimation()、resetAnimation() 函数
+    // 已在前面的"动画控制模块"中定义（约1581行），此处不再重复定义
 
     // --------------- Chart.js for uniform motion ----------------
     function initializeUniformCharts() {
@@ -2935,6 +4131,1006 @@
         });
       }
       
+      // ============================================================================
+      // 📚 知识点库和题型分类UI初始化
+      // ============================================================================
+      
+      /**
+       * 渲染知识点库分类导航
+       */
+      function renderKnowledgeCategories() {
+        const navContainer = document.getElementById('knowledge-nav');
+        if (!navContainer) return;
+        
+        navContainer.innerHTML = '';
+        
+        for (const [categoryKey, category] of Object.entries(KNOWLEDGE_BASE)) {
+          const topicsCount = Object.keys(category.topics).length;
+          const li = document.createElement('li');
+          
+          // 为所有分类添加可展开的子菜单
+          if (categoryKey === 'mechanics' || categoryKey === 'electromagnetism' || categoryKey === 'thermodynamics' || categoryKey === 'optics' || categoryKey === 'atomicPhysics') {
+            li.innerHTML = `
+              <div>
+                <button class="knowledge-category-btn w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 text-sm font-medium transition-all duration-200 flex items-center justify-between gap-2 border border-transparent hover:border-gray-200 hover:shadow-sm" 
+                        data-category="${categoryKey}">
+                  <div class="flex items-center gap-3">
+                    <span class="text-xl">${category.icon}</span>
+                    <span>${category.name}</span>
+                  </div>
+                  <i class="fa fa-chevron-down text-xs transition-transform dropdown-icon"></i>
+                </button>
+                <div class="submenu-container hidden mt-2 ml-4 space-y-1" data-submenu="${categoryKey}">
+                  ${Object.entries(category.topics).map(([topicKey, topic]) => `
+                    <button class="topic-btn w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-gray-600 text-sm transition-colors flex items-center gap-2" 
+                            data-category="${categoryKey}" 
+                            data-topic="${topicKey}">
+                      <i class="fa fa-angle-right text-xs"></i>
+                      <span>${topic.name}</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          } else {
+            li.innerHTML = `
+              <button class="knowledge-category-btn w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 text-sm font-medium transition-all duration-200 flex items-center gap-2 border border-transparent hover:border-gray-200 hover:shadow-sm" 
+                      data-category="${categoryKey}">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">${category.icon}</span>
+                  <span>${category.name}</span>
+                </div>
+              </button>
+            `;
+          }
+          
+          navContainer.appendChild(li);
+          
+          const categoryBtn = li.querySelector('.knowledge-category-btn');
+          
+          // 添加分类按钮点击事件
+          categoryBtn.addEventListener('click', () => {
+            // 如果有子菜单，切换下拉菜单
+            if (categoryKey === 'mechanics' || categoryKey === 'electromagnetism' || categoryKey === 'thermodynamics' || categoryKey === 'optics' || categoryKey === 'atomicPhysics') {
+              const submenu = li.querySelector('.submenu-container');
+              const icon = categoryBtn.querySelector('.dropdown-icon');
+              const isCurrentlyHidden = submenu.classList.contains('hidden');
+              
+              // 切换显示状态
+              submenu.classList.toggle('hidden');
+              icon.classList.toggle('rotate-180');
+              
+              // 如果是展开操作，设置按钮为active状态
+              if (isCurrentlyHidden) {
+                // 清除其他分类按钮的active状态
+                document.querySelectorAll('.knowledge-category-btn').forEach(btn => {
+                  if (btn !== categoryBtn) {
+                    btn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-blue-600', 'text-white', 'shadow-md');
+                    btn.classList.add('hover:bg-gray-50', 'text-gray-700', 'border-transparent');
+                  }
+                });
+                
+                // 关闭其他可能展开的子菜单
+                document.querySelectorAll('.submenu-container').forEach(menu => {
+                  if (menu !== submenu) {
+                    menu.classList.add('hidden');
+                  }
+                });
+                document.querySelectorAll('.dropdown-icon').forEach(ic => {
+                  if (ic !== icon) {
+                    ic.classList.remove('rotate-180');
+                  }
+                });
+                
+                // 设置当前按钮为active
+                categoryBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-blue-600', 'text-white', 'shadow-md');
+                categoryBtn.classList.remove('hover:bg-gray-50', 'text-gray-700', 'border-transparent');
+              }
+            } else {
+              // 清除其他按钮的active状态
+              document.querySelectorAll('.knowledge-category-btn').forEach(btn => {
+                btn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-blue-600', 'text-white', 'shadow-md');
+                btn.classList.add('hover:bg-gray-50', 'text-gray-700', 'border-transparent');
+              });
+              
+              // 关闭所有子菜单
+              document.querySelectorAll('.submenu-container').forEach(menu => {
+                menu.classList.add('hidden');
+              });
+              document.querySelectorAll('.dropdown-icon').forEach(icon => {
+                icon.classList.remove('rotate-180');
+              });
+              
+              // 设置当前按钮为active
+              categoryBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-blue-600', 'text-white', 'shadow-md');
+              categoryBtn.classList.remove('hover:bg-gray-50', 'text-gray-700', 'border-transparent');
+              
+              // 渲染该分类的知识点
+              renderKnowledgeTopics(categoryKey);
+            }
+          });
+          
+          // 为子主题按钮添加点击事件（所有有子菜单的分类）
+          if (categoryKey === 'mechanics' || categoryKey === 'electromagnetism' || categoryKey === 'thermodynamics' || categoryKey === 'optics' || categoryKey === 'atomicPhysics') {
+            li.querySelectorAll('.topic-btn').forEach(topicBtn => {
+              topicBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const topicKey = topicBtn.dataset.topic;
+                
+                // 清除所有子主题的active状态
+                li.querySelectorAll('.topic-btn').forEach(btn => {
+                  btn.classList.remove('bg-blue-100', 'text-blue-700', 'font-medium');
+                  btn.classList.add('text-gray-600');
+                });
+                
+                // 设置当前子主题为active
+                topicBtn.classList.add('bg-blue-100', 'text-blue-700', 'font-medium');
+                topicBtn.classList.remove('text-gray-600');
+                
+                // 渲染单个主题
+                renderSingleTopic(categoryKey, topicKey);
+              });
+            });
+          }
+        }
+        
+        // 默认不展开任何分类，显示欢迎信息
+        const contentContainer = document.getElementById('knowledge-content');
+        if (contentContainer) {
+          contentContainer.innerHTML = `
+            <div class="bg-gradient-to-br from-purple-50 via-white to-blue-50 rounded-2xl shadow-lg p-16 text-center border border-purple-100 flex flex-col justify-center min-h-[400px]">
+              <div class="text-6xl mb-6">📚</div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-4">欢迎来到物理知识点库</h3>
+              <p class="text-gray-600 text-lg mb-8">请从左侧选择一个分类开始学习</p>
+              <div class="flex justify-center gap-8 text-sm text-gray-500">
+                <div class="flex flex-col items-center gap-2">
+                  <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <i class="fa fa-book text-purple-600 text-xl"></i>
+                  </div>
+                  <span>5个分类</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <i class="fa fa-list text-blue-600 text-xl"></i>
+                  </div>
+                  <span>多个主题</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <i class="fa fa-lightbulb-o text-green-600 text-xl"></i>
+                  </div>
+                  <span>丰富例题</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      /**
+       * 渲染单个主题内容（用于力学子分类）
+       */
+      function renderSingleTopic(categoryKey, topicKey) {
+        const contentContainer = document.getElementById('knowledge-content');
+        if (!contentContainer) return;
+        
+        const category = KNOWLEDGE_BASE[categoryKey];
+        if (!category) return;
+        
+        const topic = category.topics[topicKey];
+        if (!topic) return;
+        
+        contentContainer.innerHTML = '';
+        
+        const topicCard = document.createElement('div');
+        topicCard.className = 'bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100 hover:shadow-xl transition-all duration-300';
+        
+        const difficultyColors = {
+          1: 'bg-green-100 text-green-700 border-green-200',
+          2: 'bg-blue-100 text-blue-700 border-blue-200',
+          3: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+          4: 'bg-orange-100 text-orange-700 border-orange-200',
+          5: 'bg-red-100 text-red-700 border-red-200'
+        };
+        
+        const difficultyText = ['', '基础', '简单', '中等', '困难', '极难'][topic.difficulty] || '中等';
+        const difficultyClass = difficultyColors[topic.difficulty] || difficultyColors[3];
+        
+        topicCard.innerHTML = `
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-2xl font-bold text-gray-900">${topic.name}</h3>
+                <span class="${difficultyClass} text-xs px-3 py-1.5 rounded-full border font-medium">${difficultyText}</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                <i class="fa fa-tag"></i>
+                <span>${category.name}</span>
+              </div>
+            </div>
+            <button class="text-gray-400 hover:text-yellow-500 transition-colors text-xl">
+              <i class="fa fa-star-o"></i>
+            </button>
+          </div>
+          
+          <div class="prose max-w-none">
+            <p class="text-gray-600 text-base leading-relaxed mb-6 bg-blue-50 p-4 rounded-xl border-l-4 border-blue-400">${topic.description}</p>
+            
+            <h4 class="text-lg font-bold text-gray-900 mt-6 mb-4 flex items-center gap-2">
+              <i class="fa fa-calculator text-blue-500"></i>
+              基本公式
+            </h4>
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl mb-6 border border-gray-200">
+              ${topic.formulas.map((formula, idx) => `
+                <p class="mb-3 font-mono text-base text-gray-800 flex items-start gap-3">
+                  <span class="inline-block w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5">${idx + 1}</span>
+                  <span class="flex-1">${formula}</span>
+                </p>
+              `).join('')}
+            </div>
+            
+            <h4 class="text-lg font-bold text-gray-900 mt-6 mb-4 flex items-center gap-2">
+              <i class="fa fa-lightbulb-o text-yellow-500"></i>
+              典型例题
+              <span class="text-xs font-normal text-gray-500 ml-2">(${topic.examples.length}个)</span>
+            </h4>
+            <div class="space-y-4">
+              ${topic.examples.map((example, idx) => `
+                <div class="group border-2 border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md transition-all duration-200 cursor-pointer example-card bg-gradient-to-r from-white to-gray-50" 
+                     data-example='${JSON.stringify(example)}'>
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-3">
+                      <span class="inline-block w-8 h-8 rounded-lg bg-blue-500 text-white text-sm font-bold flex items-center justify-center">${idx + 1}</span>
+                      <h5 class="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">${example.title}</h5>
+                    </div>
+                    <button class="text-sm px-4 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-1.5 shadow-sm">
+                      <i class="fa fa-play-circle"></i>
+                      加载
+                    </button>
+                  </div>
+                  <p class="text-sm text-gray-600 leading-relaxed ml-11 line-clamp-2">${example.description}</p>
+                  <div class="mt-4 ml-11 flex items-center gap-4 text-xs text-gray-500">
+                    <span><i class="fa fa-clock-o mr-1"></i>建议时间: 5分钟</span>
+                    <span><i class="fa fa-signal mr-1"></i>难度: ${'★'.repeat(topic.difficulty)}${'☆'.repeat(5-topic.difficulty)}</span>
+                    <span class="ml-auto text-blue-600 group-hover:text-blue-700 font-medium">
+                      点击查看详解 <i class="fa fa-angle-right ml-1"></i>
+                    </span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        
+        contentContainer.appendChild(topicCard);
+        
+        // 为例题卡片添加点击事件
+        topicCard.querySelectorAll('.example-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const exampleData = JSON.parse(card.getAttribute('data-example'));
+            loadExample(exampleData);
+          });
+        });
+      }
+      
+      /**
+       * 渲染知识点内容
+       */
+      function renderKnowledgeTopics(categoryKey) {
+        const contentContainer = document.getElementById('knowledge-content');
+        if (!contentContainer) return;
+        
+        const category = KNOWLEDGE_BASE[categoryKey];
+        if (!category) return;
+        
+        contentContainer.innerHTML = '';
+        
+        for (const [topicKey, topic] of Object.entries(category.topics)) {
+          const topicCard = document.createElement('div');
+          topicCard.className = 'bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100 hover:shadow-xl transition-all duration-300';
+          
+          const difficultyColors = {
+            1: 'bg-green-100 text-green-700 border-green-200',
+            2: 'bg-blue-100 text-blue-700 border-blue-200',
+            3: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+            4: 'bg-orange-100 text-orange-700 border-orange-200',
+            5: 'bg-red-100 text-red-700 border-red-200'
+          };
+          
+          const difficultyText = ['', '基础', '简单', '中等', '困难', '极难'][topic.difficulty] || '中等';
+          const difficultyClass = difficultyColors[topic.difficulty] || difficultyColors[3];
+          
+          topicCard.innerHTML = `
+            <div class="flex justify-between items-start mb-6">
+              <div>
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="text-2xl font-bold text-gray-900">${topic.name}</h3>
+                  <span class="${difficultyClass} text-xs px-3 py-1.5 rounded-full border font-medium">${difficultyText}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-gray-500">
+                  <i class="fa fa-tag"></i>
+                  <span>${category.name}</span>
+                </div>
+              </div>
+              <button class="text-gray-400 hover:text-yellow-500 transition-colors text-xl">
+                <i class="fa fa-star-o"></i>
+              </button>
+            </div>
+            
+            <div class="prose max-w-none">
+              <p class="text-gray-600 text-base leading-relaxed mb-6 bg-blue-50 p-4 rounded-xl border-l-4 border-blue-400">${topic.description}</p>
+              
+              <h4 class="text-lg font-bold text-gray-900 mt-6 mb-4 flex items-center gap-2">
+                <i class="fa fa-calculator text-blue-500"></i>
+                基本公式
+              </h4>
+              <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl mb-6 border border-gray-200">
+                ${topic.formulas.map((formula, idx) => `
+                  <p class="mb-3 font-mono text-base text-gray-800 flex items-start gap-3">
+                    <span class="inline-block w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5">${idx + 1}</span>
+                    <span class="flex-1">${formula}</span>
+                  </p>
+                `).join('')}
+              </div>
+              
+              <h4 class="text-lg font-bold text-gray-900 mt-6 mb-4 flex items-center gap-2">
+                <i class="fa fa-lightbulb-o text-yellow-500"></i>
+                典型例题
+                <span class="text-xs font-normal text-gray-500 ml-2">(${topic.examples.length}个)</span>
+              </h4>
+              <div class="space-y-4">
+                ${topic.examples.map((example, idx) => `
+                  <div class="group border-2 border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md transition-all duration-200 cursor-pointer example-card bg-gradient-to-r from-white to-gray-50" 
+                       data-example='${JSON.stringify(example)}'>
+                    <div class="flex justify-between items-start mb-3">
+                      <div class="flex items-center gap-3">
+                        <span class="inline-block w-8 h-8 rounded-lg bg-blue-500 text-white text-sm font-bold flex items-center justify-center">${idx + 1}</span>
+                        <h5 class="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">${example.title}</h5>
+                      </div>
+                      <button class="text-sm px-4 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-1.5 shadow-sm">
+                        <i class="fa fa-play-circle"></i>
+                        加载
+                      </button>
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed ml-11 line-clamp-2">${example.description}</p>
+                    <div class="mt-4 ml-11 flex items-center gap-4 text-xs text-gray-500">
+                      <span><i class="fa fa-clock-o mr-1"></i>建议时间: 5分钟</span>
+                      <span><i class="fa fa-signal mr-1"></i>难度: ★★☆☆☆</span>
+                      <span class="ml-auto text-blue-600 group-hover:text-blue-700 font-medium">
+                        点击查看详解 <i class="fa fa-angle-right ml-1"></i>
+                      </span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+          
+          contentContainer.appendChild(topicCard);
+          
+          // 为例题卡片添加点击事件
+          topicCard.querySelectorAll('.example-card').forEach(card => {
+            card.addEventListener('click', () => {
+              const exampleData = JSON.parse(card.getAttribute('data-example'));
+              loadExample(exampleData);
+            });
+          });
+        }
+      }
+      
+      /**
+       * 加载例题到可视化区域
+       */
+      function loadExample(example) {
+        console.log('📖 加载例题:', example);
+        
+        // 创建例题详情弹窗
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+        modal.onclick = (e) => {
+          if (e.target === modal) modal.remove();
+        };
+        
+        const content = document.createElement('div');
+        content.className = 'bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto';
+        
+        // 获取题型信息
+        const questionType = QUESTION_TAXONOMY.find(q => q.id === example.type);
+        const typeIcon = questionType ? questionType.icon : '📝';
+        const typeName = questionType ? questionType.name : example.type;
+        
+        content.innerHTML = `
+          <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <span class="text-2xl">${typeIcon}</span>
+              ${example.title}
+            </h2>
+            <button onclick="this.closest('.fixed').remove()" 
+                    class="text-gray-400 hover:text-gray-600 text-2xl leading-none">
+              ×
+            </button>
+          </div>
+          
+          <div class="p-6 space-y-6">
+            <!-- 题型标签 -->
+            <div class="flex gap-2 flex-wrap">
+              <span class="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                ${typeName}
+              </span>
+              <span class="bg-purple-100 text-purple-800 text-sm px-3 py-1 rounded-full">
+                难度 ${example.difficulty || '未知'}
+              </span>
+              ${example.tags ? example.tags.map(tag => `
+                <span class="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">${tag}</span>
+              `).join('') : ''}
+            </div>
+            
+            <!-- 题目描述 -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                📋 题目描述
+              </h3>
+              <div class="bg-gray-50 rounded-lg p-4 text-gray-700 leading-relaxed">
+                ${example.description}
+              </div>
+            </div>
+            
+            <!-- 已知参数 -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                📊 已知参数
+              </h3>
+              <div class="bg-blue-50 rounded-lg p-4">
+                <ul class="grid grid-cols-2 gap-2 text-sm">
+                  ${Object.entries(example.params).map(([key, val]) => {
+                    const labels = {
+                      v0: '初速度', a: '加速度', time: '时间', speed: '速度',
+                      angle: '角度', height: '高度', radius: '半径', angular: '角速度',
+                      m1: '质量1', v1: '速度1', m2: '质量2', v2: '速度2'
+                    };
+                    return `<li class="text-gray-700">• <strong>${labels[key] || key}:</strong> ${val}</li>`;
+                  }).join('')}
+                </ul>
+              </div>
+            </div>
+            
+            <!-- 解答思路 (如果有) -->
+            ${example.solution ? `
+              <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                  💡 解答思路
+                </h3>
+                <div class="bg-yellow-50 rounded-lg p-4 text-gray-700 leading-relaxed">
+                  ${example.solution}
+                </div>
+              </div>
+            ` : ''}
+            
+            <!-- 操作按钮 -->
+            <div class="flex gap-3 pt-4 border-t">
+              <button id="view-visualization-btn" 
+                      class="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                <span>🎬</span> 查看可视化动画
+              </button>
+              <button onclick="this.closest('.fixed').remove()" 
+                      class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors">
+                取消
+              </button>
+            </div>
+          </div>
+        `;
+        
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // 绑定"查看可视化"按钮事件
+        document.getElementById('view-visualization-btn').addEventListener('click', () => {
+          modal.remove();
+          
+          // 1. 设置题型
+          if (questionTypeSelect) {
+            questionTypeSelect.value = example.type;
+            questionTypeSelect.dispatchEvent(new Event('change'));
+          }
+          
+          // 2. 填充题目描述
+          const descriptionEl = document.getElementById('problem-description');
+          if (descriptionEl) {
+            descriptionEl.value = example.description;
+          }
+          
+          // 3. 等待参数字段生成后填充参数
+          setTimeout(() => {
+            for (const [key, value] of Object.entries(example.params)) {
+              let inputId = '';
+              
+              // 映射参数名到输入框ID
+              if (key === 'v0') inputId = 'input-initial-velocity';
+              else if (key === 'a') inputId = 'input-acceleration';
+              else if (key === 'time') inputId = 'input-time';
+              else if (key === 'speed') inputId = 'input-speed';
+              else if (key === 'angle') inputId = 'input-angle';
+              else if (key === 'height') inputId = 'input-height';
+              else if (key === 'radius') inputId = 'input-radius';
+              else if (key === 'angular') inputId = 'input-angular';
+              else if (key === 'm1') inputId = 'input-m1';
+              else if (key === 'v1') inputId = 'input-v1';
+              else if (key === 'm2') inputId = 'input-m2';
+              else if (key === 'v2') inputId = 'input-v2';
+              
+              const input = document.getElementById(inputId);
+              if (input) {
+                input.value = value;
+              }
+            }
+            
+            // 3.5 设置视觉参数（如果例题有visual字段）
+            if (example.visual) {
+              window.sceneVisualSettings = example.visual;
+              console.log('🎨 加载例题的视觉参数:', example.visual);
+            }
+            
+            // 4. 自动生成可视化
+            if (generateButton) {
+              generateButton.click();
+            }
+            
+            // 5. 滚动到可视化区域
+            setTimeout(() => {
+              const vizSection = document.getElementById('visualization');
+              if (vizSection) {
+                vizSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 200);
+          }, 100);
+        });
+      }
+      
+      /**
+       * 渲染题型分类卡片
+       */
+      /**
+       * 渲染题型分类(左右布局)
+       */
+      function renderQuestionTypes() {
+        const navContainer = document.getElementById('question-types-nav');
+        const contentContainer = document.getElementById('question-types-content');
+        
+        if (!navContainer || !contentContainer) return;
+        
+        // 渲染左侧导航 - 下拉式菜单
+        navContainer.innerHTML = '';
+        
+        for (const [categoryKey, category] of Object.entries(QUESTION_TAXONOMY)) {
+          const diffCount = Object.keys(category.difficulties).length;
+          const li = document.createElement('li');
+          
+          // 为所有分类添加可展开的子菜单
+          li.innerHTML = `
+            <div>
+              <button class="question-type-category-btn w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 text-sm font-medium transition-all duration-200 flex items-center justify-between gap-2 border border-transparent hover:border-gray-200 hover:shadow-sm" 
+                      data-category="${categoryKey}">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">${category.icon}</span>
+                  <span>${category.name}</span>
+                </div>
+                <i class="fa fa-chevron-down text-xs transition-transform dropdown-icon"></i>
+              </button>
+              <div class="submenu-container hidden mt-2 ml-4 space-y-1" data-submenu="${categoryKey}">
+                ${Object.entries(category.difficulties).map(([diffKey, diff]) => `
+                  <button class="difficulty-btn w-full text-left px-3 py-2 rounded-lg hover:bg-pink-50 text-gray-600 text-sm transition-colors flex items-center gap-2" 
+                          data-category="${categoryKey}" 
+                          data-difficulty="${diffKey}">
+                    <i class="fa fa-angle-right text-xs"></i>
+                    <span>${diff.name}</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          `;
+          
+          navContainer.appendChild(li);
+          
+          const categoryBtn = li.querySelector('.question-type-category-btn');
+          
+          // 添加分类按钮点击事件 - 切换下拉菜单
+          categoryBtn.addEventListener('click', () => {
+            const submenu = li.querySelector('.submenu-container');
+            const icon = categoryBtn.querySelector('.dropdown-icon');
+            const isCurrentlyHidden = submenu.classList.contains('hidden');
+            
+            // 切换显示状态
+            submenu.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+            
+            // 如果是展开操作，设置按钮为active状态
+            if (isCurrentlyHidden) {
+              // 清除其他分类按钮的active状态
+              document.querySelectorAll('.question-type-category-btn').forEach(btn => {
+                if (btn !== categoryBtn) {
+                  btn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-blue-600', 'text-white', 'shadow-md');
+                  btn.classList.add('hover:bg-gray-50', 'text-gray-700', 'border-transparent');
+                }
+              });
+              
+              // 关闭其他可能展开的子菜单
+              document.querySelectorAll('.submenu-container').forEach(menu => {
+                if (menu !== submenu) {
+                  menu.classList.add('hidden');
+                }
+              });
+              document.querySelectorAll('.dropdown-icon').forEach(ic => {
+                if (ic !== icon) {
+                  ic.classList.remove('rotate-180');
+                }
+              });
+              
+              // 设置当前按钮为active
+              categoryBtn.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-blue-600', 'text-white', 'shadow-md');
+              categoryBtn.classList.remove('hover:bg-gray-50', 'text-gray-700', 'border-transparent');
+            }
+          });
+        }
+        
+        // 渲染右侧内容(默认显示欢迎界面)
+        renderQuestionTypeWelcome();
+        
+        // 绑定难度按钮点击事件
+        navContainer.querySelectorAll('.difficulty-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const categoryKey = btn.dataset.category;
+            const difficultyKey = btn.dataset.difficulty;
+            
+            // 更新难度按钮激活状态
+            navContainer.querySelectorAll('.difficulty-btn').forEach(b => {
+              b.classList.remove('bg-pink-100', 'text-pink-700', 'font-semibold');
+              b.classList.add('hover:bg-pink-50', 'text-gray-600');
+            });
+            
+            // 激活当前难度按钮
+            btn.classList.remove('hover:bg-pink-50', 'text-gray-600');
+            btn.classList.add('bg-pink-100', 'text-pink-700', 'font-semibold');
+            
+            // 渲染对应难度的内容
+            renderQuestionDifficultyContent(categoryKey, difficultyKey);
+          });
+        });
+      }
+      
+      /**
+       * 渲染题型欢迎界面 - 简约版
+       */
+      function renderQuestionTypeWelcome() {
+        const contentContainer = document.getElementById('question-types-content');
+        if (!contentContainer) return;
+        
+        contentContainer.innerHTML = `
+          <div class="bg-gradient-to-br from-pink-50 via-white to-purple-50 rounded-2xl shadow-lg p-16 text-center border border-pink-100 flex flex-col justify-center min-h-[400px]">
+            <div class="text-6xl mb-6 text-gray-300">
+              <i class="fas fa-list-alt"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">选择题型分类</h3>
+            <p class="text-gray-600 text-lg">点击左侧分类查看该学科不同难度的题型</p>
+          </div>
+        `;
+      }
+      
+      /**
+       * 渲染单个难度的详细内容
+       */
+      function renderQuestionDifficultyContent(categoryKey, difficultyKey) {
+        const contentContainer = document.getElementById('question-types-content');
+        if (!contentContainer) return;
+        
+        const category = QUESTION_TAXONOMY[categoryKey];
+        const difficulty = category.difficulties[difficultyKey];
+        if (!category || !difficulty) return;
+        
+        const levelColors = {
+          1: { 
+            border: 'border-green-200', 
+            text: 'text-green-700', 
+            bg: 'bg-green-50',
+            badge: 'bg-green-100 text-green-700',
+            gradient: 'from-green-500 to-green-600'
+          },
+          2: { 
+            border: 'border-yellow-200', 
+            text: 'text-yellow-700', 
+            bg: 'bg-yellow-50',
+            badge: 'bg-yellow-100 text-yellow-700',
+            gradient: 'from-yellow-500 to-yellow-600'
+          },
+          3: { 
+            border: 'border-red-200', 
+            text: 'text-red-700', 
+            bg: 'bg-red-50',
+            badge: 'bg-red-100 text-red-700',
+            gradient: 'from-red-500 to-red-600'
+          }
+        };
+        const colors = levelColors[difficulty.level] || levelColors[2];
+        
+        contentContainer.innerHTML = `
+          <div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+            <!-- 面包屑导航 -->
+            <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+              <span>${category.icon} ${category.name}</span>
+              <i class="fa fa-chevron-right text-xs"></i>
+              <span class="${colors.text} font-semibold">${difficulty.name}</span>
+            </div>
+            
+            <!-- 难度标题 -->
+            <div class="flex items-center gap-4 mb-8 pb-6 border-b">
+              <div class="w-16 h-16 ${colors.bg} rounded-2xl flex items-center justify-center">
+                <span class="text-3xl">${category.icon}</span>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="text-3xl font-bold text-gray-800">${difficulty.name}</h3>
+                  <span class="text-sm ${colors.badge} px-3 py-1 rounded-full font-medium">
+                    ${'★'.repeat(difficulty.level)}${'☆'.repeat(3 - difficulty.level)} 难度 ${difficulty.level}
+                  </span>
+                </div>
+                <p class="text-gray-600">${difficulty.description}</p>
+              </div>
+            </div>
+            
+            <!-- 详细信息 -->
+            <div class="space-y-6">
+              <!-- 示例题目 -->
+              <div class="p-6 ${colors.bg} rounded-xl border ${colors.border}">
+                <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <i class="fa fa-list-ul ${colors.text}"></i>
+                  示例题目
+                </h4>
+                <div class="grid md:grid-cols-2 gap-3">
+                  ${difficulty.examples.map((ex, index) => `
+                    <div class="bg-white p-4 rounded-lg border ${colors.border} hover:shadow-md transition-all">
+                      <div class="flex items-start gap-3">
+                        <span class="${colors.badge} w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
+                        <span class="text-gray-700 text-sm flex-1">${ex}</span>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              
+              <!-- 关键词 -->
+              <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <i class="fa fa-tags text-gray-600"></i>
+                  关键词
+                </h4>
+                <div class="flex flex-wrap gap-2">
+                  ${difficulty.keywords.map(keyword => `
+                    <span class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:border-gray-400 transition-colors">
+                      ${keyword}
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+              
+              <!-- 操作按钮 -->
+              <div class="flex gap-4">
+                <button class="flex-1 bg-gradient-to-r ${colors.gradient} text-white py-4 rounded-xl font-bold hover:shadow-xl transition-all duration-200 text-lg difficulty-use-main-btn"
+                        data-category="${categoryKey}" data-difficulty="${difficultyKey}">
+                  <i class="fa fa-rocket mr-2"></i>使用此题型生成可视化
+                </button>
+                <button class="px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
+                        onclick="renderQuestionTypeWelcome()">
+                  <i class="fa fa-arrow-left mr-2"></i>返回
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // 绑定使用按钮事件
+        contentContainer.querySelectorAll('.difficulty-use-main-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const categoryKey = btn.dataset.category;
+            const difficultyKey = btn.dataset.difficulty;
+            
+            const category = QUESTION_TAXONOMY[categoryKey];
+            const difficulty = category.difficulties[difficultyKey];
+            const descriptionField = document.getElementById('problem-description');
+            
+            if (descriptionField) {
+              const exampleText = `【${category.name} - ${difficulty.name}】\n示例题目:\n${difficulty.examples[0]}\n\n关键词: ${difficulty.keywords.join('、')}`;
+              descriptionField.value = exampleText;
+              
+              // 滚动到可视化区域
+              const vizSection = document.getElementById('visualization');
+              if (vizSection) {
+                vizSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }
+          });
+        });
+      }
+      
+      /**
+       * 渲染单个分类的题型内容 - 简约版
+       */
+      function renderQuestionTypeContent(categoryKey) {
+        const contentContainer = document.getElementById('question-types-content');
+        if (!contentContainer) return;
+        
+        const category = QUESTION_TAXONOMY[categoryKey];
+        if (!category) return;
+        
+        contentContainer.innerHTML = `
+          <div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+            <!-- 分类标题 - 简约版 -->
+            <div class="flex items-center gap-4 mb-8 pb-6 border-b">
+              <span class="text-4xl">${category.icon}</span>
+              <div>
+                <h3 class="text-2xl font-bold text-gray-800">${category.name}</h3>
+                <p class="text-gray-500 text-sm mt-1">${Object.keys(category.difficulties).length} 个难度等级</p>
+              </div>
+            </div>
+            
+            <!-- 难度列表 - 简约版 -->
+            <div class="space-y-4">
+              ${Object.entries(category.difficulties).map(([diffKey, diff]) => {
+                const levelColors = {
+                  1: { 
+                    border: 'border-green-200', 
+                    text: 'text-green-700', 
+                    bg: 'bg-green-50',
+                    badge: 'bg-green-100 text-green-700'
+                  },
+                  2: { 
+                    border: 'border-yellow-200', 
+                    text: 'text-yellow-700', 
+                    bg: 'bg-yellow-50',
+                    badge: 'bg-yellow-100 text-yellow-700'
+                  },
+                  3: { 
+                    border: 'border-red-200', 
+                    text: 'text-red-700', 
+                    bg: 'bg-red-50',
+                    badge: 'bg-red-100 text-red-700'
+                  }
+                };
+                const colors = levelColors[diff.level] || levelColors[2];
+                
+                return `
+                  <div class="p-6 rounded-xl border ${colors.border} hover:shadow-md transition-all duration-200 group">
+                    <div class="flex items-center justify-between mb-4">
+                      <h4 class="text-lg font-bold text-gray-800">${diff.name}</h4>
+                      <span class="text-xs ${colors.badge} px-3 py-1 rounded-full font-medium">
+                        ${'★'.repeat(diff.level)}${'☆'.repeat(3 - diff.level)}
+                      </span>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-4 text-sm">${diff.description}</p>
+                    
+                    <div class="mb-4">
+                      <div class="text-xs font-semibold text-gray-500 mb-2">示例题目</div>
+                      <div class="flex flex-wrap gap-2">
+                        ${diff.examples.slice(0, 3).map(ex => `
+                          <span class="text-xs ${colors.bg} ${colors.text} px-3 py-1.5 rounded-lg border ${colors.border}">${ex}</span>
+                        `).join('')}
+                      </div>
+                    </div>
+                    
+                    <button class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2.5 rounded-lg font-medium hover:shadow-lg transition-all duration-200 text-sm difficulty-use-btn"
+                            data-category="${categoryKey}" data-difficulty="${diffKey}">
+                      <i class="fas fa-arrow-right mr-2"></i>使用此题型
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+        
+        // 绑定使用按钮事件
+        contentContainer.querySelectorAll('.difficulty-use-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const categoryKey = btn.dataset.category;
+            const difficultyKey = btn.dataset.difficulty;
+            
+            const category = QUESTION_TAXONOMY[categoryKey];
+            const difficulty = category.difficulties[difficultyKey];
+            const descriptionField = document.getElementById('problem-description');
+            
+            if (descriptionField) {
+              const exampleText = `【${category.name} - ${difficulty.name}】\n示例题目:\n${difficulty.examples[0]}\n\n关键词: ${difficulty.keywords.join('、')}`;
+              descriptionField.value = exampleText;
+              
+              // 滚动到可视化区域
+              const vizSection = document.getElementById('visualization');
+              if (vizSection) {
+                vizSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }
+          });
+        });
+      }
+      
+      /**
+       * 初始化题型筛选按钮(已废弃,改用左右布局)
+       */
+      function initQuestionTypeFilters() {
+        // 不再需要,题型已改为左右布局
+      }
+      
+      /**
+       * 在界面上显示识别到的知识点标签
+       */
+      function displayKnowledgeTags(knowledgeIds) {
+        // 查找或创建知识点标签容器
+        let tagsContainer = document.getElementById('knowledge-tags-container');
+        
+        if (!tagsContainer) {
+          // 在参数设置区域下方创建标签容器
+          const dynamicParams = document.getElementById('dynamic-params');
+          if (dynamicParams && dynamicParams.parentElement) {
+            tagsContainer = document.createElement('div');
+            tagsContainer.id = 'knowledge-tags-container';
+            tagsContainer.className = 'mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200';
+            dynamicParams.parentElement.insertBefore(tagsContainer, dynamicParams.nextSibling);
+          } else {
+            return; // 找不到插入位置
+          }
+        }
+        
+        // 清空旧标签
+        tagsContainer.innerHTML = '';
+        
+        if (knowledgeIds.length === 0) {
+          tagsContainer.classList.add('hidden');
+          return;
+        }
+        
+        tagsContainer.classList.remove('hidden');
+        
+        // 添加标题
+        const title = document.createElement('div');
+        title.className = 'text-xs font-medium text-blue-700 mb-2 flex items-center gap-1';
+        title.innerHTML = '<i class="fa fa-bookmark"></i> 涉及知识点';
+        tagsContainer.appendChild(title);
+        
+        // 添加标签
+        const tagsWrapper = document.createElement('div');
+        tagsWrapper.className = 'flex flex-wrap gap-2';
+        
+        for (const id of knowledgeIds) {
+          const kp = getKnowledgePoint(id);
+          if (kp) {
+            const tag = document.createElement('span');
+            tag.className = 'inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium cursor-pointer transition-colors';
+            tag.style.backgroundColor = kp.categoryColor + '20';
+            tag.style.color = kp.categoryColor;
+            tag.innerHTML = `${kp.categoryIcon} ${kp.name}`;
+            tag.title = `点击查看${kp.name}详情`;
+            
+            // 点击标签跳转到知识点详情
+            tag.addEventListener('click', () => {
+              const knowledgeSection = document.getElementById('knowledge');
+              if (knowledgeSection) {
+                knowledgeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // 可以进一步高亮对应的知识点卡片
+              }
+            });
+            
+            tagsWrapper.appendChild(tag);
+          }
+        }
+        
+        tagsContainer.appendChild(tagsWrapper);
+      }
+      
+      // 初始化知识点库和题型分类
+      console.log('📚 初始化知识点库和题型分类...');
+      renderKnowledgeCategories();
+      initQuestionTypeFilters();
+      renderQuestionTypes();
+      console.log('✅ 知识点库和题型分类初始化完成');
+      
       // ========== AI 智能解析功能 ==========
       
       /**
@@ -2984,10 +5180,42 @@
         };
       }
       
+      // ============================================================================
+      // 🧠 7. AI题目解析模块 - 调用后端DeepSeek API
+      // ============================================================================
+      
       /**
-       * 调用 AI 后端解析物理题目
-       * @param {string} text - 题目描述文本
-       * @returns {Promise<Object>} 解析结果 {success, type, params, reasoning}
+       * 使用AI解析自然语言物理题目
+       * 
+       * 工作流程：
+       * 1. 将题目文本发送到 Cloudflare Worker 后端
+       * 2. 后端调用 DeepSeek API 进行语义理解
+       * 3. 返回结构化的物理参数 {type, params, reasoning, sceneDescription}
+       * 4. 如果AI失败，自动降级到本地正则表达式解析
+       * 
+       * 后端地址：
+       * - 生产环境: https://physics-visual-worker.yywf08125.workers.dev/api/parse-problem
+       * - 本地测试: http://localhost:8787/api/parse-problem
+       * 
+       * 返回格式示例：
+       * {
+       *   success: true,
+       *   type: "uniform",           // 题型：uniform/projectile/circular/collision
+       *   params: {                  // 物理参数
+       *     v0: 0,                   // 初速度
+       *     a: 2,                    // 加速度
+       *     time: 3                  // 时间
+       *   },
+       *   reasoning: "匀加速直线运动，由静止开始(v0=0)，加速度2m/s²，时间3s",
+       *   sceneDescription: {        // AI生成的场景描述（可选）
+       *     objects: ["汽车"],
+       *     initialConditions: "静止并开始运动",
+       *     environment: "笔直公路"
+       *   }
+       * }
+       * 
+       * @param {string} text - 题目文本（自然语言）
+       * @returns {Promise<Object>} 解析结果对象
        */
       async function parseDescriptionWithAI(text) {
         try {
@@ -3021,10 +5249,28 @@
         }
       }
       
+      // ============================================================================
+      // 📝 参数填充模块 - 将AI解析结果填入表单
+      // ============================================================================
+      
       /**
-       * 根据 AI 返回的参数填充表单
-       * @param {string} type - 题型
-       * @param {Object} params - 参数对象
+       * 将AI解析的参数填充到表单输入框
+       * 
+       * 功能说明：
+       * 1. 自动切换题型下拉框（如果AI识别的题型与当前不同）
+       * 2. 调用 populateParamsForType() 重新生成对应题型的输入框
+       * 3. 将AI返回的参数值填入各个输入框
+       * 4. 处理参数名称的多种变体（如 v0/initialVelocity/speed 都映射到初速度）
+       * 
+       * 参数映射规则：
+       * - 匀变速运动: v0(初速度), a(加速度), time(时间), direction(方向)
+       * - 抛体运动: speed(初速度), angle(角度), height(高度)
+       * - 圆周运动: radius(半径), angular(角速度)
+       * - 碰撞运动: m1/v1/m2/v2(质量和速度)
+       * - 磁场运动: q(电荷), v(速度), B(磁场强度)
+       * 
+       * @param {string} type - 题型类型（uniform/projectile/circular/collision/magnetic/astrodynamics）
+       * @param {Object} params - AI返回的参数对象
        */
       function fillFormFromAI(type, params) {
         // 1. 切换题型下拉框
@@ -3112,61 +5358,127 @@
         return names[type] || type;
       }
       
-      // 智能解析按钮事件监听
+      // 可视化提示/智能解析按钮事件监听（优先使用左侧可视化提示词模块）
+      function applyVisualPrompt() {
+        const vp = document.getElementById('visual-prompt');
+        const theme = document.getElementById('visual-theme')?.value || 'cartoon';
+        const detail = document.getElementById('visual-detail')?.value || 'medium';
+        const highlightApex = !!document.getElementById('visual-highlight-apex')?.checked;
+        const showVelocity = !!document.getElementById('visual-show-velocity')?.checked;
+        const useTrail = !!document.getElementById('visual-use-trail')?.checked;
+
+        const text = (vp && vp.value) ? vp.value.trim() : '';
+        if (!text) return null;
+
+        // 简单启发式：根据提示词决定题型并填充默认参数（最小可用实现）
+        const t = text.toLowerCase();
+        let guessed = { success: true, type: 'uniform', params: {} };
+        if (t.includes('抛') || t.includes('角度') || t.includes('°') || t.includes('度')) {
+          guessed.type = 'projectile';
+          guessed.params = { speed: 10, angle: 45, height: 0 };
+        } else if (t.includes('圆周') || t.includes('角速度') || t.includes('转动')) {
+          guessed.type = 'circular';
+          guessed.params = { radius: 2, angular: 1 };
+        } else if (t.includes('碰撞') || t.includes('相撞')) {
+          guessed.type = 'collision';
+          guessed.params = { m1: 1, v1: 2, m2: 1, v2: -1 };
+        } else if (t.includes('磁') || t.includes('洛伦兹')) {
+          guessed.type = 'magnetic';
+          guessed.params = { q: 1e-6, v: 100, B: 0.1 };
+        } else {
+          guessed.type = 'uniform';
+          guessed.params = { v0: 0, a: 10, time: 5 };
+        }
+
+        // 将猜测填入表单
+        fillFormFromAI(guessed.type, guessed.params);
+
+        // 应用可视化设置到 sceneParams（生成场景时会合并这些设置）
+        sceneVisualSettings = { theme, detail, highlightApex, showVelocity, useTrail, prompt: text };
+
+        return { type: guessed.type, params: guessed.params, visual: sceneVisualSettings };
+      }
+
       parseButton?.addEventListener('click', async () => {
-        const text = descriptionEl.value || '';
-        
-        if (!text.trim()) {
-          showNotice('请先输入题目描述', 'warning');
+        // 优先读取左侧可视化提示词
+        const vpEl = document.getElementById('visual-prompt');
+        const vpText = vpEl ? vpEl.value.trim() : '';
+
+        if (vpText) {
+          // 使用本地启发式解析并应用视觉设置
+          const applied = applyVisualPrompt();
+          showNotice(`✓ 已根据提示词应用可视化设置（风格: ${applied.visual.theme}, 细节: ${applied.visual.detail}）`, 'success', 2500);
           return;
         }
-        
+
+        // 否则回退到原先的AI解析（对 problem-description 字段）
+        const text = descriptionEl.value || '';
+        if (!text.trim()) {
+          showNotice('请先输入题目描述或在左侧填写可视化提示词', 'warning');
+          return;
+        }
+
         // 显示加载提示
         parseButton.disabled = true;
         parseButton.textContent = '正在解析...';
         let loadingNotice = showNotice('AI 正在理解题目，请稍候...', 'info', 0);
-        
+
         try {
-          // 调用 AI 后端
           const result = await parseDescriptionWithAI(text);
-          
           if (result.success) {
-            // 填充表单
             fillFormFromAI(result.type, result.params);
             
-            // 显示成功提示（包含推理过程）
+            // 🆕 保存视觉参数到全局变量（供生成按钮使用）
+            if (result.visual) {
+              window.sceneVisualSettings = result.visual;
+              console.log('🎨 AI返回的视觉参数:', result.visual);
+            }
+            
+            // 🆕 识别相关知识点
+            const knowledgePoints = detectKnowledgePoints(text);
+            console.log('📚 检测到的知识点:', knowledgePoints);
+            
+            // 显示知识点标签
+            displayKnowledgeTags(knowledgePoints);
+            
             if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
-            const message = result.reasoning 
-              ? `✓ 已识别为【${getTypeNameZh(result.type)}】\n${result.reasoning}`
-              : `✓ 已识别为【${getTypeNameZh(result.type)}】并填充参数`;
-            showNotice(message, 'success', 3000);
+            
+            // 组合消息：题型 + 知识点 + 视觉风格
+            let message = `✓ 已识别为【${getTypeNameZh(result.type)}】`;
+            if (result.visual && result.visual.theme) {
+              message += ` - ${result.visual.theme}风格`;
+            }
+            if (knowledgePoints.length > 0) {
+              const knowledgeNames = knowledgePoints.map(id => {
+                const kp = getKnowledgePoint(id);
+                return kp ? kp.name : id;
+              }).join('、');
+              message += `\n📚 涉及知识点：${knowledgeNames}`;
+            }
+            if (result.reasoning) {
+              message += `\n${result.reasoning}`;
+            }
+            
+            showNotice(message, 'success', 4000);
           } else {
             throw new Error(result.error || '解析失败');
           }
-          
         } catch (error) {
-          // 确保移除加载提示
           if (loadingNotice && loadingNotice.remove) loadingNotice.remove();
           console.error('解析错误:', error);
-          
-          // 如果后端不可用，根据后端配置给出更精确的提示
           const isLocal = (typeof BACKEND_PATH === 'string') && /localhost|127\.0\.0\.1/.test(BACKEND_PATH);
           let errorMsg;
           if (isLocal && error.message && error.message.toLowerCase().includes('fetch')) {
-            // 前端指向本地后端但无法连接，提示启动本地后端
             errorMsg = '⚠️ 无法连接到本地后端。\n请在项目目录启动本地服务器：\ncd backend ; python server.py\n或在界面中手动填写参数（若您没有本地后端）。';
           } else if (!isLocal && error.message && error.message.toLowerCase().includes('fetch')) {
-            // 指向已部署的后端但 fetch 仍然失败，可能是网络或浏览器扩展拦截
             errorMsg = `⚠️ 无法连接到解析后端（网络或浏览器扩展可能阻止请求）。\n请检查网络、浏览器扩展（尝试无痕/禁用扩展）或确保后端可达：\n${BACKEND_PATH}`;
           } else {
             errorMsg = `解析失败: ${error.message}`;
           }
           showNotice(errorMsg, 'error', 7000);
-          
         } finally {
-          // 确保无论如何都恢复按钮状态并移除加载提示
           parseButton.disabled = false;
-          parseButton.textContent = '智能解析';
+          parseButton.textContent = '应用提示';
           if (loadingNotice && loadingNotice.remove) {
             try { loadingNotice.remove(); } catch(e) {}
           }
@@ -3342,7 +5654,53 @@
         }
       }
       
-      // ========== 生成按钮事件 ==========
+        // 重置左侧可视化提示词按钮
+        const resetVisualBtn = document.getElementById('reset-visual-prompt');
+        resetVisualBtn?.addEventListener('click', () => {
+          const vp = document.getElementById('visual-prompt'); if (vp) vp.value = '';
+          const theme = document.getElementById('visual-theme'); if (theme) theme.value = 'cartoon';
+          const detail = document.getElementById('visual-detail'); if (detail) detail.value = 'medium';
+          const ha = document.getElementById('visual-highlight-apex'); if (ha) ha.checked = false;
+          const sv = document.getElementById('visual-show-velocity'); if (sv) sv.checked = true;
+          const ut = document.getElementById('visual-use-trail'); if (ut) ut.checked = true;
+          sceneVisualSettings = {};
+          showNotification('✓ 已清除可视化提示词设置', 'success', 1600);
+        });
+
+        // 功能卡片点击：平滑滚动到对应板块（并避开顶部 sticky header），同时高亮目标区域
+        const featureCards = document.querySelectorAll('.feature-card');
+        featureCards.forEach(card => {
+          const target = card.dataset.target;
+          if (!target) return;
+          card.addEventListener('click', () => {
+            const dest = document.querySelector(target);
+            if (!dest) return;
+
+            // 计算顶部偏移（考虑 sticky header）
+            const headerEl = document.getElementById('navbar');
+            const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
+            const rect = dest.getBoundingClientRect();
+            const top = rect.top + window.scrollY - headerHeight - 12; // 12px 额外间隔
+
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+
+            // 可访问性：设焦点以便使用键盘的用户获取上下文
+            try { dest.setAttribute('tabindex', '-1'); dest.focus(); } catch(e){}
+
+            // 高亮目标区域一段时间以增强视觉反馈
+            dest.classList.add('feature-target-highlight');
+            setTimeout(() => {
+              dest.classList.remove('feature-target-highlight');
+            }, 1600);
+          });
+
+          // 支持回车/空格触发
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+          });
+        });
+
+        // ========== 生成按钮事件 ==========
       if (generateButton) {
         generateButton.addEventListener('click', () => {
           // Get form parameters
@@ -3351,6 +5709,8 @@
           
           // Set global scene parameters for rendering
           sceneParams = params;
+          // 合并可视化提示词设置（如果存在）
+          sceneParams.visual = Object.assign({}, sceneVisualSettings || {});
           
           // 清除之前的反弹状态
           delete sceneParams.bounceCount;
