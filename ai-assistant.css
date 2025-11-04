@@ -212,6 +212,146 @@
   flex-direction: row-reverse;
 }
 
+/* Markdown样式 */
+.ai-message-content h2,
+.ai-message-content h3,
+.ai-message-content h4 {
+  margin: 12px 0 8px 0;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.ai-message-content h2 {
+  font-size: 18px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 4px;
+}
+
+.ai-message-content h3 {
+  font-size: 16px;
+}
+
+.ai-message-content h4 {
+  font-size: 14px;
+}
+
+.ai-message-content ul,
+.ai-message-content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.ai-message-content li {
+  margin: 4px 0;
+  line-height: 1.6;
+}
+
+.ai-message-content code {
+  background: #f7fafc;
+  color: #e53e3e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+}
+
+.ai-message-content pre {
+  background: #2d3748;
+  color: #e2e8f0;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.ai-message-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 13px;
+}
+
+.ai-message-content strong {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.ai-message-content em {
+  font-style: italic;
+}
+
+.ai-message-content a {
+  color: #667eea;
+  text-decoration: underline;
+}
+
+.ai-message-content a:hover {
+  color: #764ba2;
+}
+
+/* LaTeX公式样式 */
+.ai-message-content .katex {
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.ai-message-content .katex-display {
+  margin: 16px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.ai-message-content .katex-display > .katex {
+  display: inline-block;
+  text-align: left;
+}
+
+/* 确保公式中的上下标正确显示 */
+.ai-message-content .katex .mord,
+.ai-message-content .katex .mbin,
+.ai-message-content .katex .mrel,
+.ai-message-content .katex .mop {
+  line-height: 1;
+}
+
+/* 行内公式垂直对齐 */
+.ai-message-content .katex {
+  vertical-align: baseline;
+  display: inline-block;
+}
+
+.ai-message-content .katex-display .katex {
+  vertical-align: middle;
+}
+
+/* 用户消息中的代码和公式样式调整 */
+.ai-message-user .ai-message-content code {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.ai-message-user .ai-message-content pre {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ai-message-user .ai-message-content h2,
+.ai-message-user .ai-message-content h3,
+.ai-message-user .ai-message-content h4,
+.ai-message-user .ai-message-content strong {
+  color: white;
+}
+
+.ai-message-user .ai-message-content h2 {
+  border-bottom-color: rgba(255, 255, 255, 0.3);
+}
+
+.ai-message-user .ai-message-content a {
+  color: white;
+  text-decoration: underline;
+}
+
 /* 加载动画 */
 .ai-loading .ai-message-content {
   display: flex;

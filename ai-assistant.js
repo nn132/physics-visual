@@ -306,16 +306,149 @@ class AIAssistantUI {
       const messageDiv = this.addMessage('', 'assistant');
       const contentDiv = messageDiv.querySelector('.ai-message-content');
 
+      let fullContent = '';
       // 流式显示回复
       for await (const chunk of stream) {
-        contentDiv.textContent += chunk;
+        fullContent += chunk;
+        // 实时渲染Markdown和LaTeX
+        this.renderContent(contentDiv, fullContent);
         this.scrollToBottom();
       }
+
+      // 最终渲染(确保完整)
+      this.renderContent(contentDiv, fullContent);
 
     } catch (error) {
       document.getElementById(loadingId)?.remove();
       this.addMessage('❌ 抱歉，出现了一些问题。请稍后再试。', 'assistant');
     }
+  }
+
+  /**
+   * 渲染Markdown和LaTeX内容
+   */
+  renderContent(element, content) {
+    let processed = content;
+    
+    // 存储LaTeX公式，避免被Markdown处理破坏
+    const latexBlocks = [];
+    const latexInline = [];
+    
+    // 1. 先提取并渲染块级公式 $$...$$ (必须在行内公式之前)
+    processed = processed.replace(/\$\$([\s\S]+?)\$\$/g, (match, formula) => {
+      try {
+        const rendered = katex.renderToString(formula.trim(), { 
+          throwOnError: false,
+          displayMode: true
+        });
+        const placeholder = `___LATEX_BLOCK_${latexBlocks.length}___`;
+        latexBlocks.push(rendered);
+        return placeholder;
+      } catch (e) {
+        console.warn('LaTeX块级公式渲染失败:', formula, e);
+        return match;
+      }
+    });
+
+    // 2. 提取并渲染行内公式 $...$
+    processed = processed.replace(/\$([^\$\n]+?)\$/g, (match, formula) => {
+      try {
+        const rendered = katex.renderToString(formula, { 
+          throwOnError: false,
+          displayMode: false
+        });
+        const placeholder = `___LATEX_INLINE_${latexInline.length}___`;
+        latexInline.push(rendered);
+        return placeholder;
+      } catch (e) {
+        console.warn('LaTeX行内公式渲染失败:', formula, e);
+        return match;
+      }
+    });
+
+    // 3. 处理Markdown
+    processed = this.parseMarkdown(processed);
+
+    // 4. 恢复LaTeX公式
+    latexBlocks.forEach((latex, i) => {
+      processed = processed.replace(`___LATEX_BLOCK_${i}___`, latex);
+    });
+    latexInline.forEach((latex, i) => {
+      processed = processed.replace(`___LATEX_INLINE_${i}___`, latex);
+    });
+
+    element.innerHTML = processed;
+  }
+
+  /**
+   * 简单的Markdown解析器
+   */
+  parseMarkdown(text) {
+    let html = text;
+
+    // 代码块 ```...``` (必须先处理,避免被其他规则影响)
+    const codeBlocks = [];
+    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+      const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
+      codeBlocks.push(`<pre><code class="language-${lang || 'text'}">${this.escapeHtml(code.trim())}</code></pre>`);
+      return placeholder;
+    });
+
+    // 行内代码 `...` (也要先保护起来)
+    const inlineCodes = [];
+    html = html.replace(/`([^`\n]+)`/g, (match, code) => {
+      const placeholder = `___INLINE_CODE_${inlineCodes.length}___`;
+      inlineCodes.push(`<code>${this.escapeHtml(code)}</code>`);
+      return placeholder;
+    });
+
+    // 粗体 **...**
+    html = html.replace(/\*\*([^\*\n]+)\*\*/g, '<strong>$1</strong>');
+
+    // 斜体 *...* (确保不匹配**)
+    html = html.replace(/(?<!\*)\*([^\*\n]+)\*(?!\*)/g, '<em>$1</em>');
+
+    // 标题 (必须在行首)
+    html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+
+    // 链接 [text](url)
+    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    // 无序列表 (- 或 *)
+    html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>[\s\S]+?<\/li>)(?!\n<li>)/g, '<ul>$1</ul>');
+
+    // 有序列表
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>[\s\S]+?<\/li>)(?!\n<li>)/g, '<ol>$1</ol>');
+
+    // 恢复代码块
+    codeBlocks.forEach((code, i) => {
+      html = html.replace(`___CODE_BLOCK_${i}___`, code);
+    });
+
+    // 恢复行内代码
+    inlineCodes.forEach((code, i) => {
+      html = html.replace(`___INLINE_CODE_${i}___`, code);
+    });
+
+    // 换行 (两个空格+换行 或 <br>)
+    html = html.replace(/  \n/g, '<br>');
+    html = html.replace(/\n\n/g, '<br><br>');
+    html = html.replace(/\n/g, '<br>');
+
+    return html;
+  }
+
+  /**
+   * HTML转义
+   */
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   addMessage(content, role, isLoading = false) {

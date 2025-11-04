@@ -14,6 +14,9 @@
   <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
   <!-- html2canvas for PDF export with Chinese support -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <!-- KaTeX for LaTeX math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <!-- AI助手样式 -->
   <link rel="stylesheet" href="ai-assistant.css">
   <!-- 学习报告样式 v2.0 -->
@@ -5795,12 +5798,30 @@
     
     if (DEEPSEEK_API_KEY && DEEPSEEK_API_KEY !== 'YOUR_API_KEY_HERE') {
       const { assistant, ui } = initAIAssistant(DEEPSEEK_API_KEY, {
-        systemPrompt: '你是一个物理学习助手，名叫"物理小助手"。你擅长解答高中物理问题，包括力学、电磁学、光学、热学等。回答要简洁明了，对于计算题要给出详细步骤。用emoji让回答更生动有趣。',
+        systemPrompt: `你是一个专业的物理学习助手，名叫"物理小助手"。
+
+【核心能力】
+- 解答高中物理问题(力学、电磁学、光学、热学、原子物理等)
+- 讲解物理概念和定律
+- 分析物理题目,给出详细解题步骤
+- 用可视化方式帮助理解
+
+【回答要求】
+1. 简洁明了,通俗易懂
+2. 对于计算题,必须给出详细步骤
+3. 使用LaTeX公式: 行内公式用 $...$, 块级公式用 $$...$$
+4. 使用Markdown格式: 标题用##, 列表用-, 代码用\`\`\`
+5. 适当使用emoji让回答生动有趣
+
+【公式示例】
+- 牛顿第二定律: $F = ma$
+- 动能公式: $$E_k = \\frac{1}{2}mv^2$$
+- 位移公式: $s = v_0t + \\frac{1}{2}at^2$`,
         avatarImage: '🧪',
         assistantName: '物理小助手',
-        placeholder: '问我物理问题，比如：牛顿第二定律是什么？'
+        placeholder: '问我物理问题，比如：解释一下牛顿第二定律'
       });
-      console.log('✅ AI助手已启动');
+      console.log('✅ AI助手已启动 (支持Markdown & LaTeX)');
     } else {
       console.warn('⚠️ 请在代码中配置 DeepSeek API Key 以启用AI助手');
     }

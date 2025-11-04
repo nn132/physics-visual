@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI助手测试页面</title>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- KaTeX for LaTeX math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <!-- AI助手样式 -->
+  <link rel="stylesheet" href="ai-assistant.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .test-section h2 {
+      color: #667eea;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .test-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .test-button:hover {
+      opacity: 0.9;
+    }
+    .code-block {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .info {
+      background: #e6f2ff;
+      border-left: 4px solid #667eea;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>🧪 AI助手 Markdown & LaTeX 测试页面</h1>
+    
+    <div class="info">
+      <strong>使用说明：</strong>点击下方按钮,AI助手会模拟发送包含Markdown和LaTeX的消息。观察渲染效果。
+    </div>
+
+    <div class="test-section">
+      <h2>📝 基础Markdown测试</h2>
+      <button class="test-button" onclick="testBasicMarkdown()">测试基础格式</button>
+      <button class="test-button" onclick="testLists()">测试列表</button>
+      <button class="test-button" onclick="testCode()">测试代码块</button>
+      <button class="test-button" onclick="testLinks()">测试链接</button>
+    </div>
+
+    <div class="test-section">
+      <h2>🔢 LaTeX公式测试</h2>
+      <button class="test-button" onclick="testInlineFormula()">测试行内公式</button>
+      <button class="test-button" onclick="testBlockFormula()">测试块级公式</button>
+      <button class="test-button" onclick="testPhysicsFormulas()">测试物理公式</button>
+      <button class="test-button" onclick="testComplexFormulas()">测试复杂公式</button>
+      <button class="test-button" onclick="testSubscriptSuperscript()">测试上下标</button>
+    </div>
+
+    <div class="test-section">
+      <h2>🎯 综合测试</h2>
+      <button class="test-button" onclick="testCombined()">测试Markdown+LaTeX混合</button>
+      <button class="test-button" onclick="testPhysicsProblem()">测试物理题解答</button>
+      <button class="test-button" onclick="clearMessages()">清空消息</button>
+    </div>
+
+    <div class="test-section">
+      <h2>📋 测试消息示例</h2>
+      <div class="code-block" id="example-code">
+点击上方按钮查看测试消息示例...
+      </div>
+    </div>
+  </div>
+
+  <!-- AI助手脚本 -->
+  <script src="ai-assistant.js"></script>
+
+  <script>
+    // 模拟AI助手(不使用真实API)
+    class MockAIAssistant {
+      async chat(message) {
+        return this.mockStream(message);
+      }
+
+      async *mockStream(content) {
+        // 模拟流式输出
+        for (let char of content) {
+          yield char;
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+      }
+    }
+
+    // 创建mock助手和UI
+    const mockAssistant = new MockAIAssistant();
+    const ui = new AIAssistantUI(mockAssistant, {
+      avatarImage: '🧪',
+      assistantName: '测试助手',
+      placeholder: '这是测试页面,点击上方按钮测试...'
+    });
+
+    // 自动打开窗口
+    ui.toggleWindow();
+
+    // 辅助函数:发送测试消息
+    async function sendTestMessage(content, exampleCode) {
+      document.getElementById('example-code').textContent = exampleCode || content;
+      
+      // 模拟AI回复
+      const messageDiv = ui.addMessage('', 'assistant');
+      const contentDiv = messageDiv.querySelector('.ai-message-content');
+
+      let fullContent = '';
+      for (let char of content) {
+        fullContent += char;
+        ui.renderContent(contentDiv, fullContent);
+        ui.scrollToBottom();
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    }
+
+    // 测试函数
+    function testBasicMarkdown() {
+      const content = `这是一段测试文本。
+
+**粗体文本** 和 *斜体文本*
+
+## 二级标题
+### 三级标题
+
+这是一个段落,包含**粗体**、*斜体*和\`行内代码\`。`;
+      sendTestMessage(content);
+    }
+
+    function testLists() {
+      const content = `## 无序列表
+- 第一项
+- 第二项
+- 第三项
+
+## 有序列表
+1. 步骤一
+2. 步骤二
+3. 步骤三`;
+      sendTestMessage(content);
+    }
+
+    function testCode() {
+      const content = `## Python代码示例
+
+\`\`\`python
+def calculate_velocity(distance, time):
+    velocity = distance / time
+    return velocity
+
+# 计算速度
+v = calculate_velocity(100, 10)
+print(f"速度: {v} m/s")
+\`\`\`
+
+这是\`行内代码\`的示例。`;
+      sendTestMessage(content);
+    }
+
+    function testLinks() {
+      const content = `查看更多信息:
+- [物理公式大全](https://example.com)
+- [牛顿运动定律](https://example.com)`;
+      sendTestMessage(content);
+    }
+
+    function testInlineFormula() {
+      const content = `根据公式 $v = v_0 + at$,可以计算出物体的速度。
+
+质能方程 $E = mc^2$ 是相对论的核心公式。
+
+圆的面积公式是 $A = \\pi r^2$。`;
+      sendTestMessage(content);
+    }
+
+    function testBlockFormula() {
+      const content = `## 牛顿第二定律
+
+$$F = ma$$
+
+其中:
+- $F$ 是合外力
+- $m$ 是物体质量
+- $a$ 是加速度`;
+      sendTestMessage(content);
+    }
+
+    function testPhysicsFormulas() {
+      const content = `## 常用物理公式
+
+**1. 匀变速直线运动**
+
+速度公式: $v = v_0 + at$
+
+位移公式: $s = v_0 t + \\frac{1}{2}at^2$
+
+速度位移关系: $v^2 - v_0^2 = 2as$
+
+**2. 自由落体**
+
+高度: $h = \\frac{1}{2}gt^2$
+
+速度: $v = gt$
+
+解得时间: $t = \\sqrt{\\frac{2h}{g}}$
+
+**3. 动能定理**
+
+$$W = \\Delta E_k = \\frac{1}{2}mv^2 - \\frac{1}{2}mv_0^2$$
+
+**4. 万有引力定律**
+
+$$F = G\\frac{m_1 m_2}{r^2}$$`;
+      sendTestMessage(content);
+    }
+
+    function testComplexFormulas() {
+      const content = `## 复杂数学公式
+
+**求和公式:**
+
+$$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
+
+**积分:**
+
+$$\\int_{a}^{b} f(x)dx$$
+
+**矩阵:**
+
+$$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$$
+
+**希腊字母:**
+
+$\\alpha, \\beta, \\gamma, \\Delta, \\theta, \\lambda, \\omega$`;
+      sendTestMessage(content);
+    }
+
+    function testSubscriptSuperscript() {
+      const content = `## 上标和下标测试
+
+**水平方向:** $x = v_0 t$
+
+**竖直方向:** $h = \\frac{1}{2}gt^2$
+
+**初速度:** $v_0 = 10 m/s$
+
+**平方:** $v^2 - v_0^2 = 2as$
+
+**立方:** $x^3 + y^3 = z^3$
+
+**复杂上下标:** $x_1^2 + x_2^2 = r^2$
+
+**分数中的上标:** 
+
+$$E = \\frac{1}{2}mv^2$$
+
+$$s = v_0t + \\frac{1}{2}at^2$$
+
+**多重上标:**
+
+$$e^{-\\frac{x^2}{2}}$$`;
+      sendTestMessage(content);
+    }
+
+    function testCombined() {
+      const content = `## 自由落体运动分析
+
+### 定义
+自由落体运动是指**物体只在重力作用下**从静止开始下落的运动。
+
+### 公式推导
+
+初速度 $v_0 = 0$,加速度 $a = g$
+
+根据速度公式:
+$$v = gt$$
+
+根据位移公式:
+$$h = \\frac{1}{2}gt^2$$
+
+### 代码实现
+
+\`\`\`python
+def free_fall(g, t):
+    v = g * t
+    h = 0.5 * g * t**2
+    return v, h
+\`\`\`
+
+### 注意事项
+- 忽略空气阻力
+- 重力加速度 $g \\approx 9.8 m/s^2$
+- 适用于近地表`;
+      sendTestMessage(content);
+    }
+
+    function testPhysicsProblem() {
+      const content = `## 【例题】平抛运动
+
+### 题目
+一物体从高度 $h = 20m$ 处以初速度 $v_0 = 10m/s$ 水平抛出,求:
+1. 物体在空中的飞行时间
+2. 物体的水平射程
+
+### 解答
+
+**步骤1: 求飞行时间**
+
+竖直方向做自由落体运动:
+$$h = \\frac{1}{2}gt^2$$
+
+解得:
+$$t = \\sqrt{\\frac{2h}{g}} = \\sqrt{\\frac{2 \\times 20}{10}} = 2s$$
+
+**步骤2: 求水平射程**
+
+水平方向做匀速直线运动:
+$$x = v_0 t = 10 \\times 2 = 20m$$
+
+### 答案
+- 飞行时间: **2秒**
+- 水平射程: **20米**
+
+### 相关公式
+\`\`\`
+水平: x = v₀t
+竖直: h = ½gt²
+\`\`\``;
+      sendTestMessage(content);
+    }
+
+    function clearMessages() {
+      const chatContainer = document.getElementById('ai-chat-container');
+      chatContainer.innerHTML = `
+        <div class="ai-welcome-message">
+          <p>👋 消息已清空</p>
+          <p>点击上方按钮继续测试~</p>
+        </div>
+      `;
+      document.getElementById('example-code').textContent = '点击上方按钮查看测试消息示例...';
+    }
+  </script>
+</body>
+</html>
