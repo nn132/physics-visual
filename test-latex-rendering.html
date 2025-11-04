@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LaTeX 渲染测试 - AI助手优化</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <link rel="stylesheet" href="ai-assistant.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f7fa;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .test-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #2d3748;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+    .test-case {
+      margin: 12px 0;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .test-label {
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+    .test-result {
+      padding: 12px;
+      border-radius: 8px;
+      background: white;
+      min-height: 40px;
+      line-height: 1.6;
+    }
+    .info-box {
+      background: #edf2f7;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 16px 0;
+      border-left: 4px solid #667eea;
+    }
+    .success {
+      background: #f0fff4;
+      border-left-color: #48bb78;
+    }
+    .warning {
+      background: #fffaf0;
+      border-left-color: #ed8936;
+    }
+    code {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center; color: #2d3748; margin-bottom: 30px;">
+    🧪 LaTeX 公式渲染测试 - AI助手优化版
+  </h1>
+
+  <div class="info-box">
+    <h3 style="margin-top: 0;">✨ 优化内容</h3>
+    <ul style="margin: 8px 0; padding-left: 20px;">
+      <li><strong>流式渲染防抖</strong>：避免公式不完整时频繁渲染（100ms防抖）</li>
+      <li><strong>公式完整性检查</strong>：检测括号匹配、未完成命令，流式时跳过不完整公式</li>
+      <li><strong>错误处理增强</strong>：渲染失败时显示友好提示，而非空白</li>
+      <li><strong>占位符替换优化</strong>：使用 split().join() 代替正则，避免特殊字符问题</li>
+      <li><strong>金额过滤</strong>：避免将 $100 这样的金额误识别为公式</li>
+      <li><strong>Markdown改进</strong>：更安全的列表和换行处理，避免破坏占位符</li>
+    </ul>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">📐 测试用例 1：基础物理公式</div>
+    <div class="test-case">
+      <div class="test-label">输入文本：</div>
+      <code>牛顿第二定律：$F = ma$，动能公式：$E_k = \frac{1}{2}mv^2$</code>
+      <div class="test-label" style="margin-top: 12px;">渲染结果：</div>
+      <div class="test-result" id="test1"></div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">🔬 测试用例 2：块级公式</div>
+    <div class="test-case">
+      <div class="test-label">输入文本：</div>
+      <code>能量守恒定律：$$E = mc^2$$</code>
+      <div class="test-label" style="margin-top: 12px;">渲染结果：</div>
+      <div class="test-result" id="test2"></div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">⚛️ 测试用例 3：复杂公式（分式、根号、上下标）</div>
+    <div class="test-case">
+      <div class="test-label">输入文本：</div>
+      <code>二次公式：$$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$</code>
+      <div class="test-label" style="margin-top: 12px;">渲染结果：</div>
+      <div class="test-result" id="test3"></div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">💰 测试用例 4：金额过滤（不应被识别为公式）</div>
+    <div class="test-case">
+      <div class="test-label">输入文本：</div>
+      <code>这本书价格是 $100，另一本是 $50.99</code>
+      <div class="test-label" style="margin-top: 12px;">渲染结果：</div>
+      <div class="test-result" id="test4"></div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">📝 测试用例 5：Markdown + LaTeX混合</div>
+    <div class="test-case">
+      <div class="test-label">输入文本：</div>
+      <code>## 物理公式
+**力的定义**：$F = ma$
+- 加速度 $a$
+- 质量 $m$
+
+公式推导：
+$$v^2 = v_0^2 + 2as$$</code>
+      <div class="test-label" style="margin-top: 12px;">渲染结果：</div>
+      <div class="test-result" id="test5"></div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">⚠️ 测试用例 6：错误处理（故意的错误公式）</div>
+    <div class="test-case">
+      <div class="test-label">输入文本：</div>
+      <code>错误公式：$\frac{1}{2$ （缺少闭合括号）</code>
+      <div class="test-label" style="margin-top: 12px;">渲染结果：</div>
+      <div class="test-result" id="test6"></div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">🎯 测试用例 7：多行公式</div>
+    <div class="test-case">
+      <div class="test-label">输入文本：</div>
+      <code>$$
+\begin{aligned}
+E &= mc^2 \\
+p &= mv \\
+F &= ma
+\end{aligned}
+$$</code>
+      <div class="test-label" style="margin-top: 12px;">渲染结果：</div>
+      <div class="test-result" id="test7"></div>
+    </div>
+  </div>
+
+  <div class="info-box success" style="margin-top: 30px;">
+    <h3 style="margin-top: 0;">✅ 使用方法</h3>
+    <p>在 AI 助手初始化时，可以启用调试模式：</p>
+    <pre style="background: #2d3748; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto;">
+const { assistant, ui } = initAIAssistant('your-api-key', {
+  debug: true  // 启用调试日志
+});</pre>
+  </div>
+
+  <script src="ai-assistant.js"></script>
+  <script>
+    // 模拟 AIAssistantUI 的渲染方法
+    class TestRenderer {
+      renderContent(element, content, isFinal = true) {
+        let processed = content;
+        const latexBlocks = [];
+        const latexInline = [];
+        
+        // 块级公式
+        processed = processed.replace(/\$\$[\s\S]*?\$\$/g, (match) => {
+          const formula = match.slice(2, -2).trim();
+          if (!formula) return match;
+          
+          if (!isFinal && !this.isCompleteLatex(formula)) {
+            return match;
+          }
+          
+          try {
+            const rendered = katex.renderToString(formula, { 
+              throwOnError: false,
+              displayMode: true,
+              strict: false,
+              trust: true
+            });
+            const placeholder = `___LATEX_BLOCK_${latexBlocks.length}___`;
+            latexBlocks.push(rendered);
+            return placeholder;
+          } catch (e) {
+            console.warn('LaTeX块级公式渲染失败:', formula, e);
+            return `<span class="latex-error" title="公式渲染失败: ${e.message}">${this.escapeHtml(match)}</span>`;
+          }
+        });
+
+        // 行内公式
+        processed = processed.replace(/(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g, (match, formula) => {
+          if (!formula.trim()) return match;
+          if (/^\s*\d+(\.\d+)?\s*$/.test(formula)) return match;
+          if (!isFinal && !this.isCompleteLatex(formula)) return match;
+          
+          try {
+            const rendered = katex.renderToString(formula.trim(), { 
+              throwOnError: false,
+              displayMode: false,
+              strict: false,
+              trust: true
+            });
+            const placeholder = `___LATEX_INLINE_${latexInline.length}___`;
+            latexInline.push(rendered);
+            return placeholder;
+          } catch (e) {
+            console.warn('LaTeX行内公式渲染失败:', formula, e);
+            return `<span class="latex-error" title="公式渲染失败: ${e.message}">${this.escapeHtml(match)}</span>`;
+          }
+        });
+
+        // Markdown
+        processed = this.parseMarkdown(processed);
+
+        // 恢复公式
+        latexBlocks.forEach((latex, i) => {
+          processed = processed.split(`___LATEX_BLOCK_${i}___`).join(latex);
+        });
+        latexInline.forEach((latex, i) => {
+          processed = processed.split(`___LATEX_INLINE_${i}___`).join(latex);
+        });
+
+        element.innerHTML = processed;
+      }
+
+      isCompleteLatex(formula) {
+        const openBraces = (formula.match(/\{/g) || []).length;
+        const closeBraces = (formula.match(/\}/g) || []).length;
+        const openParens = (formula.match(/\(/g) || []).length;
+        const closeParens = (formula.match(/\)/g) || []).length;
+        const openBrackets = (formula.match(/\[/g) || []).length;
+        const closeBrackets = (formula.match(/\]/g) || []).length;
+        
+        if (openBraces !== closeBraces || openParens !== closeParens || openBrackets !== closeBrackets) {
+          return false;
+        }
+        if (formula.trim().endsWith('\\')) return false;
+        return true;
+      }
+
+      parseMarkdown(text) {
+        let html = text;
+        const codeBlocks = [];
+        html = html.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
+          const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
+          codeBlocks.push(`<pre><code class="language-${lang || 'text'}">${this.escapeHtml(code.trim())}</code></pre>`);
+          return placeholder;
+        });
+
+        const inlineCodes = [];
+        html = html.replace(/`([^`]+?)`/g, (match, code) => {
+          const placeholder = `___INLINE_CODE_${inlineCodes.length}___`;
+          inlineCodes.push(`<code>${this.escapeHtml(code)}</code>`);
+          return placeholder;
+        });
+
+        html = html.replace(/\*\*([^\*\n]+?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/(?<!\*)\*([^\*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+        html = html.replace(/^#### (.+)$/gm, '<h5>$1</h5>');
+        html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+        html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+        html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+        html = html.replace(/^[\-\*] (.+)$/gm, (match, content) => {
+          if (content.includes('___')) return match;
+          return '<li>' + content + '</li>';
+        });
+        html = html.replace(/(<li>.*?<\/li>\n?)+/g, (match) => '<ul>' + match + '</ul>');
+
+        html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*?<\/li>\n?)+/g, (match) => {
+          if (match.startsWith('<ul>')) return match;
+          return '<ol>' + match + '</ol>';
+        });
+
+        codeBlocks.forEach((code, i) => {
+          html = html.split(`___CODE_BLOCK_${i}___`).join(code);
+        });
+        inlineCodes.forEach((code, i) => {
+          html = html.split(`___INLINE_CODE_${i}___`).join(code);
+        });
+
+        html = html.replace(/\n\n+/g, '<br><br>');
+        html = html.replace(/([^>])\n(?!<)/g, '$1<br>');
+
+        return html;
+      }
+
+      escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+    }
+
+    // 运行测试
+    const renderer = new TestRenderer();
+    
+    const tests = [
+      { id: 'test1', content: '牛顿第二定律：$F = ma$，动能公式：$E_k = \\frac{1}{2}mv^2$' },
+      { id: 'test2', content: '能量守恒定律：$$E = mc^2$$' },
+      { id: 'test3', content: '二次公式：$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$' },
+      { id: 'test4', content: '这本书价格是 $100，另一本是 $50.99' },
+      { id: 'test5', content: `## 物理公式
+**力的定义**：$F = ma$
+- 加速度 $a$
+- 质量 $m$
+
+公式推导：
+$$v^2 = v_0^2 + 2as$$` },
+      { id: 'test6', content: '错误公式：$\\frac{1}{2$ （缺少闭合括号）' },
+      { id: 'test7', content: `$$
+\\begin{aligned}
+E &= mc^2 \\\\
+p &= mv \\\\
+F &= ma
+\\end{aligned}
+$$` }
+    ];
+
+    tests.forEach(test => {
+      const element = document.getElementById(test.id);
+      renderer.renderContent(element, test.content, true);
+    });
+
+    console.log('✅ 所有测试用例已加载');
+  </script>
+</body>
+</html>

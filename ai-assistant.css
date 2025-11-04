@@ -326,6 +326,54 @@
   vertical-align: middle;
 }
 
+/* 公式渲染错误提示 */
+.ai-message-content .latex-error {
+  background: #fff5f5;
+  color: #c53030;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  border: 1px dashed #fc8181;
+  cursor: help;
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.ai-message-content .latex-error:hover {
+  background: #fed7d7;
+  border-color: #f56565;
+}
+
+/* 公式占位符（流式渲染时的临时显示） */
+.ai-message-content .latex-placeholder {
+  background: #edf2f7;
+  color: #718096;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  font-style: italic;
+  display: inline-block;
+}
+
+/* 公式加载动画 */
+.ai-message-content .katex.rendering {
+  opacity: 0.5;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
 /* 用户消息中的代码和公式样式调整 */
 .ai-message-user .ai-message-content code {
   background: rgba(255, 255, 255, 0.2);

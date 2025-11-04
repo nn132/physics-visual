@@ -307,16 +307,32 @@ class AIAssistantUI {
       const contentDiv = messageDiv.querySelector('.ai-message-content');
 
       let fullContent = '';
-      // 流式显示回复
+      let renderTimer = null;
+      
+      // 流式显示回复 - 使用防抖优化
       for await (const chunk of stream) {
         fullContent += chunk;
-        // 实时渲染Markdown和LaTeX
-        this.renderContent(contentDiv, fullContent);
-        this.scrollToBottom();
+        
+        // 清除之前的渲染定时器
+        if (renderTimer) {
+          clearTimeout(renderTimer);
+        }
+        
+        // 使用防抖：避免公式不完整时频繁渲染
+        renderTimer = setTimeout(() => {
+          this.renderContent(contentDiv, fullContent, false);
+          this.scrollToBottom();
+        }, 100);
+      }
+      
+      // 清除最后的定时器
+      if (renderTimer) {
+        clearTimeout(renderTimer);
       }
 
-      // 最终渲染(确保完整)
-      this.renderContent(contentDiv, fullContent);
+      // 最终完整渲染(确保公式完整)
+      this.renderContent(contentDiv, fullContent, true);
+      this.scrollToBottom();
 
     } catch (error) {
       document.getElementById(loadingId)?.remove();
@@ -326,8 +342,11 @@ class AIAssistantUI {
 
   /**
    * 渲染Markdown和LaTeX内容
+   * @param {HTMLElement} element - 目标DOM元素
+   * @param {string} content - 原始内容
+   * @param {boolean} isFinal - 是否为最终完整渲染
    */
-  renderContent(element, content) {
+  renderContent(element, content, isFinal = false) {
     let processed = content;
     
     // 存储LaTeX公式，避免被Markdown处理破坏
@@ -335,60 +354,152 @@ class AIAssistantUI {
     const latexInline = [];
     
     // 1. 先提取并渲染块级公式 $$...$$ (必须在行内公式之前)
-    processed = processed.replace(/\$\$([\s\S]+?)\$\$/g, (match, formula) => {
+    // 使用非贪婪匹配，支持多行
+    processed = processed.replace(/\$\$[\s\S]*?\$\$/g, (match) => {
+      const formula = match.slice(2, -2).trim();
+      
+      // 跳过空公式
+      if (!formula) {
+        return match;
+      }
+      
+      // 流式渲染时，如果公式不完整则保留原文
+      if (!isFinal && !this.isCompleteLatex(formula)) {
+        return match;
+      }
+      
       try {
-        const rendered = katex.renderToString(formula.trim(), { 
+        const rendered = katex.renderToString(formula, { 
           throwOnError: false,
-          displayMode: true
+          displayMode: true,
+          strict: false,
+          trust: true,
+          macros: {
+            "\\f": "f(#1)",
+            "\\vec": "\\mathbf{#1}"
+          }
         });
         const placeholder = `___LATEX_BLOCK_${latexBlocks.length}___`;
         latexBlocks.push(rendered);
         return placeholder;
       } catch (e) {
         console.warn('LaTeX块级公式渲染失败:', formula, e);
-        return match;
+        // 返回原文而不是空白
+        return `<span class="latex-error" title="公式渲染失败">${this.escapeHtml(match)}</span>`;
       }
     });
 
     // 2. 提取并渲染行内公式 $...$
-    processed = processed.replace(/\$([^\$\n]+?)\$/g, (match, formula) => {
+    // 改进正则：更精确地匹配行内公式
+    processed = processed.replace(/(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g, (match, formula) => {
+      // 跳过空公式或只有空格的公式
+      if (!formula.trim()) {
+        return match;
+      }
+      
+      // 跳过看起来像金额的数字（如 $100）
+      if (/^\s*\d+(\.\d+)?\s*$/.test(formula)) {
+        return match;
+      }
+      
+      // 流式渲染时，如果公式不完整则保留原文
+      if (!isFinal && !this.isCompleteLatex(formula)) {
+        return match;
+      }
+      
       try {
-        const rendered = katex.renderToString(formula, { 
+        const rendered = katex.renderToString(formula.trim(), { 
           throwOnError: false,
-          displayMode: false
+          displayMode: false,
+          strict: false,
+          trust: true,
+          macros: {
+            "\\f": "f(#1)",
+            "\\vec": "\\mathbf{#1}"
+          }
         });
         const placeholder = `___LATEX_INLINE_${latexInline.length}___`;
         latexInline.push(rendered);
         return placeholder;
       } catch (e) {
         console.warn('LaTeX行内公式渲染失败:', formula, e);
-        return match;
+        // 返回原文而不是空白
+        return `<span class="latex-error" title="公式渲染失败">${this.escapeHtml(match)}</span>`;
       }
     });
 
     // 3. 处理Markdown
     processed = this.parseMarkdown(processed);
 
-    // 4. 恢复LaTeX公式
+    // 4. 恢复LaTeX公式（使用安全的替换方法）
     latexBlocks.forEach((latex, i) => {
-      processed = processed.replace(`___LATEX_BLOCK_${i}___`, latex);
+      const placeholder = `___LATEX_BLOCK_${i}___`;
+      // 使用字符串替换而不是正则，避免特殊字符问题
+      processed = processed.split(placeholder).join(latex);
     });
     latexInline.forEach((latex, i) => {
-      processed = processed.replace(`___LATEX_INLINE_${i}___`, latex);
+      const placeholder = `___LATEX_INLINE_${i}___`;
+      processed = processed.split(placeholder).join(latex);
     });
 
     element.innerHTML = processed;
   }
 
   /**
+   * 检查LaTeX公式是否完整（简单的括号匹配检查）
+   * @param {string} formula - 公式内容
+   * @returns {boolean}
+   */
+  isCompleteLatex(formula) {
+    // 检查常见的未闭合情况
+    const openBraces = (formula.match(/\{/g) || []).length;
+    const closeBraces = (formula.match(/\}/g) || []).length;
+    const openParens = (formula.match(/\(/g) || []).length;
+    const closeParens = (formula.match(/\)/g) || []).length;
+    const openBrackets = (formula.match(/\[/g) || []).length;
+    const closeBrackets = (formula.match(/\]/g) || []).length;
+    
+    // 如果括号不匹配，认为公式不完整
+    if (openBraces !== closeBraces || openParens !== closeParens || openBrackets !== closeBrackets) {
+      return false;
+    }
+    
+    // 检查是否以反斜杠结尾（可能是命令未完成）
+    if (formula.trim().endsWith('\\')) {
+      return false;
+    }
+    
+    // 检查常见的未完成命令
+    const incompleteCommands = ['\\frac{', '\\sqrt{', '\\begin{'];
+    for (const cmd of incompleteCommands) {
+      const cmdCount = (formula.match(new RegExp(cmd.replace(/[\\{}]/g, '\\$&'), 'g')) || []).length;
+      if (cmdCount > closeBraces) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  /**
+   * 添加调试信息（开发模式）
+   */
+  logDebug(message, data) {
+    if (this.options.debug) {
+      console.log(`[AI Assistant] ${message}`, data);
+    }
+  }
+
+  /**
    * 简单的Markdown解析器
+   * 改进版：更安全的处理，避免破坏LaTeX占位符
    */
   parseMarkdown(text) {
     let html = text;
 
     // 代码块 ```...``` (必须先处理,避免被其他规则影响)
     const codeBlocks = [];
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    html = html.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
       const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
       codeBlocks.push(`<pre><code class="language-${lang || 'text'}">${this.escapeHtml(code.trim())}</code></pre>`);
       return placeholder;
@@ -396,48 +507,64 @@ class AIAssistantUI {
 
     // 行内代码 `...` (也要先保护起来)
     const inlineCodes = [];
-    html = html.replace(/`([^`\n]+)`/g, (match, code) => {
+    html = html.replace(/`([^`]+?)`/g, (match, code) => {
       const placeholder = `___INLINE_CODE_${inlineCodes.length}___`;
       inlineCodes.push(`<code>${this.escapeHtml(code)}</code>`);
       return placeholder;
     });
 
-    // 粗体 **...**
-    html = html.replace(/\*\*([^\*\n]+)\*\*/g, '<strong>$1</strong>');
+    // 粗体 **...** (避免跨行)
+    html = html.replace(/\*\*([^\*\n]+?)\*\*/g, '<strong>$1</strong>');
 
-    // 斜体 *...* (确保不匹配**)
-    html = html.replace(/(?<!\*)\*([^\*\n]+)\*(?!\*)/g, '<em>$1</em>');
+    // 斜体 *...* (确保不匹配**，避免跨行)
+    html = html.replace(/(?<!\*)\*([^\*\n]+?)\*(?!\*)/g, '<em>$1</em>');
 
     // 标题 (必须在行首)
+    html = html.replace(/^#### (.+)$/gm, '<h5>$1</h5>');
     html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
     html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
     html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
 
     // 链接 [text](url)
-    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
-    // 无序列表 (- 或 *)
-    html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>[\s\S]+?<\/li>)(?!\n<li>)/g, '<ul>$1</ul>');
+    // 无序列表 (- 或 * 开头，但要避免匹配到占位符)
+    // 改进：只在行首匹配
+    html = html.replace(/^[\-\*] (.+)$/gm, (match, content) => {
+      // 如果是占位符，不处理
+      if (content.includes('___')) {
+        return match;
+      }
+      return '<li>' + content + '</li>';
+    });
+    // 包装连续的 <li> 为 <ul>
+    html = html.replace(/(<li>.*?<\/li>\n?)+/g, (match) => {
+      return '<ul>' + match + '</ul>';
+    });
 
     // 有序列表
     html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>[\s\S]+?<\/li>)(?!\n<li>)/g, '<ol>$1</ol>');
+    html = html.replace(/(<li>.*?<\/li>\n?)+/g, (match) => {
+      // 避免重复包装
+      if (match.startsWith('<ul>')) {
+        return match;
+      }
+      return '<ol>' + match + '</ol>';
+    });
 
     // 恢复代码块
     codeBlocks.forEach((code, i) => {
-      html = html.replace(`___CODE_BLOCK_${i}___`, code);
+      html = html.split(`___CODE_BLOCK_${i}___`).join(code);
     });
 
     // 恢复行内代码
     inlineCodes.forEach((code, i) => {
-      html = html.replace(`___INLINE_CODE_${i}___`, code);
+      html = html.split(`___INLINE_CODE_${i}___`).join(code);
     });
 
-    // 换行 (两个空格+换行 或 <br>)
-    html = html.replace(/  \n/g, '<br>');
-    html = html.replace(/\n\n/g, '<br><br>');
-    html = html.replace(/\n/g, '<br>');
+    // 换行处理（改进：避免过多的<br>）
+    html = html.replace(/\n\n+/g, '<br><br>');  // 多个换行变成两个<br>
+    html = html.replace(/([^>])\n(?!<)/g, '$1<br>');  // 单个换行变成<br>，但避免在标签后
 
     return html;
   }
