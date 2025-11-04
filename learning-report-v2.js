@@ -464,12 +464,12 @@ class LearningReportUI {
     section.innerHTML = `
       <h3 class="section-title">📤 导出报告</h3>
       <p style="color: #92400e; font-size: 14px; margin-bottom: 20px; font-weight: 500;">
-        将学习数据保存为PDF文件，方便打印和分享
+        将学习数据保存为长图（PNG格式），方便保存和分享
       </p>
       <div class="export-buttons">
         <button class="export-btn pdf" onclick="window.reportUI.exportPDF('${reportType}')">
-          <i class="fa fa-file-pdf-o" style="font-size: 20px; margin-right: 8px;"></i>
-          <span style="font-weight: 700;">导出为 PDF</span>
+          <i class="fa fa-picture-o" style="font-size: 20px; margin-right: 8px;"></i>
+          <span style="font-weight: 700;">导出为长图</span>
         </button>
       </div>
     `;
@@ -740,7 +740,7 @@ class LearningReportUI {
   // ==================== 导出功能 ====================
   
   async exportPDF(reportType) {
-    console.log('📄 导出PDF...');
+    console.log('� 导出长图...');
     
     // 显示精美的加载提示
     const loadingEl = document.createElement('div');
@@ -759,8 +759,8 @@ class LearningReportUI {
       min-width: 320px;
     `;
     loadingEl.innerHTML = `
-      <div style="font-size: 48px; margin-bottom: 16px; animation: bounce 1s infinite;">📄</div>
-      <div style="font-size: 22px; font-weight: 700; margin-bottom: 12px;">正在生成 PDF...</div>
+      <div style="font-size: 48px; margin-bottom: 16px; animation: bounce 1s infinite;">�</div>
+      <div style="font-size: 22px; font-weight: 700; margin-bottom: 12px;">正在生成长图...</div>
       <div style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 20px;">请稍候，正在渲染报告内容</div>
       <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; margin: 0 auto;">
         <div style="width: 30%; height: 100%; background: white; border-radius: 2px; animation: loading 1.5s ease-in-out infinite;"></div>
@@ -784,27 +784,12 @@ class LearningReportUI {
     document.body.appendChild(backdrop);
     
     try {
-      // 使用 jsPDF 库（带中文字体支持）
-      if (typeof jspdf === 'undefined') {
-        // 动态加载 jsPDF
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      }
-      
-      // 加载中文字体
-      await this.loadChineseFont();
-      
-      // 生成PDF
+      // 生成长图（不需要jsPDF库）
       await this.generatePDF(reportType);
       
     } catch (error) {
-      console.error('PDF导出失败:', error);
-      alert('PDF导出失败，请重试。错误: ' + error.message);
+      console.error('长图导出失败:', error);
+      alert('长图导出失败，请重试。错误: ' + error.message);
     } finally {
       loadingEl.remove();
       backdrop.remove();
@@ -812,7 +797,7 @@ class LearningReportUI {
   }
   
   /**
-   * 加载中文字体支持
+   * 加载中文字体支持（已废弃，改用长图导出）
    */
   async loadChineseFont() {
     // 注意：完整的中文字体文件较大，这里使用简化方案
@@ -822,8 +807,7 @@ class LearningReportUI {
   }
   
   async generatePDF(reportType) {
-    // 使用html2canvas将报告转换为图片再导出PDF（解决中文乱码问题）
-    const { jsPDF } = window.jspdf;
+    // 改为导出长图（PNG格式）
     
     // 先加载html2canvas
     if (typeof html2canvas === 'undefined') {
@@ -861,21 +845,22 @@ class LearningReportUI {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     try {
-      // 使用html2canvas截图，优化配置以获得更好的排版
+      console.log('📸 正在生成长图...');
+      
+      // 使用html2canvas截取完整报告为一张长图
       const canvas = await html2canvas(reportBody, {
-        scale: 2.5,            // 提高清晰度
-        useCORS: true,         // 支持跨域图片
+        scale: 2.5,            // 高清晰度
+        useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
         allowTaint: false,
-        windowWidth: 1000,     // 减小宽度让内容更居中
+        windowWidth: 1000,
         windowHeight: reportBody.scrollHeight,
         width: reportBody.scrollWidth,
         height: reportBody.scrollHeight,
         imageTimeout: 0,
         removeContainer: true,
         onclone: (clonedDoc) => {
-          // 在克隆的文档中进一步优化样式
           const clonedBody = clonedDoc.querySelector('.report-body');
           if (clonedBody) {
             clonedBody.style.width = '1000px';
@@ -886,92 +871,21 @@ class LearningReportUI {
         }
       });
       
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      
-      // PDF配置
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-      
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 12;
-      const contentWidth = pageWidth - 2 * margin;
-      const contentHeight = pageHeight - 2 * margin;
-      
-      // 计算图片尺寸
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const imgRatio = imgHeight / imgWidth;
-      
-      // PDF中图片的宽度和高度（mm）
-      const pdfImgWidth = contentWidth;
-      const pdfImgHeight = contentWidth * imgRatio;
-      
-      // 如果图片高度小于一页，直接添加
-      if (pdfImgHeight <= contentHeight) {
-        pdf.addImage(imgData, 'PNG', margin, margin, pdfImgWidth, pdfImgHeight, undefined, 'FAST');
-      } else {
-        // 分页处理：智能切分成多个部分
-        let currentY = 0;
-        let pageNum = 0;
+      // 转换为PNG图片并下载
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const filename = `${reportType === 'student' ? '学生学习报告' : '教师备课指导报告'}_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.png`;
+        link.download = filename;
+        link.href = url;
+        link.click();
         
-        while (currentY < pdfImgHeight) {
-          if (pageNum > 0) {
-            pdf.addPage();
-          }
-          
-          // 计算这一页可以显示的高度（稍微重叠避免断裂）
-          const remainingHeight = pdfImgHeight - currentY;
-          const pageContentHeight = Math.min(contentHeight, remainingHeight);
-          
-          // 计算源图片中对应的区域（添加1px重叠避免边界问题）
-          const sourceY = Math.max(0, (currentY / pdfImgHeight) * imgHeight - (pageNum > 0 ? 2 : 0));
-          const sourceHeight = Math.min(
-            (pageContentHeight / pdfImgHeight) * imgHeight + (pageNum > 0 ? 2 : 0),
-            imgHeight - sourceY
-          );
-          
-          // 创建临时canvas截取这一页的内容
-          const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = imgWidth;
-          tempCanvas.height = Math.ceil(sourceHeight);
-          const tempCtx = tempCanvas.getContext('2d', { alpha: false });
-          tempCtx.fillStyle = '#ffffff';
-          tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-          
-          // 从原canvas截取当前页的内容
-          tempCtx.drawImage(
-            canvas, 
-            0, Math.floor(sourceY), 
-            imgWidth, Math.ceil(sourceHeight), 
-            0, 0, 
-            imgWidth, Math.ceil(sourceHeight)
-          );
-          
-          const pageImgData = tempCanvas.toDataURL('image/png', 1.0);
-          const actualPageHeight = (tempCanvas.height / imgWidth) * pdfImgWidth;
-          pdf.addImage(pageImgData, 'PNG', margin, margin, pdfImgWidth, actualPageHeight, undefined, 'FAST');
-          
-          currentY += contentHeight;
-          pageNum++;
-          
-          // 安全限制
-          if (pageNum > 50) {
-            console.warn('PDF页数超过50页，停止生成');
-            break;
-          }
-        }
-      }
+        // 释放URL对象
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        console.log('✅ 长图导出成功');
+      }, 'image/png', 1.0);
       
-      // 保存PDF
-      const filename = `${reportType === 'student' ? '学生学习报告' : '教师备课指导报告'}_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.pdf`;
-      pdf.save(filename);
-      
-      console.log('✅ PDF导出成功');
       
       // 显示成功提示
       const successEl = document.createElement('div');
