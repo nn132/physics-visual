@@ -12,6 +12,12 @@
   <script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
   <!-- gifshot.js for GIF export (更适合浏览器环境) -->
   <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
+  <!-- html2canvas for PDF export with Chinese support -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <!-- AI助手样式 -->
+  <link rel="stylesheet" href="ai-assistant.css">
+  <!-- 学习报告样式 v2.0 -->
+  <link rel="stylesheet" href="learning-report-v2.css">
   
   
   <!-- 配置Tailwind -->
@@ -227,13 +233,37 @@
         
         <!-- 用户区域 -->
         <div class="flex items-center gap-3">
-          <a href="dengluyemian001/index.html" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors inline-block">
+          <!-- 数据报告下拉菜单 -->
+          <div class="report-dropdown-container">
+            <button id="report-dropdown-btn" class="report-toggle-btn">
+              <i class="fa fa-bar-chart"></i>
+              <span class="hidden sm:inline">数据报告</span>
+              <span class="report-badge">NEW</span>
+              <i class="fa fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
+            </button>
+            
+            <!-- 下拉菜单 -->
+            <div id="report-dropdown-menu" class="report-dropdown-menu hidden">
+              <button id="show-student-report" class="report-dropdown-item">
+                <i class="fa fa-user"></i>
+                <div class="report-dropdown-text">
+                  <div class="report-dropdown-title">学习报告</div>
+                  <div class="report-dropdown-desc">查看个人学习数据分析</div>
+                </div>
+              </button>
+              <button id="show-teacher-report" class="report-dropdown-item">
+                <i class="fa fa-graduation-cap"></i>
+                <div class="report-dropdown-text">
+                  <div class="report-dropdown-title">教师精准备课指导</div>
+                  <div class="report-dropdown-desc">班级统计与教学建议</div>
+                </div>
+              </button>
+            </div>
+          </div>
+          
+          <a href="dengluyemian001/index.html" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-block">
             登录
           </a>
-          <!-- 圆形头像按钮 -->
-          <button class="hidden md:block w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 flex items-center justify-center transition-all hover:scale-110 shadow-md">
-            <i class="fa fa-user text-blue-600 text-lg"></i>
-          </button>
           <!-- 移动端菜单按钮 -->
           <button type="button" class="md:hidden text-gray-700 hover:text-primary" id="mobile-menu-button">
             <i class="fa fa-bars text-xl"></i>
@@ -5755,6 +5785,170 @@
         console.log('✅ 所有功能初始化完成');
       }, 100);
     });
+  </script>
+
+  <!-- AI助手 -->
+  <script src="ai-assistant.js"></script>
+  <script>
+    // 初始化AI助手
+    const DEEPSEEK_API_KEY = 'sk-0100cbe054c9466e94776583ea2967d7'; // 👈 您的 DeepSeek API Key
+    
+    if (DEEPSEEK_API_KEY && DEEPSEEK_API_KEY !== 'YOUR_API_KEY_HERE') {
+      const { assistant, ui } = initAIAssistant(DEEPSEEK_API_KEY, {
+        systemPrompt: '你是一个物理学习助手，名叫"物理小助手"。你擅长解答高中物理问题，包括力学、电磁学、光学、热学等。回答要简洁明了，对于计算题要给出详细步骤。用emoji让回答更生动有趣。',
+        avatarImage: '🧪',
+        assistantName: '物理小助手',
+        placeholder: '问我物理问题，比如：牛顿第二定律是什么？'
+      });
+      console.log('✅ AI助手已启动');
+    } else {
+      console.warn('⚠️ 请在代码中配置 DeepSeek API Key 以启用AI助手');
+    }
+  </script>
+  
+  <!-- 学习行为追踪与报告系统 v2.0 -->
+  <script src="learning-analytics-v2.js"></script>
+  <script src="learning-report-v2.js"></script>
+  <script>
+    // ==================== 初始化演示数据 ====================
+    // 如果是首次访问且没有数据，生成丰富的演示数据
+    if (window.learningAnalytics && !localStorage.getItem('learningAnalyticsV2')) {
+      console.log('🎯 首次访问，生成专业演示数据...');
+      
+      // 模拟浏览多个知识点（带分类和难度）
+      const knowledgePoints = [
+        { id: 'uniform-1', name: '匀变速直线运动', category: '力学', difficulty: 'easy' },
+        { id: 'projectile-1', name: '抛体运动', category: '力学', difficulty: 'medium' },
+        { id: 'circular-1', name: '圆周运动', category: '力学', difficulty: 'hard' },
+        { id: 'electric-1', name: '电场强度', category: '电磁学', difficulty: 'medium' },
+        { id: 'magnetic-1', name: '磁场与安培力', category: '电磁学', difficulty: 'hard' },
+        { id: 'optics-1', name: '光的折射', category: '光学', difficulty: 'easy' },
+        { id: 'wave-1', name: '波的干涉', category: '光学', difficulty: 'medium' }
+      ];
+      
+      knowledgePoints.forEach((kp, index) => {
+        setTimeout(() => {
+          window.learningAnalytics.startActivity('knowledge', kp);
+          setTimeout(() => {
+            window.learningAnalytics.endActivity();
+          }, 2000 + Math.random() * 3000); // 随机学习时长 2-5秒
+        }, index * 1500);
+      });
+      
+      // 模拟生成多个可视化（带参数）
+      const visualizations = [
+        { type: 'uniform', params: { speed: 5, gravity: 10 }, played: true },
+        { type: 'projectile', params: { angle: 45, speed: 20 }, played: true },
+        { type: 'circular', params: { radius: 50, period: 3 }, played: false },
+        { type: 'collision', params: { mass1: 2, mass2: 3 }, played: true }
+      ];
+      
+      setTimeout(() => {
+        visualizations.forEach((viz, index) => {
+          setTimeout(() => {
+            window.learningAnalytics.startActivity('visualization', viz);
+            setTimeout(() => {
+              window.learningAnalytics.endActivity();
+            }, 1500 + Math.random() * 2000);
+          }, index * 2000);
+        });
+        
+        setTimeout(() => {
+          console.log('✅ 专业演示数据生成完成！已包含 7 个知识点和 4 个可视化。');
+        }, visualizations.length * 2000 + 3000);
+      }, knowledgePoints.length * 1500 + 2000);
+    }
+    
+    // ==================== 绑定报告下拉菜单 ====================
+    const dropdownBtn = document.getElementById('report-dropdown-btn');
+    const dropdownMenu = document.getElementById('report-dropdown-menu');
+    const dropdownContainer = document.querySelector('.report-dropdown-container');
+    
+    // 切换下拉菜单
+    dropdownBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('hidden');
+      dropdownContainer.classList.toggle('active');
+    });
+    
+    // 点击外部关闭下拉菜单
+    document.addEventListener('click', (e) => {
+      if (!dropdownContainer?.contains(e.target)) {
+        dropdownMenu?.classList.add('hidden');
+        dropdownContainer?.classList.remove('active');
+      }
+    });
+    
+    // 学生报告按钮
+    document.getElementById('show-student-report')?.addEventListener('click', () => {
+      if (window.reportUI && window.learningAnalytics) {
+        window.reportUI.showStudentReport(window.learningAnalytics);
+        console.log('📊 学生学习报告已打开');
+        dropdownMenu.classList.add('hidden');
+        dropdownContainer.classList.remove('active');
+      } else {
+        console.error('❌ 报告系统未初始化');
+      }
+    });
+    
+    // 教师报告按钮
+    document.getElementById('show-teacher-report')?.addEventListener('click', () => {
+      if (window.reportUI && window.learningAnalytics) {
+        window.reportUI.showTeacherReport(window.learningAnalytics);
+        console.log('📊 教师精准备课指导已打开');
+        dropdownMenu.classList.add('hidden');
+        dropdownContainer.classList.remove('active');
+      } else {
+        console.error('❌ 报告系统未初始化');
+      }
+    });
+    
+    // ==================== 集成追踪到现有功能 ====================
+    // 监听知识点点击
+    document.addEventListener('click', (e) => {
+      const knowledgeCard = e.target.closest('[data-knowledge-id]');
+      if (knowledgeCard && window.learningAnalytics) {
+        const knowledgeId = knowledgeCard.dataset.knowledgeId;
+        const knowledgeName = knowledgeCard.dataset.knowledgeName;
+        const category = knowledgeCard.dataset.category || '物理';
+        const difficulty = knowledgeCard.dataset.difficulty || 'medium';
+        
+        window.learningAnalytics.startActivity('knowledge', {
+          id: knowledgeId,
+          name: knowledgeName,
+          category: category,
+          difficulty: difficulty
+        });
+      }
+    });
+    
+    // 监听可视化生成
+    const originalGenerateBtn = document.getElementById('generate-animation');
+    if (originalGenerateBtn) {
+      originalGenerateBtn.addEventListener('click', () => {
+        const questionType = document.getElementById('question-type-select')?.value || 'uniform';
+        if (window.learningAnalytics) {
+          window.learningAnalytics.startActivity('visualization', {
+            type: questionType,
+            params: window.currentParams || {},
+            played: false
+          });
+        }
+      });
+    }
+    
+    // 监听动画播放
+    const playButton = document.getElementById('play-animation');
+    if (playButton) {
+      playButton.addEventListener('click', () => {
+        if (window.learningAnalytics && window.learningAnalytics.currentActivity) {
+          // 标记可视化已播放
+          console.log('▶️ 动画开始播放');
+        }
+      });
+    }
+    
+    console.log('✅ 学习报告系统 v2.0 已启动 (增强分析引擎 + 专业图表)');
   </script>
 </body>
 </html>

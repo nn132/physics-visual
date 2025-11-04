@@ -7,6 +7,12 @@ compatibility_date = "2025-10-19"
 [build]
 command = ""
 
+# D1 数据库绑定
+[[d1_databases]]
+binding = "DB"  # 在代码中通过 env.DB 访问
+database_name = "physics-learning-db"
+database_id = "a177daff-ccca-439f-b1d9-a8c9a955aa9f"  # 数据库ID
+
 [env.production]
 route = "physics-visual.pages.dev/api/*"
 zone_id = "<YOUR_ZONE_ID>"  # optional for Pages route binding via worker routes

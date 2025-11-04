@@ -1,7 +1,5 @@
-// Cloudflare Worker: backend API for physics-visual
-// Exposes POST /api/parse-problem
-// Expects JSON { description: string }
-// Uses OPENAI_API_KEY (set as a secret) to call OpenAI-compatible API
+// Cloudflare Worker - ES Module format
+// Physics visualization backend with D1 database support
 
 const SYSTEM_PROMPT = `You are DeepSeek, a specialized physics problem parser that converts natural-language physics problems into structured JSON with visualization parameters.
 
@@ -9,46 +7,33 @@ Return ONLY valid JSON with these fields:
 1. type: (uniform|projectile|circular|collision|magnetic|astrodynamics)
 2. params: Object with numeric parameters specific to the motion type
 3. reasoning: Short explanation (in Chinese)
-4. visual: Object defining the visual appearance of the simulation:
-   - objectType: Type of object to display (car|train|ball|basketball|ferrisWheel|billiard|electron|satellite)
-   - objectColor: Primary color in hex (e.g., "#ef4444")
-   - backgroundColor: Scene background color in hex
-   - groundColor: Ground/surface color in hex (if applicable)
-   - showTrajectory: boolean
-   - theme: (realistic|sports|minimalist|billiards|electromagnetic|space|amusement)
-   - Additional theme-specific properties (e.g., showBrakeMarks for cars, showBasket for basketball, showStars for space)
+4. visual: Object defining the visual appearance of the simulation`;
 
-Example output for "一辆红色汽车以20m/s刹车":
-{
-  "type": "uniform",
-  "params": {"v0": 20, "a": -5, "time": 4},
-  "reasoning": "汽车刹车为匀减速运动",
-  "visual": {
-    "objectType": "car",
-    "objectColor": "#ef4444",
-    "backgroundColor": "#f3f4f6",
-    "groundColor": "#374151",
-    "showTrajectory": true,
-    "showBrakeMarks": true,
-    "theme": "realistic"
+export default {
+  async fetch(request, env, ctx) {
+    return handleRequest(request, env);
   }
-}
+};
 
-Match the visual style to the problem context:
-- Vehicles → car/train with road colors
-- Sports → basketball/ball with court colors
-- Space → satellite with dark space background and stars
-- Amusement → ferrisWheel with bright colors
-- Physics lab → minimalist with simple colors`;
-
-
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
-
-async function handleRequest(request) {
+async function handleRequest(request, env) {
   const url = new URL(request.url);
-  // simple router: only handle /api/parse-problem
+  
+  if (url.pathname === '/api/learning/session') {
+    return handleLearningSession(request, env);
+  }
+  if (url.pathname === '/api/learning/knowledge') {
+    return handleKnowledgeVisit(request, env);
+  }
+  if (url.pathname === '/api/learning/example') {
+    return handleExampleAttempt(request, env);
+  }
+  if (url.pathname === '/api/learning/visualization') {
+    return handleVisualization(request, env);
+  }
+  if (url.pathname === '/api/learning/report') {
+    return handleGenerateReport(request, env);
+  }
+  
   if (url.pathname === '/api/parse-problem') {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders() });
@@ -70,45 +55,250 @@ async function handleRequest(request) {
     }
 
     try {
-      const result = await callOpenAI(description);
-      // Front-end expects: {success: true, type, params, reasoning, visual}
+      const result = await callOpenAI(description, env);
       if (result.parsed && result.parsed.type && result.parsed.params) {
         return jsonResponse({ 
           success: true, 
           type: result.parsed.type, 
           params: result.parsed.params,
-          reasoning: result.parsed.reasoning || '已成功解析',
-          visual: result.parsed.visual || null  // 新增：视觉参数
+          reasoning: result.parsed.reasoning || 'Successfully parsed',
+          visual: result.parsed.visual || null
         }, 200);
       } else {
-        // OpenAI returned but parsing failed
         return jsonResponse({ 
           success: false, 
-          error: 'AI 返回格式不正确', 
+          error: 'AI response format error', 
           raw: result.raw 
         }, 200);
       }
     } catch (err) {
-      // If MOCK_RESPONSE is set (truthy), return a safe mocked parsed result so
-      // the front-end can continue to be tested without a working OpenAI call.
-      try {
-        if (typeof MOCK_RESPONSE !== 'undefined' && MOCK_RESPONSE) {
-          const mock = mockParsed(description);
-          return jsonResponse({ 
-            success: true, 
-            type: mock.type, 
-            params: mock.params,
-            reasoning: mock.reasoning || 'Mock 模式'
-          }, 200);
-        }
-      } catch (e) {
-        // ignore mock generation errors and fall through to original error
-      }
-      return jsonResponse({ success: false, error: 'AI 请求失败', detail: String(err) }, 502);
+      return jsonResponse({ success: false, error: 'AI request failed', detail: String(err) }, 502);
     }
   }
 
   return new Response('Not found', { status: 404 });
+}
+
+async function handleLearningSession(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
+  try {
+    const data = await request.json();
+    const { sessionId, studentId, startTime, endTime, totalTime } = data;
+    
+    if (!sessionId || !startTime) {
+      return jsonResponse({ error: 'Missing sessionId or startTime' }, 400);
+    }
+
+    const db = env.DB;
+    if (!db) {
+      return jsonResponse({ error: 'Database not configured' }, 500);
+    }
+
+    await db.prepare(`
+      INSERT INTO learning_sessions (id, student_id, start_time, end_time, total_time)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        end_time = excluded.end_time,
+        total_time = excluded.total_time
+    `).bind(sessionId, studentId || null, startTime, endTime || null, totalTime || 0).run();
+
+    return jsonResponse({ success: true, sessionId });
+  } catch (err) {
+    return jsonResponse({ error: 'Failed to save session', detail: String(err) }, 500);
+  }
+}
+
+async function handleKnowledgeVisit(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
+  try {
+    const data = await request.json();
+    const { sessionId, knowledgeId, knowledgeName, category, visitCount, totalTime } = data;
+    
+    if (!sessionId || !knowledgeId) {
+      return jsonResponse({ error: 'Missing sessionId or knowledgeId' }, 400);
+    }
+
+    const db = env.DB;
+    if (!db) {
+      return jsonResponse({ error: 'Database not configured' }, 500);
+    }
+
+    await db.prepare(`
+      INSERT INTO knowledge_visits (session_id, knowledge_id, knowledge_name, category, visit_count, total_time, last_visit)
+      VALUES (?, ?, ?, ?, ?, ?, unixepoch())
+      ON CONFLICT(session_id, knowledge_id) DO UPDATE SET
+        visit_count = visit_count + excluded.visit_count,
+        total_time = total_time + excluded.total_time,
+        last_visit = unixepoch()
+    `).bind(sessionId, knowledgeId, knowledgeName, category || '', visitCount || 1, totalTime || 0).run();
+
+    return jsonResponse({ success: true });
+  } catch (err) {
+    return jsonResponse({ error: 'Failed to save knowledge visit', detail: String(err) }, 500);
+  }
+}
+
+async function handleExampleAttempt(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
+  try {
+    const data = await request.json();
+    const { sessionId, exampleTitle, knowledgePoint, questionType, attempts, totalTime, visualizations } = data;
+    
+    if (!sessionId || !exampleTitle) {
+      return jsonResponse({ error: 'Missing sessionId or exampleTitle' }, 400);
+    }
+
+    const db = env.DB;
+    if (!db) {
+      return jsonResponse({ error: 'Database not configured' }, 500);
+    }
+
+    await db.prepare(`
+      INSERT INTO example_attempts (session_id, example_title, knowledge_point, question_type, attempts, total_time, visualizations, last_attempt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, unixepoch())
+      ON CONFLICT(session_id, example_title) DO UPDATE SET
+        attempts = attempts + excluded.attempts,
+        total_time = total_time + excluded.total_time,
+        visualizations = visualizations + excluded.visualizations,
+        last_attempt = unixepoch()
+    `).bind(sessionId, exampleTitle, knowledgePoint || '', questionType || '', attempts || 1, totalTime || 0, visualizations || 0).run();
+
+    return jsonResponse({ success: true });
+  } catch (err) {
+    return jsonResponse({ error: 'Failed to save example attempt', detail: String(err) }, 500);
+  }
+}
+
+async function handleVisualization(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
+  try {
+    const data = await request.json();
+    const { sessionId, questionType, params, duration, played } = data;
+    
+    if (!sessionId || !questionType) {
+      return jsonResponse({ error: 'Missing sessionId or questionType' }, 400);
+    }
+
+    const db = env.DB;
+    if (!db) {
+      return jsonResponse({ error: 'Database not configured' }, 500);
+    }
+
+    await db.prepare(`
+      INSERT INTO visualizations (session_id, question_type, params, duration, played, timestamp)
+      VALUES (?, ?, ?, ?, ?, unixepoch())
+    `).bind(sessionId, questionType, JSON.stringify(params || {}), duration || 0, played ? 1 : 0).run();
+
+    return jsonResponse({ success: true });
+  } catch (err) {
+    return jsonResponse({ error: 'Failed to save visualization', detail: String(err) }, 500);
+  }
+}
+
+async function handleGenerateReport(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method !== 'GET') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
+  try {
+    const url = new URL(request.url);
+    const reportType = url.searchParams.get('type') || 'teacher';
+    const days = parseInt(url.searchParams.get('days') || '7', 10);
+    
+    const db = env.DB;
+    if (!db) {
+      return jsonResponse({ error: 'Database not configured' }, 500);
+    }
+
+    if (reportType === 'teacher') {
+      const cutoffTime = Math.floor(Date.now() / 1000) - (days * 86400);
+      
+      const studentCount = await db.prepare(`
+        SELECT COUNT(DISTINCT id) as total FROM learning_sessions WHERE created_at > ?
+      `).bind(cutoffTime).first();
+      
+      const hotKnowledge = await db.prepare(`
+        SELECT knowledge_name, SUM(visit_count) as visits, SUM(kv.total_time) as time
+        FROM knowledge_visits kv
+        JOIN learning_sessions ls ON kv.session_id = ls.id
+        WHERE ls.created_at > ?
+        GROUP BY knowledge_name
+        ORDER BY visits DESC
+        LIMIT 5
+      `).bind(cutoffTime).all();
+      
+      const coldKnowledge = await db.prepare(`
+        SELECT knowledge_name, SUM(visit_count) as visits
+        FROM knowledge_visits kv
+        JOIN learning_sessions ls ON kv.session_id = ls.id
+        WHERE ls.created_at > ?
+        GROUP BY knowledge_name
+        HAVING visits < (SELECT AVG(total_visits) FROM (
+          SELECT SUM(visit_count) as total_visits FROM knowledge_visits GROUP BY knowledge_name
+        ))
+        ORDER BY visits ASC
+        LIMIT 5
+      `).bind(cutoffTime).all();
+      
+      const typeStats = await db.prepare(`
+        SELECT question_type, COUNT(*) as count
+        FROM visualizations v
+        JOIN learning_sessions ls ON v.session_id = ls.id
+        WHERE ls.created_at > ?
+        GROUP BY question_type
+        ORDER BY count DESC
+      `).bind(cutoffTime).all();
+      
+      const avgTime = await db.prepare(`
+        SELECT AVG(ls.total_time) as avg_time FROM learning_sessions ls WHERE ls.created_at > ?
+      `).bind(cutoffTime).first();
+
+      return jsonResponse({
+        success: true,
+        reportType: 'teacher',
+        period: `${days} days`,
+        stats: {
+          studentCount: studentCount?.total || 0,
+          avgStudyTime: Math.round((avgTime?.avg_time || 0) / 1000),
+          hotKnowledge: hotKnowledge.results || [],
+          coldKnowledge: coldKnowledge.results || [],
+          typeDistribution: typeStats.results || []
+        },
+        generatedAt: new Date().toISOString()
+      });
+    }
+    
+    return jsonResponse({ error: 'Unsupported report type' }, 400);
+  } catch (err) {
+    return jsonResponse({ error: 'Failed to generate report', detail: String(err) }, 500);
+  }
 }
 
 function corsHeaders() {
@@ -124,12 +314,10 @@ function jsonResponse(obj, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers });
 }
 
-async function callOpenAI(description) {
-  // Use secret `OPENAI_API_KEY` (or DEEPSEEK_API_KEY) bound via wrangler secret
-  const key = OPENAI_API_KEY || DEEPSEEK_API_KEY || '';
+async function callOpenAI(description, env) {
+  const key = env.OPENAI_API_KEY || env.DEEPSEEK_API_KEY || '';
   if (!key) throw new Error('OPENAI_API_KEY not configured');
 
-  // Build a chat completion request (OpenAI-compatible)
   const body = {
     model: 'gpt-4o-mini',
     messages: [
@@ -155,13 +343,10 @@ async function callOpenAI(description) {
   }
 
   const data = await res.json();
-  // Extract assistant's content (assume first choice)
   const assistant = data.choices?.[0]?.message?.content || '';
 
-  // Try to parse JSON out of assistant content; if assistant included explanation, try to extract JSON block
   let parsed = null;
   try {
-    // find first brace
     const start = assistant.indexOf('{');
     const end = assistant.lastIndexOf('}');
     if (start !== -1 && end !== -1 && end > start) {
@@ -169,59 +354,8 @@ async function callOpenAI(description) {
       parsed = JSON.parse(jsonText);
     }
   } catch (e) {
-    // fall through
+    // Parsing failed
   }
 
-  // Fallback: return raw assistant text
   return { raw: assistant, parsed };
-}
-
-// Mock parser: returns a conservative parsed object for common physics problems.
-function mockParsed(description) {
-  // very small heuristic: if contains '抛体' or '角度' -> projectile, else default to uniform fall
-  const d = (description || '').toLowerCase();
-  if (d.includes('抛体') || d.includes('角') || d.includes('角度')) {
-    return { 
-      type: 'projectile', 
-      params: { speed: 10, angle: 45, height: 0 }, 
-      reasoning: '检测到抛体关键词，返回示例值。',
-      visual: {
-        objectType: 'ball',
-        objectColor: '#8b5cf6',
-        backgroundColor: '#ede9fe',
-        groundColor: '#6d28d9',
-        showTrajectory: true,
-        theme: 'minimalist'
-      }
-    };
-  }
-  if (d.includes('圆周') || d.includes('角速度')) {
-    return { 
-      type: 'circular', 
-      params: { radius: 2, angular: 1 }, 
-      reasoning: '检测到圆周运动关键词。',
-      visual: {
-        objectType: 'ferrisWheel',
-        objectColor: '#06b6d4',
-        backgroundColor: '#e0f2fe',
-        showTrajectory: true,
-        theme: 'amusement'
-      }
-    };
-  }
-  // default: uniform motion (free fall) - params should match front-end expectations
-  // Front-end expects: v0, a, time for uniform type
-  return { 
-    type: 'uniform', 
-    params: { v0: 0, a: 10, time: 5 }, 
-    reasoning: '默认为自由落体（匀变速直线运动）。',
-    visual: {
-      objectType: 'ball',
-      objectColor: '#3b82f6',
-      backgroundColor: '#dbeafe',
-      groundColor: '#1e3a8a',
-      showTrajectory: true,
-      theme: 'minimalist'
-    }
-  };
 }
