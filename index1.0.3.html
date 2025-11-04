@@ -182,41 +182,85 @@
     /* 保持桌面端完全不变；以下规则只在窄屏（手机）生效 */
     @media (max-width: 768px) {
       /* 导航：确保品牌、按钮在一行且菜单更紧凑 */
-      #navbar .container { padding-left: 0.75rem; padding-right: 0.75rem; }
-      #navbar .font-bold { font-size: 0.95rem; }
-      #navbar .text-2xl { font-size: 1.25rem; }
+      #navbar .container { 
+        padding-left: 0.5rem; 
+        padding-right: 0.5rem; 
+      }
+      #navbar .font-bold { 
+        font-size: 0.85rem; 
+        line-height: 1.2;
+      }
+      #navbar .text-2xl { font-size: 1.1rem; }
+      #navbar .flex.items-center { gap: 0.25rem; }
+
+      /* 导航栏按钮缩小 */
+      #navbar .bg-primary,
+      #navbar .report-button {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.8rem !important;
+        white-space: nowrap;
+      }
+
+      /* 学习报告下拉按钮 */
+      .report-button {
+        min-width: auto !important;
+      }
+      
+      .report-badge {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+      }
+
+      /* 下拉菜单优化 */
+      .report-dropdown-menu {
+        right: 0;
+        left: auto;
+        min-width: 260px;
+      }
+
+      .report-dropdown-item {
+        padding: 10px 12px !important;
+      }
+
+      .report-dropdown-title {
+        font-size: 0.9rem !important;
+      }
+
+      .report-dropdown-desc {
+        font-size: 0.75rem !important;
+      }
 
       /* 英雄区：文字和按钮更紧凑，避免换行 */
       section.bg-gradient-to-br h1 { 
-        font-size: 2rem !important; 
-        line-height: 1.2 !important;
-        margin-bottom: 1.5rem !important;
+        font-size: 1.5rem !important; 
+        line-height: 1.3 !important;
+        margin-bottom: 1rem !important;
       }
-      section.bg-gradient-to-br p { font-size: 1rem; }
+      section.bg-gradient-to-br p { font-size: 0.95rem; }
       section.bg-gradient-to-br .flex { flex-direction: column; }
       section.bg-gradient-to-br .flex a { 
         width: 100%; 
-        padding: 0.875rem 1.5rem !important;
-        font-size: 1rem !important;
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.95rem !important;
       }
-      section.bg-gradient-to-br { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+      section.bg-gradient-to-br { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
 
       /* 功能卡和列表：单列显示，内边距微调 */
       .grid.md\:grid-cols-3, .grid.md\:grid-cols-4 { 
         grid-template-columns: 1fr !important; 
-        gap: 1rem !important;
+        gap: 0.875rem !important;
       }
-      .p-6 { padding: 1rem !important; }
-      .p-8 { padding: 1.25rem !important; }
+      .p-6 { padding: 0.875rem !important; }
+      .p-8 { padding: 1rem !important; }
 
       /* 主内容区域：移除过大的内边距 */
-      section.py-20 { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
-      section.py-16 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+      section.py-20 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+      section.py-16 { padding-top: 1.75rem !important; padding-bottom: 1.75rem !important; }
 
       /* 标题：减小字号 */
-      h2.text-4xl, h2.text-5xl { font-size: 1.75rem !important; }
-      h3.text-2xl { font-size: 1.25rem !important; }
-      h3.text-lg { font-size: 1rem !important; }
+      h2.text-4xl, h2.text-5xl { font-size: 1.5rem !important; line-height: 1.3; }
+      h3.text-2xl { font-size: 1.15rem !important; }
+      h3.text-lg { font-size: 0.95rem !important; }
 
       /* 三栏布局改为单列 */
       .grid.md\:grid-cols-3.divide-y { 
@@ -225,12 +269,12 @@
 
       /* 动画容器：高度自适应，使用相对单位，确保不会超出小屏幕 */
       #animation-container { 
-        height: 40vh !important; 
-        min-height: 250px !important;
-        max-height: 400px !important;
+        height: 35vh !important; 
+        min-height: 220px !important;
+        max-height: 350px !important;
       }
-      #animated-object { width: 24px !important; height: 24px !important; }
-      #animated-object-2 { width: 24px !important; height: 24px !important; }
+      #animated-object { width: 22px !important; height: 22px !important; }
+      #animated-object-2 { width: 22px !important; height: 22px !important; }
 
       /* 控制面板：行内元素换行并撑满宽度 */
       .mt-4.flex.flex-wrap { 
@@ -246,8 +290,9 @@
       /* 按钮：撑满宽度，增大点击区域 */
       button, .btn, a.group {
         width: 100% !important;
-        min-height: 44px !important;
-        padding: 0.75rem 1rem !important;
+        min-height: 42px !important;
+        padding: 0.625rem 0.875rem !important;
+        font-size: 0.9rem !important;
       }
 
       /* 文本块、表单元素：增大点击目标，避免过窄 */
@@ -257,18 +302,18 @@
       select, 
       button { 
         font-size: 16px !important; /* 防止iOS自动缩放 */
-        padding: 0.75rem !important;
+        padding: 0.625rem !important;
         width: 100% !important;
       }
-      textarea.h-32 { height: 8rem !important; }
+      textarea.h-32 { height: 7rem !important; }
       
       /* Label文字：确保可读 */
-      label { font-size: 0.95rem !important; }
+      label { font-size: 0.9rem !important; }
 
       /* 文件上传区域 */
       .border-2.border-dashed { 
-        padding: 1.5rem 1rem !important;
-        font-size: 0.9rem !important;
+        padding: 1.25rem 0.875rem !important;
+        font-size: 0.85rem !important;
       }
 
       /* 参数输入框组：堆叠显示 */
@@ -286,7 +331,7 @@
 
       /* 图表容器 */
       canvas {
-        max-height: 250px !important;
+        max-height: 220px !important;
       }
 
       /* 卡片网格：单列 */
@@ -295,28 +340,28 @@
       .max-w-4xl { max-width: 100% !important; }
 
       /* 圆角：减小以适应小屏 */
-      .rounded-2xl { border-radius: 1rem !important; }
+      .rounded-2xl { border-radius: 0.875rem !important; }
 
       /* 功能图标 */
       .w-16.h-16 { 
-        width: 3rem !important; 
-        height: 3rem !important; 
+        width: 2.75rem !important; 
+        height: 2.75rem !important; 
       }
 
       /* 页脚：网格改为单列 */
       footer .grid.md\:grid-cols-4 { 
         grid-template-columns: 1fr !important; 
-        gap: 1.5rem !important;
+        gap: 1.25rem !important;
       }
-      footer { padding: 2rem 1rem !important; }
+      footer { padding: 1.75rem 0.875rem !important; }
 
       /* 容器内边距统一减小 */
-      .container { padding-left: 1rem !important; padding-right: 1rem !important; }
+      .container { padding-left: 0.875rem !important; padding-right: 0.875rem !important; }
 
       /* 移除过大的margin */
-      .mb-16 { margin-bottom: 2rem !important; }
-      .mb-10 { margin-bottom: 1.5rem !important; }
-      .mb-6 { margin-bottom: 1rem !important; }
+      .mb-16 { margin-bottom: 1.75rem !important; }
+      .mb-10 { margin-bottom: 1.25rem !important; }
+      .mb-6 { margin-bottom: 0.875rem !important; }
 
       /* 隐藏桌面端元素 */
       .hidden.md\:flex { display: none !important; }
@@ -332,15 +377,15 @@
 
       /* 知识点卡片优化 */
       .knowledge-card {
-        padding: 1rem !important;
+        padding: 0.875rem !important;
       }
 
       /* 模态框优化 */
       .modal-content {
         width: 95vw !important;
         max-width: 95vw !important;
-        margin: 1rem !important;
-        padding: 1rem !important;
+        margin: 0.75rem !important;
+        padding: 0.875rem !important;
       }
     }
 
@@ -349,21 +394,37 @@
       /* 进一步缩小文字 */
       html { font-size: 14px; }
       
-      h1 { font-size: 1.5rem !important; }
-      h2 { font-size: 1.35rem !important; }
-      h3 { font-size: 1.1rem !important; }
+      /* 导航栏进一步优化 */
+      #navbar .font-bold { 
+        font-size: 0.8rem; 
+      }
+      #navbar .text-2xl { 
+        font-size: 1rem; 
+        margin-right: 0.25rem;
+      }
+
+      /* 按钮更小 */
+      #navbar .bg-primary,
+      #navbar .report-button {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.75rem !important;
+      }
+
+      h1 { font-size: 1.35rem !important; }
+      h2 { font-size: 1.25rem !important; }
+      h3 { font-size: 1rem !important; }
 
       /* 进一步减小内边距 */
-      .p-6, .p-8 { padding: 0.75rem !important; }
-      section { padding: 1.5rem 0.5rem !important; }
+      .p-6, .p-8 { padding: 0.625rem !important; }
+      section { padding: 1.25rem 0.5rem !important; }
 
       /* 按钮文字 */
-      button, .btn { font-size: 0.9rem !important; }
+      button, .btn { font-size: 0.85rem !important; }
 
       /* 动画容器 */
       #animation-container { 
-        height: 35vh !important;
-        min-height: 200px !important;
+        height: 30vh !important;
+        min-height: 180px !important;
       }
     }
   </style>
