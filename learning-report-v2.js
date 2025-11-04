@@ -759,7 +759,7 @@ class LearningReportUI {
       min-width: 320px;
     `;
     loadingEl.innerHTML = `
-      <div style="font-size: 48px; margin-bottom: 16px; animation: bounce 1s infinite;">�</div>
+      <div style="font-size: 64px; margin-bottom: 16px; animation: bounce 1s infinite;"><i class="fa fa-camera" style="color: white;"></i></div>
       <div style="font-size: 22px; font-weight: 700; margin-bottom: 12px;">正在生成长图...</div>
       <div style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 20px;">请稍候，正在渲染报告内容</div>
       <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; margin: 0 auto;">
